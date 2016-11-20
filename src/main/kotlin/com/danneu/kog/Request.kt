@@ -45,20 +45,20 @@ class Request(
 
     override fun toString(): String {
         return listOf(
-          Pair("serverPort", serverPort),
-          Pair("serverName", serverName),
-          Pair("remoteAddr", remoteAddr),
-          Pair("href", href),
-          Pair("queryString", queryString),
-          Pair("scheme", scheme),
-          Pair("method", method.toString()),
-          Pair("protocol", protocol),
-          Pair("headers", headers),
-          Pair("type", type),
-          Pair("length", length),
-          Pair("charset", charset),
-          Pair("path", path)
-        ).map{ pair -> pair.toString() }.joinToString("\n")
+          "serverPort" to serverPort,
+          "serverName" to serverName,
+          "remoteAddr" to remoteAddr,
+          "href" to href,
+          "queryString" to queryString,
+          "scheme" to scheme,
+          "method" to method.toString(),
+          "protocol" to protocol,
+          "headers" to headers,
+          "type" to type,
+          "length" to length,
+          "charset" to charset,
+          "path" to path
+        ).map { pair -> pair.toString() }.joinToString("\n")
     }
 
     companion object {
@@ -73,10 +73,9 @@ class Request(
                 method = Method.Companion.fromString(r.method.toLowerCase(Locale.ENGLISH)),
                 protocol = r.protocol,
                 headers = expandHeaders(r),
-                //type = notNullThen(r.contentType) { it.split(";", limit = 1)[0].toLowerCase() },
-                type = r.contentType?.let { it.split(";", limit = 1)[0].toLowerCase() },
+                type = r.contentType?.split(";", limit = 1)?.get(0)?.toLowerCase(),
                 length = if (r.contentLength >= 0) { r.contentLength } else { null },
-                charset = notNullThen(r.characterEncoding, String::toLowerCase),
+                charset = r.characterEncoding?.toLowerCase(),
                 //sslClientCert = r.getAttribute("javax.servlet.request.X509Certificate").first()
                 body = r.inputStream,
                 path = r.pathInfo ?: "/"

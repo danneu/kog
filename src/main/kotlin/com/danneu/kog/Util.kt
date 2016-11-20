@@ -19,10 +19,3 @@ fun urlDecode(str: String, encoding: String = "UTF-8"): String {
 }
 
 fun <K, V> Map<K, V>.mutableCopy(): MutableMap<K, V> = java.util.HashMap(this)
-
-
-// Apply a function to a value if the value is not null
-fun <A, B> notNullThen(value: A?, xform: (A) -> B): B? {
-    if (value == null) { return null }
-    return xform(value)
-}
