@@ -98,7 +98,7 @@ val echoHandler = { request: Request, socket: WebSocket ->
 
 fun main(args: Array<String>) {
   var router = Router {
-    get("/") { Response().text("Hello world) }
+    get("/") { Response().text("Hello world") }
     get("/ws") { Response.websocket("echo") }
   }
   Server(kogHandler, websockets = mapOf("echo" to echoHandler)).listen(3000)
