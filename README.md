@@ -67,7 +67,7 @@ fun main(args: Array<String>) {
 }
 ```
 
-### WebSocket
+### WebSockets
 
 This example starts a websocket server that echoes back
 to clients whatever they send the server.
@@ -78,22 +78,22 @@ import com.danneu.kog.Server
 import com.danneu.kog.Response
 import com.danneu.kog.WebSocket
 
-fun socketHandler(socket: WebSocket) {
-    val id = java.util.UUID.randomUUID()
-    println("[$id] a client connected")
+val onConnect = { request: Request, socket: WebSocket ->
+  val id = java.util.UUID.randomUUID()
+  println("[$id] a client connected")
 
-    socket.onError = { cause: Throwable ->
-        println("[$id] onError ${cause.message}")
-    }
+  socket.onError = { cause: Throwable ->
+    println("[$id] onError ${cause.message}")
+  }
 
-    socket.onText = { message: String ->
-        println("[$id] onText $message")
-        socket.session.remote.sendString(message)
-    }
+  socket.onText = { message: String ->
+    println("[$id] onText $message")
+    socket.session.remote.sendString(message)
+  }
 
-    socket.onClose = { statusCode: Int, reason: String? ->
-        println("[$id] onClose $statusCode ${reason ?: "<no reason>"}")
-    }
+  socket.onClose = { statusCode: Int, reason: String? ->
+    println("[$id] onClose $statusCode ${reason ?: "<no reason>"}")
+  }
 }
 
 val kogHandler: Handler = { req ->
@@ -101,7 +101,7 @@ val kogHandler: Handler = { req ->
 }
 
 fun main(args: Array<String>) {
-  Server(kogHandler, websocket = ::socketHandler).listen(3000)
+  Server(kogHandler, onWebSocket = Pair({ Response(Status.switchingProtocols) }, onConnect)).listen(3000)
 }
 ```
 
@@ -446,6 +446,61 @@ fun main(args: Array<String>) {
     server.listen(9000)
 }
 ```
+
+## WebSockets
+
+It's a bit of a hack right now, but currently, to configure a websocket handler, you pass the server a tuple:
+
+    Server(kogHandler, onWebSocket = Pair(checkRequest, onConnect))
+
+- `checkRequest : Handler` is a handler that returns `Response(Status.switchingProtocols)` if you want to go ahead and upgrade
+  the request into a websocket. Any other response short-circuits the upgrade and is sent to the client.
+  For instance, this lets you bail on the websocket connection if the user isn't authenticated. Since it's a handler,
+  you can wrap it in arbitrary middleware.
+- `onConnect : (Request, WebSocket) -> Unit` is a function that is passed the request and websocket objects
+  on successful connection and if `checkRequest` returns `Response(Status.switchingProtocols)`. Inside this function
+  is where you define your websocket event handlers.
+
+Here's an example websocket server that upgrades the websocket request if the client has a `session_id` cookie
+of value `"xxx"`:
+
+``` kotlin
+import com.danneu.kog.Handler
+import com.danneu.kog.Server
+import com.danneu.kog.Response
+import com.danneu.kog.WebSocket
+
+// Handles the websocket connection only if `checkRequest` succeeds.
+val onConnect = { request: Request, socket: WebSocket ->
+    val id = java.util.UUID.randomUUID()
+    println("[$id] a client connected")
+    socket.onError = { cause: Throwable -> println("[$id] onError ${cause.message}") }
+    socket.onClose = { statusCode: Int, reason: String? -> println("[$id] onClose $statusCode ${reason ?: "<no reason>"}") }
+    socket.onText = { message: String -> println("[$id] onText $message") }
+}
+
+val authenticateUser: Middleware = { handler -> fun(req: Request): Response {
+    req.cookies["session_id"] != "xxx" && return Response(Status.forbidden)
+    return handler(req)
+}}
+
+val checkRequest: Handler = authenticateUser({ Response(Status.switchingProtocols) })
+
+val router = Router {
+    get("/") { Response().text("Hello, world!") }
+}
+
+fun main(args: Array<String>) {
+    Server(router.handler(), onWebSocket = Pair(checkRequest, onConnect)).listen(3000)
+}
+```
+
+Note: The first argument to `Server()` (the kog handler) receives all requests except for attempted websocket
+upgrade requests. It's optional and will default to a handler that always 404s.
+
+Eventually I'd like to have it so that you can mount a websocket handler on any route so that you can reuse
+the existing router and middleware machinery. The current implementation above is kind of the half-way
+point of my efforts.
 
 ## Performance
 

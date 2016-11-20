@@ -2,7 +2,9 @@ package com.danneu.kog
 
 typealias Middleware = (Handler) -> Handler
 
+// Used as a pass-through noop
+val identity: Middleware = { handler -> handler }
+
 fun composeMiddleware(vararg wares: Middleware): Middleware {
-    val noop: Middleware = { handler -> handler }
-    return wares.fold(noop, { final, next -> { handler -> final(next(handler)) } })
+    return wares.fold(identity, { final, next -> { handler -> final(next(handler)) } })
 }

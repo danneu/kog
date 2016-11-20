@@ -64,7 +64,7 @@ class Request(
         ).map { pair -> pair.toString() }.joinToString("\n")
     }
 
-    companion object {}
+    companion object
 }
 
 

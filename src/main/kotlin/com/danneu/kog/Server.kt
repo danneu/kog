@@ -19,6 +19,9 @@ import org.eclipse.jetty.server.handler.ContextHandler
 import org.eclipse.jetty.server.handler.HandlerList
 
 
+typealias WebSocketConfig = Pair<Handler, (Request, WebSocket) -> Unit>
+
+
 // Lift a kog handler into a jetty handler
 class JettyHandler(val handler: Handler) : AbstractHandler() {
     override fun handle(target: String, baseRequest: org.eclipse.jetty.server.Request, servletRequest: HttpServletRequest, servletResponse: HttpServletResponse) {
@@ -30,7 +33,7 @@ class JettyHandler(val handler: Handler) : AbstractHandler() {
 }
 
 
-class Server(val handler: Handler = { Response(Status.notFound) }, val websocket: ((WebSocket) -> Unit)?) {
+class Server(val handler: Handler = { Response(Status.notFound) }, val onWebSocket: WebSocketConfig? = null) {
     val jettyServer: org.eclipse.jetty.server.Server
 
     init {
@@ -48,19 +51,13 @@ class Server(val handler: Handler = { Response(Status.notFound) }, val websocket
     fun listen(port: Int): Server {
         (jettyServer.connectors.first() as ServerConnector).port = port
 
-        val kogHandler = run {
-            val middleware: Middleware = composeMiddleware(
-              ::finalizer,
-              ::errorHandler
-            )
-            JettyHandler(middleware(handler))
-        }
+        val kogHandler = JettyHandler(Server.middleware()(handler))
 
         val handlers = HandlerList().apply {
-            if (websocket == null) {
+            if (onWebSocket == null) {
                 handlers = arrayOf(kogHandler)
             } else {
-                val wsHandler = ContextHandler().apply { handler = WebSocket.handler(websocket) }
+                val wsHandler = ContextHandler().apply { handler = WebSocket.handler(onWebSocket) }
                 handlers = arrayOf(wsHandler, kogHandler)
             }
         }
@@ -76,20 +73,30 @@ class Server(val handler: Handler = { Response(Status.notFound) }, val websocket
             throw ex
         }
     }
+
+    companion object
 }
 
 
-// TOP-LEVEL SERVER MIDDLEWARE
+// MIDDLEWARE
+
+
+// The server's stack of top-level middleware. This should always
+// wrap the user's final handler.
+fun Server.Companion.middleware(): Middleware = composeMiddleware(
+  ::finalizer,
+  ::errorHandler
+)
 
 
 // Must be last middleware to touch the response
-fun finalizer(handler: Handler): Handler {
+private fun finalizer(handler: Handler): Handler {
     return { req -> handler(req).finalize() }
 }
 
 
 // Catches uncaught errors and lifts them into 500 responses
-fun errorHandler(handler: Handler): Handler {
+private fun errorHandler(handler: Handler): Handler {
     return { req ->
         try {
             handler(req)

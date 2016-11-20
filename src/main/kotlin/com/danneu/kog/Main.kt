@@ -1,9 +1,8 @@
 package com.danneu.kog
 
-import java.util.UUID
 
-fun socketHandler(socket: WebSocket) {
-    val id = UUID.randomUUID()
+val connect = { request: Request, socket: WebSocket ->
+    val id = java.util.UUID.randomUUID()
     println("[$id] a client connected")
 
     socket.onError = { cause: Throwable ->
@@ -24,6 +23,17 @@ fun socketHandler(socket: WebSocket) {
     }
 }
 
+val authenticateUser: Middleware = { handler -> fun(req: Request): Response {
+    req.cookies["session_id"] != "xxx" && return Response(Status.forbidden)
+    return handler(req)
+}}
+
+var checkRequest: Handler = authenticateUser({ Response(Status.switchingProtocols) })
+
+//fun main(args: Array<String>) {
+//    Server(onWebSocket = Pair(checkRequest, onConnect)).listen(3000)
+//}
+
 
 class Main {
     companion object {
@@ -33,7 +43,7 @@ class Main {
                   .setHeader("Access-Control-Allow-Origin", "*")
                   .text("Hello, World!")
             }
-            val server = Server(handler, websocket = ::socketHandler)
+            val server = Server(handler, onWebSocket = checkRequest to connect)
             server.listen(9000)
         }
     }
