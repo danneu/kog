@@ -7,6 +7,7 @@ import org.apache.commons.fileupload.FileItemIterator
 import org.apache.commons.fileupload.FileItemStream
 import org.apache.commons.fileupload.FileUpload
 import org.apache.commons.fileupload.RequestContext
+import org.apache.commons.fileupload.UploadContext
 import org.apache.commons.fileupload.util.Streams
 import java.io.File
 import java.io.InputStream
@@ -19,12 +20,14 @@ private fun fileSequence(iter: FileItemIterator): Sequence<FileItemStream> = gen
     }
 }
 
-private fun Request.context() = object : RequestContext {
-    // TODO: parse char encoding myself
+private fun Request.context() = object : UploadContext {
+    // RequestContext
     override fun getCharacterEncoding(): String = this@context.charset ?: "utf-8"
     override fun getContentLength(): Int = this@context.length ?: -1
     override fun getContentType(): String = this@context.type!! // guarantee this exists before trying to get context
     override fun getInputStream(): InputStream = this@context.body
+    // UploadContext (Note: Jetty's Request has Int content-length so this can't actually be a Long in practice)
+    override fun contentLength(): Long = this@context.length?.toLong() ?: -1
 }
 
 
