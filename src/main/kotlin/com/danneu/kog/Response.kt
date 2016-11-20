@@ -5,7 +5,15 @@ import com.danneu.kog.json.JsonValue
 import java.io.File
 import java.io.InputStream
 
-class Response(var status: Status = Status.ok, var body: ResponseBody = ResponseBody.None) : HasHeaders<Response> {
+
+typealias WebSocketAcceptor = (Request, WebSocket) -> Unit
+
+
+fun Response.Companion.websocket(key: String): Response {
+    return Response(Status.switchingProtocols).apply { this.webSocketKey = key }
+}
+
+class Response(var status: Status = Status.ok, var body: ResponseBody = ResponseBody.None, var webSocketKey: String? = null) : HasHeaders<Response> {
 
     override var headers: MutableList<Pair<String, String>> = mutableListOf()
 
@@ -99,4 +107,6 @@ class Response(var status: Status = Status.ok, var body: ResponseBody = Response
     override fun toString(): String {
         return "Response (status=${status.code}, headers=$headers, body=$body)"
     }
+
+    companion object
 }

@@ -62,7 +62,7 @@ class Servlet(val handler: Handler) : HttpServlet() {
 fun expandHeaders(r: HttpServletRequest): MutableList<Pair<String, String>> {
     return r.headerNames.asSequence().flatMap { name ->
         r.getHeaders(name).asSequence().map { value ->
-            name.toLowerCase(Locale.ENGLISH) to value
+            name to value
         }
     }.toMutableList()
 }
