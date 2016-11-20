@@ -55,7 +55,7 @@ fun WebSocket.Companion.adapter(request: Request, accept: WebSocketAcceptor): We
 }
 
 
-fun WebSocket.Companion.handler(key: String, accept: WebSocketAcceptor): WebSocketHandler {
+fun WebSocket.Companion.handler(accept: WebSocketAcceptor): WebSocketHandler {
     var request: Request? = null
     return object : WebSocketHandler() {
         override fun configure(factory: WebSocketServletFactory) {
@@ -64,11 +64,6 @@ fun WebSocket.Companion.handler(key: String, accept: WebSocketAcceptor): WebSock
         }
         override fun handle(target: String, baseReq: JettyServerRequest, req: HttpServletRequest, res: HttpServletResponse) {
             val factory = this.webSocketFactory
-
-            if (key !== req.getAttribute("ws-handler")) {
-                // go to next handler
-                return
-            }
 
             // HACK: Saving into upstream variable so configure() can read it
             request = req.getAttribute("kog-request") as Request

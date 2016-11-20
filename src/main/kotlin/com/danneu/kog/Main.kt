@@ -10,23 +10,24 @@ class Main {
                       .setHeader("Access-Control-Allow-Origin", "*")
                       .text("Hello, World!")
                 }
-                websocket("/foo", key = "foo")
-                websocket("/bar", key = "bar")
+                websocket("/foo") { request: Request, socket: WebSocket ->
+                    println("[foo] a client connected")
+                    socket.onClose = { statusCode, reason -> println("[foo] a client disconnected") }
+                    socket.onText = { text ->
+                        println("[foo] said $text")
+                        socket.session.remote.sendString(text)
+                    }
+                }
+                websocket("/bar") { request: Request, socket: WebSocket ->
+                    println("[bar] a client connected")
+                    socket.onClose = { statusCode, reason -> println("[bar] a client disconnected") }
+                    socket.onText = { text ->
+                        println("[bar] said $text")
+                        socket.session.remote.sendString(text)
+                    }
+                }
             }
-            val server = Server(router.handler(), websockets = mapOf(
-              "foo" to { request: Request, socket: WebSocket ->
-                  println("[foo] a client connected")
-                  socket.onClose = { statusCode, reason ->
-                      println("[foo] a client disconnected")
-                  }
-              },
-              "bar" to { request: Request, socket: WebSocket ->
-                  println("[bar] a client connected")
-                  socket.onClose = { statusCode, reason ->
-                      println("[bar] a client disconnected")
-                  }
-              }
-            ))
+            val server = Server(router.handler())
             server.listen(9000)
         }
     }

@@ -99,11 +99,9 @@ val echoHandler = { request: Request, socket: WebSocket ->
 fun main(args: Array<String>) {
   var router = Router {
     get("/") { Response().text("Hello world") }
-    websocket("/ws", key = "echo")
-    // The goal is to eventually just be able to declare: websocket("/ws", echoHandler)
+    websocket("/ws", echoHandler)
   }
-  // A websocket() route simply links a /path to a socket handler
-  Server(kogHandler, websockets = mapOf("echo" to echoHandler)).listen(3000)
+  Server(router.handler()).listen(3000)
 }
 ```
 
@@ -453,12 +451,6 @@ fun main(args: Array<String>) {
 
 ## WebSockets
 
-I'm gradually hacking at the implementation until it's where I want it since Jetty's API
-is pretty weird and hard for me to figure out without meandering guesses.
-
-I eventually want to remove the key to socket-handler mapping which only
-exists since it's my latest effort to route upgrade requests to `HandlerList` instances.
-
 Here's an example websocket server that upgrades the websocket request if the client has a `session_id` cookie
 of value `"xxx"`:
 
@@ -468,25 +460,23 @@ import com.danneu.kog.Server
 import com.danneu.kog.Response
 import com.danneu.kog.WebSocket
 
-val socketHandler = { request: Request, socket: WebSocket ->
-    val id = java.util.UUID.randomUUID()
-    println("[$id] a client connected")
-    socket.onError = { cause: Throwable -> println("[$id] onError ${cause.message}") }
-    socket.onClose = { statusCode: Int, reason: String? -> println("[$id] onClose $statusCode ${reason ?: "<no reason>"}") }
-    socket.onText = { message: String -> println("[$id] onText $message") }
-}
-
 val authenticateUser: Middleware = { handler -> fun(req: Request): Response {
     req.cookies["session_id"] != "xxx" && return Response(Status.forbidden)
     return handler(req)
 }}
 
 val router = Router {
-    websocket("/", arrayOf(authenticateUser), key = "my-handler")
+    websocket("/", arrayOf(authenticateUser)) { request: Request, socket: WebSocket ->
+        val id = java.util.UUID.randomUUID()
+        println("[$id] a client connected")
+        socket.onError = { cause: Throwable -> println("[$id] onError ${cause.message}") }
+        socket.onClose = { statusCode: Int, reason: String? -> println("[$id] onClose $statusCode ${reason ?: "<no reason>"}") }
+        socket.onText = { message: String -> println("[$id] onText $message") }
+    }
 }
 
 fun main(args: Array<String>) {
-    Server(router.handler(), websockets = mapOf("my-handler" to socketHandler)).listen(3000)
+    Server(router.handler()).listen(3000)
 }
 ```
 

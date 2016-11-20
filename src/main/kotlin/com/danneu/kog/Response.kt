@@ -9,11 +9,13 @@ import java.io.InputStream
 typealias WebSocketAcceptor = (Request, WebSocket) -> Unit
 
 
-internal fun Response.Companion.websocket(key: String): Response {
-    return Response(Status.switchingProtocols).apply { this.webSocketKey = key }
+internal fun Response.Companion.websocket(key: String, accept: WebSocketAcceptor): Response {
+    return Response(Status.switchingProtocols).apply {
+        this.webSocket = key to accept
+    }
 }
 
-class Response(var status: Status = Status.ok, var body: ResponseBody = ResponseBody.None, var webSocketKey: String? = null) : HasHeaders<Response> {
+class Response(var status: Status = Status.ok, var body: ResponseBody = ResponseBody.None, var webSocket: Pair<String, WebSocketAcceptor>? = null) : HasHeaders<Response> {
 
     override var headers: MutableList<Pair<String, String>> = mutableListOf()
 

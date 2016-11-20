@@ -15,6 +15,8 @@ import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.eclipse.jetty.io.EofException
 import com.danneu.kog.adapters.Servlet
+import org.eclipse.jetty.server.handler.ContextHandler
+import org.eclipse.jetty.server.handler.HandlerCollection
 import org.eclipse.jetty.server.handler.HandlerList
 import org.eclipse.jetty.websocket.server.WebSocketServerFactory
 import org.eclipse.jetty.websocket.server.WebSocketHandler as JettyWebSocketHandler
@@ -22,14 +24,20 @@ import org.eclipse.jetty.server.Request as JettyServerRequest
 
 
 // Lift a kog handler into a jetty handler
-class JettyHandler(val handler: Handler) : AbstractHandler() {
+class JettyHandler(val handler: Handler, val insertContextHandler: (String, WebSocketAcceptor) -> Unit) : AbstractHandler() {
+    val installedSocketHandlers: MutableSet<String> = mutableSetOf()
+
     override fun handle(target: String, baseRequest: JettyServerRequest, servletRequest: HttpServletRequest, servletResponse: HttpServletResponse) {
         val request = Servlet.intoKogRequest(servletRequest)
         val response = handler(request)
-        if (response.status == Status.switchingProtocols && response.webSocketKey != null && WebSocketServerFactory().isUpgradeRequest(servletRequest, servletResponse)) {
+        if (response.status == Status.switchingProtocols && response.webSocket != null && WebSocketServerFactory().isUpgradeRequest(servletRequest, servletResponse)) {
+            val (key, accept) = response.webSocket!!
+            if (!installedSocketHandlers.contains(key)) {
+                installedSocketHandlers.add(key)
+                insertContextHandler(key, accept)
+            }
             // HACK: Store info in this Any bucket
             servletRequest.setAttribute("kog-request", request)
-            servletRequest.setAttribute("ws-handler", response.webSocketKey)
         } else {
             Servlet.updateServletResponse(servletResponse, response)
             baseRequest.isHandled = true
@@ -56,15 +64,21 @@ class Server(val handler: Handler = { Response(Status.notFound) }, val websocket
     fun listen(port: Int): Server {
         (jettyServer.connectors.first() as ServerConnector).port = port
 
-        val handlers = HandlerList()
+        val handlers = HandlerCollection(true)
 
-        handlers.addHandler(JettyHandler(Server.middleware()(handler)))
-
-        websockets.forEach { k, accept ->
-            handlers.addHandler(WebSocket.handler(k, accept))
+        val insertContextHandler: (key: String, accept: WebSocketAcceptor) -> Unit = { key, accept ->
+            val context = ContextHandler(key)
+            context.handler = WebSocket.handler(accept)
+            context.allowNullPathInfo = true  // don't redirect /foo to /foo/
+            context.server = jettyServer
+            context.start()
+            handlers.addHandler(context)
         }
 
+        handlers.addHandler(JettyHandler(Server.middleware()(handler), insertContextHandler))
+
         jettyServer.handler = handlers
+
         try {
             jettyServer.start()
             jettyServer.join()
