@@ -13,56 +13,19 @@ import org.eclipse.jetty.server.handler.AbstractHandler
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.util.thread.QueuedThreadPool
-import javax.servlet.http.HttpServlet
 import org.eclipse.jetty.io.EofException
+import com.danneu.kog.adapters.Servlet
 
-class MyServlet(val serviceMethod: (HttpServlet, HttpServletRequest, HttpServletResponse) -> Unit) : HttpServlet() {
-    override fun service(req: HttpServletRequest?, resp: HttpServletResponse?) {
-        //super.service(req, resp)
-        serviceMethod(this, req!!, resp!!)
 
-    }
-
-    companion object {
-        fun servlet(handler: Handler): MyServlet {
-            // Make blocking service method
-            val serviceMethod = { servlet: HttpServlet, servletReq: HttpServletRequest, servletRes: HttpServletResponse ->
-                val request = Request.fromServletRequest(servletReq)
-                val response = handler(request).finalize()
-                updateServletResponse(servletRes, response)
-            }
-            return MyServlet(serviceMethod)
-        }
-
-        fun updateServletResponse(servletResponse: HttpServletResponse, response: Response) {
-            servletResponse.status = response.status.code
-
-            // Set headers
-            for ((k, v) in response.headers.iterator()) {
-                servletResponse.addHeader(k, v)
-            }
-
-            // Some headers have special setters
-            val type = response.getHeader("Content-Type")
-            if (type != null) {
-                servletResponse.contentType = type
-            }
-
-            response.body.pipe(servletResponse.outputStream)
-        }
+// Lift a kog handler into a jetty handler
+class JettyHandler(val handler: Handler) : AbstractHandler() {
+    override fun handle(target: String, baseRequest: org.eclipse.jetty.server.Request, servletRequest: HttpServletRequest, servletResponse: HttpServletResponse) {
+        val request = Servlet.intoKogRequest(servletRequest)
+        val response = handler(request)
+        Servlet.updateServletResponse(servletResponse, response)
+        baseRequest.isHandled = true
     }
 }
-
-
-class JettyProxyHandler(val handler: Handler) : AbstractHandler() {
-    override fun handle(target: String?, baseRequest: org.eclipse.jetty.server.Request?, servletRequest: HttpServletRequest?, servletResponse: HttpServletResponse?) {
-        val request = Request.fromServletRequest(servletRequest!!)
-        val response = handler(request).finalize()
-        MyServlet.updateServletResponse(servletResponse!!, response)
-        baseRequest!!.isHandled = true
-    }
-}
-
 
 
 class Server(val handler: Handler) {
@@ -80,23 +43,13 @@ class Server(val handler: Handler) {
         server.addConnector(serverConnector)
         jettyServer = server
 
-        val wrapErrorHandler: Middleware = { handler ->
-            { req ->
-                try {
-                    handler(req)
-                } catch (ex: EofException) {
-                    // We can't do anything about early client hangup
-                    Response(Status.internalError).text("Internal Error")
-                } catch (ex: Exception) {
-                    System.err.print("Unhandled error: ")
-                    ex.printStackTrace(System.err)
-                    Response(Status.internalError).text("Internal Error")
-                }
-            }
-        }
+        val middleware: Middleware = composeMiddleware(
+          ::finalizer,
+          ::errorHandler
+        )
 
-        val proxiedHandler = JettyProxyHandler(wrapErrorHandler(handler))
-        jettyServer.handler = proxiedHandler
+        jettyServer.handler = JettyHandler(middleware(handler))
+
         try {
             jettyServer.start()
             jettyServer.join()
@@ -104,6 +57,32 @@ class Server(val handler: Handler) {
         } catch (ex: Exception) {
             jettyServer.stop()
             throw ex
+        }
+    }
+}
+
+
+// TOP-LEVEL SERVER MIDDLEWARE
+
+
+// Must be last middleware to touch the response
+fun finalizer(handler: Handler): Handler {
+    return { req -> handler(req).finalize() }
+}
+
+
+// Catches uncaught errors and lifts them into 500 responses
+fun errorHandler(handler: Handler): Handler {
+    return { req ->
+        try {
+            handler(req)
+        } catch (ex: EofException) {
+            // We can't do anything about early client hangup
+            Response(Status.internalError).text("Internal Error")
+        } catch (ex: Exception) {
+            System.err.print("Unhandled error: ")
+            ex.printStackTrace(System.err)
+            Response(Status.internalError).text("Internal Error")
         }
     }
 }

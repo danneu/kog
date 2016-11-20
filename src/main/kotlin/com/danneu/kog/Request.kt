@@ -6,10 +6,8 @@ import com.danneu.kog.json.Decoder
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.flatMap
 import java.nio.charset.Charset
-import java.util.Locale
 import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
-import javax.servlet.http.HttpServletRequest
 
 
 class Request(
@@ -66,59 +64,28 @@ class Request(
         ).map { pair -> pair.toString() }.joinToString("\n")
     }
 
-    companion object {
-        fun fromServletRequest(r: HttpServletRequest): Request {
-            return Request(
-                serverPort = r.serverPort,
-                serverName = r.serverName,
-                remoteAddr = r.remoteAddr,
-                href = r.requestURL.toString() + if (r.queryString != null) { "?" + r.queryString } else { "" },
-                queryString = r.queryString,
-                scheme = r.scheme,
-                method = Method.fromString(r.method.toLowerCase(Locale.ENGLISH)),
-                protocol = r.protocol,
-                headers = expandHeaders(r),
-                type = r.contentType?.split(";", limit = 1)?.get(0)?.toLowerCase(),
-                length = if (r.contentLength >= 0) { r.contentLength } else { null },
-                charset = r.characterEncoding?.toLowerCase(),
-                //sslClientCert = r.getAttribute("javax.servlet.request.X509Certificate").first()
-                body = r.inputStream,
-                path = r.pathInfo ?: "/"
-            )
-        }
-        fun toy(method: Method = Method.get, path: String = "/", queryString: String = "foo=bar"): Request {
-            return Request(
-              serverPort = 3000,
-              serverName = "name",
-              remoteAddr = "1.2.3.4",
-              href = path + if (queryString.isNotBlank()) { "?" + queryString } else { "" },
-              queryString = queryString,
-              scheme = "http",
-              method = method,
-              protocol = "http",
-              headers = mutableListOf(),
-              type = null,
-              length = 0,
-              charset = null,
-              body = ToyStream(),
-              path = path
-            )
-        }
-
-    }
+    companion object {}
 }
 
 
-fun expandHeaders(r: HttpServletRequest): MutableList<Pair<String, String>> {
-    val headers = mutableListOf<Pair<String, String>>()
-    for (name in r.headerNames.iterator()) {
-        for (value in r.getHeaders(name).iterator()) {
-            headers.add(Pair(name.toLowerCase(Locale.ENGLISH), value))
-        }
-    }
-    return headers
+fun Request.Companion.toy(method: Method = Method.get, path: String = "/", queryString: String = "foo=bar"): Request {
+    return Request(
+      serverPort = 3000,
+      serverName = "name",
+      remoteAddr = "1.2.3.4",
+      href = path + if (queryString.isNotBlank()) { "?" + queryString } else { "" },
+      queryString = queryString,
+      scheme = "http",
+      method = method,
+      protocol = "http",
+      headers = mutableListOf(),
+      type = null,
+      length = 0,
+      charset = null,
+      body = ToyStream(),
+      path = path
+    )
 }
-
 
 
 // Lets us mock a Request with a noop input stream
