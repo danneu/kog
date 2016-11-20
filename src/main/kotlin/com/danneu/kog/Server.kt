@@ -15,6 +15,10 @@ import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.eclipse.jetty.io.EofException
 import com.danneu.kog.adapters.Servlet
+import com.danneu.kog.WebSocketHandler
+import com.danneu.kog.handler
+import org.eclipse.jetty.server.handler.ContextHandler
+import org.eclipse.jetty.server.handler.HandlerList
 
 
 // Lift a kog handler into a jetty handler
@@ -28,27 +32,42 @@ class JettyHandler(val handler: Handler) : AbstractHandler() {
 }
 
 
-class Server(val handler: Handler) {
-    lateinit var jettyServer: org.eclipse.jetty.server.Server
+class Server(val handler: Handler = { Response(Status.notFound) }, val websocket: WebSocketHandler?) {
+    val jettyServer: org.eclipse.jetty.server.Server
 
-    fun listen(port: Int): Server {
+    init {
         val threadPool = QueuedThreadPool(50)
         val server = org.eclipse.jetty.server.Server(threadPool)
         val httpConfig = HttpConfiguration()
         httpConfig.sendServerVersion = false
         val httpFactory = HttpConnectionFactory(httpConfig)
         val serverConnector = ServerConnector(server, httpFactory)
-        serverConnector.port = port
         serverConnector.idleTimeout = 200000
         server.addConnector(serverConnector)
         jettyServer = server
+    }
 
-        val middleware: Middleware = composeMiddleware(
-          ::finalizer,
-          ::errorHandler
-        )
+    fun listen(port: Int): Server {
+        (jettyServer.connectors.first() as ServerConnector).port = port
 
-        jettyServer.handler = JettyHandler(middleware(handler))
+        val kogHandler = run {
+            val middleware: Middleware = composeMiddleware(
+              ::finalizer,
+              ::errorHandler
+            )
+            JettyHandler(middleware(handler))
+        }
+
+        val handlers = HandlerList().apply {
+            if (websocket == null) {
+                handlers = arrayOf(kogHandler)
+            } else {
+                val wsHandler = ContextHandler().apply { handler = websocket.handler() }
+                handlers = arrayOf(wsHandler, kogHandler)
+            }
+        }
+
+        jettyServer.handler = handlers
 
         try {
             jettyServer.start()
@@ -78,11 +97,11 @@ fun errorHandler(handler: Handler): Handler {
             handler(req)
         } catch (ex: EofException) {
             // We can't do anything about early client hangup
-            Response(Status.internalError).text("Internal Error")
+            Response(Status.internalError)
         } catch (ex: Exception) {
             System.err.print("Unhandled error: ")
             ex.printStackTrace(System.err)
-            Response(Status.internalError).text("Internal Error")
+            Response(Status.internalError)
         }
     }
 }

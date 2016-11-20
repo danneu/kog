@@ -62,6 +62,13 @@ class Response(var status: Status = Status.ok, var body: ResponseBody = Response
             this.none()
         }
 
+        // TODO: Only set this if response type is text/*
+        if (body is ResponseBody.None) {
+            if (status in setOf(Status.notFound, Status.internalError)) {
+                text(status.phrase)
+            }
+        }
+
         when (body.length) {
             null -> setHeader("Transfer-Encoding", "chunked")
             else -> setHeader("Content-Length", body.length.toString())

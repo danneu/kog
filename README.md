@@ -67,6 +67,45 @@ fun main(args: Array<String>) {
 }
 ```
 
+### WebSocket
+
+``` kotlin
+import com.danneu.kog.Handler
+import com.danneu.kog.Server
+import com.danneu.kog.Response
+import com.danneu.kog.WebSocketHandler
+import org.eclipse.jetty.websocket.api.Session
+
+val wsHandler = object : WebSocketHandler() {
+  override fun onConnect(session: Session) {
+    println("a client connected")
+  }
+  override fun onClose(statusCode: Int, reason: String?) {
+    println("a client disconnected")
+  }
+  override fun onText(message: String?) {
+    println("a client said '${message}'")
+  }
+}
+
+val kogHandler: Handler = { req ->
+  Response().text("That wasn't a websocket upgrade request")
+}
+
+fun main(args: Array<String>) {
+  Server(kogHandler, websocket = wsHandler).listen(3000)
+}
+```
+
+Browser:
+
+``` javascript
+var socket = new WebSocket("ws://localhost:3000")
+socket.emit("hello world")
+```
+
+Non-websocket requests get routed to your kog handler.
+
 ## Goals
 
 1. Simplicity
@@ -475,3 +514,6 @@ There's so much missing that it feels silly writing a TODO list, but here are so
   InputStream after it has already been consumed upstream. For example,
   maybe consuming it transitions it into some sort of consumed stream
   type so that you must handle that case?
+- Unify websocket handler with kog handler system. e.g. I want to be able to mount a websocket
+  handler at some arbitrary point in my middleware stack so that I can, for example, reuse my authentication
+  middleware for websocket requests.
