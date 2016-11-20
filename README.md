@@ -397,21 +397,30 @@ fun main(args: Array<String>) {
 
 There's so much missing that it feels silly writing a TODO list, but here are some short-term reminders.
 
-- Router should parse :params from the URL. e.g. `get("/users/:id") { req -> Response().text("User ${req.params.get(":id")}") }`
+- Router should parse :params from the URL.
+
+  ``` kotlin
+  get("/users/:id") { req -> 
+    Response().text("User ${req.params.get(":id")}") 
+  }
+  ```
+
   Bonus points for type safety.
 - Look into Kotlin's `inline` functionality for handlers.
 - I've started on an uncomitted decoder inspired by my JSON decoder for doing type-safe unwrapping of things
   like the request's `query` map. I'm trying to figure out the best way to continue generalizing the idea
   to short-circuit on bad input and validation failure:
 
-      // Example: GET /books?author=foo&title=bar
-      get("/books") { req ->
-        val (author, title) = D.tuple2(
-          D.get("author", D.string),
-          D.get("title", D.string)
-        )(req.query)
-        Response().text("author=$author, title=$title")
-      }
+  ``` kotlin
+  // Example: GET /books?author=foo&title=bar
+  get("/books") { req ->
+    val (author, title) = D.tuple2(
+      D.get("author", D.string),
+      D.get("title", D.string)
+    )(req.query)
+    Response().text("author=$author, title=$title")
+  }
+  ```
       
 - Use the same JSON library for encoding and decoding JSON. I currently use
   minimal-json for parsing and kotson for encoding.
