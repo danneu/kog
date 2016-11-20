@@ -1,8 +1,6 @@
 package com.danneu.kog.cookies
 
 import com.danneu.kog.urlDecode
-import org.joda.time.DateTime
-import java.net.URLDecoder
 
 
 //fun cookies(): Middleware = { handler -> { req ->

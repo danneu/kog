@@ -84,7 +84,7 @@ fun multipart(ttl: Long = 3600 * 1000, interval: Long = 10000): Middleware = { h
                 Pair(item.fieldName, savedUpload)
             }
         }.filterNotNull().forEach { pair ->
-            req.uploads.set(pair.first, pair.second)
+            req.uploads[pair.first] = pair.second
         }
 
         return handler(req)

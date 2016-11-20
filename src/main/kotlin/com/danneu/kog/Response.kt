@@ -90,6 +90,6 @@ class Response(var status: Status = Status.ok, var body: ResponseBody = Response
     // MISC
 
     override fun toString(): String {
-        return "Response (status=${status.code}, headers=${headers}, body=${this.body})"
+        return "Response (status=${status.code}, headers=$headers, body=$body)"
     }
 }

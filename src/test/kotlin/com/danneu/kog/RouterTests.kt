@@ -67,7 +67,7 @@ class RouterTests {
 
     @Test
     fun groupOnlyMiddleware() {
-        var tokens: MutableList<String> = mutableListOf()
+        val tokens: MutableList<String> = mutableListOf()
         val router = Router {
             group("/nest") {
                 use { handler -> { req ->
@@ -91,7 +91,7 @@ class RouterTests {
 
     @Test
     fun hitsManyMiddleware() {
-        var tokens: MutableList<String> = mutableListOf()
+        val tokens: MutableList<String> = mutableListOf()
         val router = Router {
             use { handler -> { req -> tokens.add("A"); handler(req) }}
             use { handler -> { req -> tokens.add("B"); handler(req) }}
