@@ -20,7 +20,7 @@ fun serveStatic(publicRootString: String, maxAge: Long = 0): Middleware = { hand
         val assetPath = publicRoot.resolve(File(request.path.drop(1)).toPath())
 
         // Ensure request path is downstream from public root
-        // Note: This is actually handled by Jetty which throws a 400 on a malicious path and klobb doesn't even
+        // Note: This is actually handled by Jetty which throws a 400 on a malicious path and kog doesn't even
         //       get the request. But I left this logic in anyways.
         if (!publicRoot.isParentOf(assetPath)) {
             return Response(Status.badRequest)

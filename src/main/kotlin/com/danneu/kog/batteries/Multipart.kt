@@ -73,13 +73,11 @@ fun multipart(ttl: Long = 3600 * 1000, interval: Long = 10000): Middleware = { h
 
         fileSequence(iter).map { item ->
             if (item.isFormField) {
-                // this is going to be the name of the uploaded file, not sure we need
-                //println("form field ${item.fieldName} with value ${Streams.asString(item.openStream())} detected")
-                //Pair(item.fieldName, Streams.asString(item.openStream(), "UTF-8"))
-                println("isFOrmFireld === ${Streams.asString(item.openStream(), "UTF-8")}")
+                // If we're in this branch, it means ${Streams.asString(item.openStream(), "utf-8")} is going
+                // to be the name of the uploaded file. Not sure we need this.
                 null
             } else {
-                val file = File.createTempFile("klobb-multipart-", null)
+                val file = File.createTempFile("kog-multipart-", null)
                 file.deleteOnExit()
                 fileSet.add(file)
                 item.openStream().copyTo(file.outputStream())

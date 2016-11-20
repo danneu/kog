@@ -85,6 +85,7 @@ class Server(val handler: Handler) {
                 try {
                     handler(req)
                 } catch (ex: EofException) {
+                    // We can't do anything about early client hangup
                     Response(Status.internalError).text("Internal Error")
                 } catch (ex: Exception) {
                     System.err.print("Unhandled error: ")
