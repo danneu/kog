@@ -44,7 +44,7 @@ class Group(val path: String, init: Group.() -> Unit = {}) {
     val wares = Stack<Middleware>()
     init { init() }
 
-    fun method(method: Method) = { path: String, handler: Handler ->
+    fun method(method: Method): (String, Handler) -> Unit = { path: String, handler: Handler ->
         val route = Route(method, toPath(this.path, path), handler)
         routes.push(route)
         stack.push(StackItem.Route(route))
