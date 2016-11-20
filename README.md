@@ -393,6 +393,39 @@ fun main(args: Array<String>) {
 }
 ```
 
+## Performance
+
+Just for fun, here's how kog's hello world benchmarks next to Node.js' hello world.
+
+Kog is written naively with no thought yet given to performance, so this is a testament to how amazing Jetty is
+since kog is doing more work than the Node.js example.
+
+Node.js:
+
+``` javascript
+require('http').createServer((req, res) => res.end('Hello, World!')).listen(3001)
+```
+
+Kog:
+
+``` kotlin
+class Main {
+  companion object {
+    @JvmStatic fun main(args: Array<String>) {
+      val handler: Handler = { Response().text("Hello, World!") }
+      Server(handler).listen(4000)
+    }
+  }
+}
+```
+
+Benching with 2 threads and 1,000 concurrent connections:
+
+| Platform | Benchmark                           | Requests     | Per Second     |
+| -------- | ----------------------------------- | ------------ | -------------- |
+| Node.js  | `wrk -c 1000 http://localhost:3000` | 120,000 reqs | 12,000 req/sec |
+| Kog      | `wrk -c 1000 http://localhost:4000` | 350,000 reqs | 35,000 req/sec |
+
 ## TODO
 
 There's so much missing that it feels silly writing a TODO list, but here are some short-term reminders.
