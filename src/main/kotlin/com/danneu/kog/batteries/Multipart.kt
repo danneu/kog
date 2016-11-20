@@ -65,11 +65,6 @@ fun multipart(ttl: Long = 3600 * 1000, interval: Long = 10000): Middleware = { h
             return handler(req)
         }
 
-        // Bail if prereqs missing
-        if (req.type == null) {
-            return handler(req)
-        }
-
         val upload = FileUpload()
         val iter: FileItemIterator = upload.getItemIterator(req.context())
 
