@@ -39,8 +39,13 @@ class Request(
 
     // TODO: At framework level, need to avoid reading stream when it is already being/been consumed or come up with a deliberate gameplan.
     fun <T : Any> json(decoder: Decoder<T>): Result<T, Exception> {
-        val bodyString = this.body.readBytes().toString(Charset.defaultCharset())
+        val bodyString = this.body.readBytes().toString(Charset.forName("UTF-8"))
         return Decoder.tryParse(bodyString).flatMap { jsonValue -> decoder(jsonValue) }
+    }
+
+    // TODO: Handle case where body stream is already read
+    val utf8: String by lazy {
+        body.readBytes().toString(Charset.forName("UTF-8"))
     }
 
     override fun toString(): String {
