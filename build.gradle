@@ -29,13 +29,11 @@ apply plugin: 'application'
 //apply plugin: 'org.junit.platform.gradle.plugin'
 
 
-//mainClassName = 'com.danneu.kog.Main'
-mainClassName = 'com.danneu.kog.Decoder'
+mainClassName = 'com.danneu.kog.Main'
 
 
 repositories {
     jcenter()
-    //mavenCentral()
     maven {
         url  "http://dl.bintray.com/kotlin/kotlin-eap-1.1"
     }
