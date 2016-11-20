@@ -562,7 +562,3 @@ There's so much missing that it feels silly writing a TODO list, but here are so
   InputStream after it has already been consumed upstream. For example,
   maybe consuming it transitions it into some sort of consumed stream
   type so that you must handle that case?
-- Unify websocket handler with kog handler system. e.g. I want to be able to mount a websocket
-  handler at some arbitrary point in my middleware stack so that I can, for example, reuse my authentication
-  middleware for websocket requests.
-- Get rid of the websocket handler strings keys, replace with something type-safe.
