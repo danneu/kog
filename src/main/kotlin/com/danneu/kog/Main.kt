@@ -10,8 +10,8 @@ class Main {
                       .setHeader("Access-Control-Allow-Origin", "*")
                       .text("Hello, World!")
                 }
-                get("/foo") { Response.websocket("foo") }
-                get("/bar") { Response.websocket("bar") }
+                websocket("/foo", key = "foo")
+                websocket("/bar", key = "bar")
             }
             val server = Server(router.handler(), websockets = mapOf(
               "foo" to { request: Request, socket: WebSocket ->

@@ -9,7 +9,7 @@ import java.io.InputStream
 typealias WebSocketAcceptor = (Request, WebSocket) -> Unit
 
 
-fun Response.Companion.websocket(key: String): Response {
+internal fun Response.Companion.websocket(key: String): Response {
     return Response(Status.switchingProtocols).apply { this.webSocketKey = key }
 }
 

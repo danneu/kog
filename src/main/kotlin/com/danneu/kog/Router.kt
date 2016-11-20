@@ -59,6 +59,10 @@ class Group(val path: String, init: Group.() -> Unit = {}) {
     fun delete(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.delete)(path, composeMiddleware(*mws), handler)
     fun options(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.options)(path, composeMiddleware(*mws), handler)
 
+    fun websocket(path: String, mws: Array<Middleware> = emptyArray(), key: String) = method(Method.get)(path, composeMiddleware(*mws), {
+        Response.websocket(key)
+    })
+
     fun group(path: String, subinit: Group.() -> Unit): Group {
         val group = Group(toPath(this.path, path), subinit)
         stack.push(StackItem.Group(group))

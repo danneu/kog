@@ -99,8 +99,10 @@ val echoHandler = { request: Request, socket: WebSocket ->
 fun main(args: Array<String>) {
   var router = Router {
     get("/") { Response().text("Hello world") }
-    get("/ws") { Response.websocket("echo") }
+    websocket("/ws", key = "echo")
+    // The goal is to eventually just be able to declare: websocket("/ws", echoHandler)
   }
+  // A websocket() route simply links a /path to a socket handler
   Server(kogHandler, websockets = mapOf("echo" to echoHandler)).listen(3000)
 }
 ```
@@ -480,7 +482,7 @@ val authenticateUser: Middleware = { handler -> fun(req: Request): Response {
 }}
 
 val router = Router {
-    get("/", arrayOf(authenticateUser)) { Response.websocket("my-handler") }
+    websocket("/", arrayOf(authenticateUser), key = "my-handler")
 }
 
 fun main(args: Array<String>) {
@@ -573,3 +575,4 @@ There's so much missing that it feels silly writing a TODO list, but here are so
 - Unify websocket handler with kog handler system. e.g. I want to be able to mount a websocket
   handler at some arbitrary point in my middleware stack so that I can, for example, reuse my authentication
   middleware for websocket requests.
+- Get rid of the websocket handler strings keys, replace with something type-safe.
