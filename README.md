@@ -429,3 +429,7 @@ There's so much missing that it feels silly writing a TODO list, but here are so
 - Finish enumerating Status.kt codes.
 - Investigate having a ./gradle/wrapper folder. Seems every Kotlin project has this which I assume packages the
   gradle build step dependency with the project instead of relying on system gradle?
+- Figure how to handle middleware/handlers trying to read the `request.body`
+  InputStream after it has already been consumed upstream. For example,
+  maybe consuming it transitions it into some sort of consumed stream
+  type so that you must handle that case?
