@@ -183,7 +183,7 @@ They both return a `kog.json.encode.JsonValue` object that you pass
 to `Response#json`.
 
 ``` kotlin
-import com.danneu.kog.json.encode.Encoder as JE
+import com.danneu.kog.json.Encoder as JE
 
 val handler: Handler = { req ->
   Response().json(JE.jsonObject("hello" to "world"))
@@ -191,7 +191,7 @@ val handler: Handler = { req ->
 ```
 
 ``` kotlin
-import com.danneu.kog.json.encode.Encoder as JE
+import com.danneu.kog.json.Encoder as JE
 
 val handler: Handler = { req ->
   Response().json(JE.jsonArray("a", "b", "c"))
@@ -201,7 +201,7 @@ val handler: Handler = { req ->
 ```
 
 ``` kotlin
-import com.danneu.kog.json.encode.Encoder as JE
+import com.danneu.kog.json.Encoder as JE
 
 val handler: Handler = { req ->
   Response().json(JE.jsonObject(
@@ -226,8 +226,8 @@ Check out <https://github.com/kittinunf/Result> for more info about the
 Result object.
 
 ``` kotlin
-import com.danneu.kog.json.decode.Decoder as JD
-import com.danneu.kog.json.encode.Encoder as JE
+import com.danneu.kog.json.Decoder as JD
+import com.danneu.kog.json.Encoder as JE
 
 // example request payload: [1, 2, 3]
 val handler = { request ->
@@ -245,8 +245,8 @@ We can use `Result#getOrElse()` to rewrite the previous example so that
 invalid user-input will defaults to an empty list of numbers.
 
 ``` kotlin
-import com.danneu.kog.json.decode.Decoder as JD
-import com.danneu.kog.json.encode.Encoder as JE
+import com.danneu.kog.json.Decoder as JD
+import com.danneu.kog.json.Encoder as JE
 
 // example request payload: [1, 2, 3]
 val handler = { req ->
@@ -259,8 +259,8 @@ This authentication handler parses the username/password combo from
 the request's JSON body:
 
 ``` kotlin
-import com.danneu.kog.json.decode.Decoder as JD
-import com.danneu.kog.json.encode.Encoder as JE
+import com.danneu.kog.json.Decoder as JD
+import com.danneu.kog.json.Encoder as JE
 
 // example request payload: {"user": {"uname": "chuck"}, "password": "secret"}
 val handler = { request ->
