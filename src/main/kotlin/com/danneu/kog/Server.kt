@@ -30,7 +30,7 @@ class JettyHandler(val handler: Handler) : AbstractHandler() {
 }
 
 
-class Server(val handler: Handler = { Response(Status.notFound) }, val websocket: (() -> WebSocket)?) {
+class Server(val handler: Handler = { Response(Status.notFound) }, val websocket: ((WebSocket) -> Unit)?) {
     val jettyServer: org.eclipse.jetty.server.Server
 
     init {

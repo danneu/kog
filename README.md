@@ -77,20 +77,23 @@ import com.danneu.kog.Handler
 import com.danneu.kog.Server
 import com.danneu.kog.Response
 import com.danneu.kog.WebSocket
-import org.eclipse.jetty.websocket.api.Session
 
-val wsHandler: () -> WebSocket = {
-  object : WebSocket() {
-    override fun onConnect(session: Session) {
-      println("a client connected")
+fun socketHandler(socket: WebSocket) {
+    val id = java.util.UUID.randomUUID()
+    println("[$id] a client connected")
+
+    socket.onError = { cause: Throwable ->
+        println("[$id] onError ${cause.message}")
     }
-    override fun onClose(statusCode: Int, reason: String?) {
-      println("a client disconnected")
+
+    socket.onText = { message: String ->
+        println("[$id] onText $message")
+        socket.session.remote.sendString(message)
     }
-    override fun onText(message: String?) {
-      println("a client said '${message}'")
+
+    socket.onClose = { statusCode: Int, reason: String? ->
+        println("[$id] onClose $statusCode ${reason ?: "<no reason>"}")
     }
-  }
 }
 
 val kogHandler: Handler = { req ->
@@ -98,7 +101,7 @@ val kogHandler: Handler = { req ->
 }
 
 fun main(args: Array<String>) {
-  Server(kogHandler, websocket = wsHandler).listen(3000)
+  Server(kogHandler, websocket = ::socketHandler).listen(3000)
 }
 ```
 
@@ -111,8 +114,8 @@ socket.onopen = function () {
   socket.emit('hello world')
 }
 
-socket.onmessage = function (msg) {
-  console.log('server said:', msg)
+socket.onmessage = function (payload) {
+  console.log('server said:', payload.data)
 }
 ```
 
