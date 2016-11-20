@@ -490,7 +490,7 @@ since kog is doing more work than the Node.js example.
 Node.js:
 
 ``` javascript
-require('http').createServer((req, res) => res.end('Hello, World!')).listen(3001)
+require('http').createServer((req, res) => res.end('Hello, World!')).listen(3000)
 ```
 
 Kog:
@@ -499,8 +499,7 @@ Kog:
 class Main {
   companion object {
     @JvmStatic fun main(args: Array<String>) {
-      val handler: Handler = { Response().text("Hello, World!") }
-      Server(handler).listen(4000)
+      Server({ Response().text("Hello, World!") }).listen(9000)
     }
   }
 }
@@ -511,7 +510,7 @@ Benching with 2 threads and 1,000 concurrent connections:
 | Platform | Benchmark                           | Requests     | Per Second     |
 | -------- | ----------------------------------- | ------------ | -------------- |
 | Node.js  | `wrk -c 1000 http://localhost:3000` | 120,000 reqs | 12,000 req/sec |
-| Kog      | `wrk -c 1000 http://localhost:4000` | 350,000 reqs | 35,000 req/sec |
+| Kog      | `wrk -c 1000 http://localhost:9000` | 350,000 reqs | 35,000 req/sec |
 
 ## TODO
 
