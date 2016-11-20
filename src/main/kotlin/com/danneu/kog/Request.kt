@@ -75,7 +75,7 @@ class Request(
                 href = r.requestURL.toString() + if (r.queryString != null) { "?" + r.queryString } else { "" },
                 queryString = r.queryString,
                 scheme = r.scheme,
-                method = Method.Companion.fromString(r.method.toLowerCase(Locale.ENGLISH)),
+                method = Method.fromString(r.method.toLowerCase(Locale.ENGLISH)),
                 protocol = r.protocol,
                 headers = expandHeaders(r),
                 type = r.contentType?.split(";", limit = 1)?.get(0)?.toLowerCase(),
