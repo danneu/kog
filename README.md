@@ -69,22 +69,27 @@ fun main(args: Array<String>) {
 
 ### WebSocket
 
+This example starts a websocket server that echoes back
+to clients whatever they send the server.
+
 ``` kotlin
 import com.danneu.kog.Handler
 import com.danneu.kog.Server
 import com.danneu.kog.Response
-import com.danneu.kog.WebSocketHandler
+import com.danneu.kog.WebSocket
 import org.eclipse.jetty.websocket.api.Session
 
-val wsHandler = object : WebSocketHandler() {
-  override fun onConnect(session: Session) {
-    println("a client connected")
-  }
-  override fun onClose(statusCode: Int, reason: String?) {
-    println("a client disconnected")
-  }
-  override fun onText(message: String?) {
-    println("a client said '${message}'")
+val wsHandler: () -> WebSocket = {
+  object : WebSocket() {
+    override fun onConnect(session: Session) {
+      println("a client connected")
+    }
+    override fun onClose(statusCode: Int, reason: String?) {
+      println("a client disconnected")
+    }
+    override fun onText(message: String?) {
+      println("a client said '${message}'")
+    }
   }
 }
 
@@ -101,7 +106,14 @@ Browser:
 
 ``` javascript
 var socket = new WebSocket("ws://localhost:3000")
-socket.emit("hello world")
+
+socket.onopen = function () {
+  socket.emit('hello world')
+}
+
+socket.onmessage = function (msg) {
+  console.log('server said:', msg)
+}
 ```
 
 Non-websocket requests get routed to your kog handler.

@@ -15,8 +15,6 @@ import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.eclipse.jetty.io.EofException
 import com.danneu.kog.adapters.Servlet
-import com.danneu.kog.WebSocketHandler
-import com.danneu.kog.handler
 import org.eclipse.jetty.server.handler.ContextHandler
 import org.eclipse.jetty.server.handler.HandlerList
 
@@ -32,7 +30,7 @@ class JettyHandler(val handler: Handler) : AbstractHandler() {
 }
 
 
-class Server(val handler: Handler = { Response(Status.notFound) }, val websocket: WebSocketHandler?) {
+class Server(val handler: Handler = { Response(Status.notFound) }, val websocket: (() -> WebSocket)?) {
     val jettyServer: org.eclipse.jetty.server.Server
 
     init {
@@ -62,7 +60,7 @@ class Server(val handler: Handler = { Response(Status.notFound) }, val websocket
             if (websocket == null) {
                 handlers = arrayOf(kogHandler)
             } else {
-                val wsHandler = ContextHandler().apply { handler = websocket.handler() }
+                val wsHandler = ContextHandler().apply { handler = WebSocket.handler(websocket) }
                 handlers = arrayOf(wsHandler, kogHandler)
             }
         }
