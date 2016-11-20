@@ -44,20 +44,20 @@ class Group(val path: String, init: Group.() -> Unit = {}) {
     val wares = Stack<Middleware>()
     init { init() }
 
-    fun method(method: Method): (String, Handler) -> Unit = { path: String, handler: Handler ->
-        val route = Route(method, toPath(this.path, path), handler)
+    fun method(method: Method): (String, Middleware, Handler) -> Unit = { path: String, middleware: Middleware, handler: Handler ->
+        val route = Route(method, toPath(this.path, path), middleware(handler))
         routes.push(route)
         stack.push(StackItem.Route(route))
         wares.push(route.middleware())
     }
 
-    fun get(path: String, handler: Handler) = method(Method.get)(path, handler)
-    fun put(path: String, handler: Handler) = method(Method.put)(path, handler)
-    fun post(path: String, handler: Handler) = method(Method.post)(path, handler)
-    fun head(path: String, handler: Handler) = method(Method.head)(path, handler)
-    fun patch(path: String, handler: Handler) = method(Method.patch)(path, handler)
-    fun delete(path: String, handler: Handler) = method(Method.delete)(path, handler)
-    fun options(path: String, handler: Handler) = method(Method.options)(path, handler)
+    fun get(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.get)(path, composeMiddleware(*mws), handler)
+    fun put(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.put)(path, composeMiddleware(*mws), handler)
+    fun post(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.post)(path, composeMiddleware(*mws), handler)
+    fun head(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.head)(path, composeMiddleware(*mws), handler)
+    fun patch(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.patch)(path, composeMiddleware(*mws), handler)
+    fun delete(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.delete)(path, composeMiddleware(*mws), handler)
+    fun options(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.options)(path, composeMiddleware(*mws), handler)
 
     fun group(path: String, subinit: Group.() -> Unit): Group {
         val group = Group(toPath(this.path, path), subinit)

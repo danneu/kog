@@ -353,6 +353,8 @@ val router = Router {
     use(ensureAdmin()) // only runs if routes in this group are hit
     get("/") { Response().text("admin panel") }
   }
+  // routes take an optional array of route-level middleware
+  get("/foo", arrayOf(mw1, mw2, mw3)) { Response() }
 }
 
 fun main(args: Array<String>) {
@@ -450,7 +452,9 @@ fun main(args: Array<String>) {
 ## WebSockets
 
 I'm gradually hacking at the implementation until it's where I want it since Jetty's API
-is pretty weird. I eventually want to remove the key to socket-handler mapping which only
+is pretty weird and hard for me to figure out without meandering guesses.
+
+I eventually want to remove the key to socket-handler mapping which only
 exists since it's my latest effort to route upgrade requests to `HandlerList` instances.
 
 Here's an example websocket server that upgrades the websocket request if the client has a `session_id` cookie
@@ -476,8 +480,7 @@ val authenticateUser: Middleware = { handler -> fun(req: Request): Response {
 }}
 
 val router = Router {
-    use(authenticateUser)
-    get("/") { Response.websocket("my-handler") }
+    get("/", arrayOf(authenticateUser)) { Response.websocket("my-handler") }
 }
 
 fun main(args: Array<String>) {
