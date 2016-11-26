@@ -146,7 +146,7 @@ class RouterTests {
     fun arrayRouteMiddleware() {
         var tokens: MutableList<String> = mutableListOf()
         val router = Router {
-            get("/", arrayOf(token(tokens, "A"), token(tokens, "B"))) { Response() }
+            get("/", token(tokens, "A"), token(tokens, "B")) { Response() }
         }
         val response = router(Request.toy())
         assertTrue("all array middleware run", tokens == listOf("A", "B"))
