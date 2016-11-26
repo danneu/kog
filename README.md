@@ -354,13 +354,24 @@ val router = Router {
     // use(ensureAdmin())          // <-- .use() immediately inside a group has the same effect
     get("/") { Response().text("admin panel") }
   }
-  // routes takes optional route-level middleware varargs
+  // routes take optional route-level middleware varargs
   get("/foo", mw1, mw2, mw3) { Response() }
 }
 
 fun main(args: Array<String>) {
   Server(router.handler()).listen(3000)
 }
+```
+
+Router methods accept optional middleware varargs:
+
+``` kotlin
+use(mw1())
+use(mw1(), mw2(), mw3())
+get("/") { Response() }
+get("/", mw1(), mw2()) { Response() }
+group("/foo") { ... }
+group("/foo", mw1(), mw2()) { ... }
 ```
 
 ## Development Logger (Middleware)
