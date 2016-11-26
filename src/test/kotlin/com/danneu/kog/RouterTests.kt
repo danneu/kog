@@ -2,6 +2,26 @@ package com.danneu.kog
 
 import org.junit.Assert.*
 import org.junit.Test
+import java.util.Stack
+
+
+// generates middleware for testing
+class Tokenware() {
+    private val stack = Stack<String>()
+
+    fun list() = stack.toList()
+    fun clear() = stack.clear()
+    fun isEmpty() = stack.isEmpty()
+    fun add(string: String) { stack.push(string) }
+
+    // returns middleware that mutates the stack
+    fun mw(string: String): Middleware {
+        return { handler -> { request ->
+            stack.push(string)
+            handler(request)
+        }}
+    }
+}
 
 class RouterTests {
     @Test
@@ -67,7 +87,7 @@ class RouterTests {
 
     @Test
     fun groupOnlyMiddleware() {
-        val tokens: MutableList<String> = mutableListOf()
+        val tokens = Tokenware()
         val router = Router {
             group("/nest") {
                 use { handler -> { req ->
@@ -83,15 +103,15 @@ class RouterTests {
             get("/outside") { Response().text("ok")}
         }
         router(Request.toy(path = "/nest"))
-        assertTrue("middleware fires in group", tokens == listOf("A"))
+        assertTrue("middleware fires in group", tokens.list() == listOf("A"))
 
         router(Request.toy(path = "/outside"))
-        assertTrue("outer route hits middleware outside of group", tokens == listOf("A", "B"))
+        assertTrue("outer route hits middleware outside of group", tokens.list() == listOf("A", "B"))
     }
 
     @Test
     fun hitsManyMiddleware() {
-        val tokens: MutableList<String> = mutableListOf()
+        val tokens = Tokenware()
         val router = Router {
             use { handler -> { req -> tokens.add("A"); handler(req) }}
             use { handler -> { req -> tokens.add("B"); handler(req) }}
@@ -100,7 +120,7 @@ class RouterTests {
             use { handler -> { req -> tokens.add("D"); handler(req) }}
         }
         router(Request.toy(path = "/"))
-        assertTrue("hits multiple middleware before short-circuiting", tokens == listOf("A", "B", "C"))
+        assertTrue("hits multiple middleware before short-circuiting", tokens.list() == listOf("A", "B", "C"))
 
         tokens.clear()
         router(Request.toy(path = "/not-found"))
@@ -109,7 +129,6 @@ class RouterTests {
 
     @Test
     fun deepGroup() {
-        var tokens: MutableList<String> = mutableListOf()
         val router = Router {
             group("/a") {
                 group("/b") {
@@ -125,7 +144,6 @@ class RouterTests {
 
     @Test
     fun otherMethods() {
-        var tokens: MutableList<String> = mutableListOf()
         val router = Router {
             post("/a/b/c") { Response() }
             options("/d/e/f") { Response() }
@@ -137,27 +155,22 @@ class RouterTests {
         assertTrue("OPTIONS works", response2.status == Status.ok)
     }
 
-    fun token(tokens: MutableList<String>, name: String): Middleware = { handler -> { req ->
-        tokens.add(name)
-        handler(req)
-    }}
-
     @Test
     fun varargRouteMiddleware() {
-        var tokens: MutableList<String> = mutableListOf()
+        val tokens = Tokenware()
         val router = Router {
-            get("/", token(tokens, "A"), token(tokens, "B")) { Response() }
+            get("/", tokens.mw("A"), tokens.mw("B")) { Response() }
         }
         val response = router(Request.toy())
-        assertTrue("all array middleware run", tokens == listOf("A", "B"))
+        assertTrue("all array middleware run", tokens.list() == listOf("A", "B"))
     }
 
     @Test
     fun varargGroupMiddleware() {
-        var tokens: MutableList<String> = mutableListOf()
+        val tokens = Tokenware()
         val router = Router {
-            group("/", token(tokens, "A"), token(tokens, "B")) {
-                use(token(tokens, "C"), token(tokens, "D"))
+            group("/", tokens.mw("A"), tokens.mw("B")) {
+                use(tokens.mw("C"), tokens.mw("D"))
                 get("/") { Response() }
             }
             get("/after") { Response() }
@@ -165,11 +178,11 @@ class RouterTests {
 
         val response1 = router(Request.toy(path = "/after"))
         assertTrue("route is hit", response1.status == Status.ok)
-        assertTrue("no middleware was hit", tokens == listOf<String>())
+        assertTrue("no middleware was hit", tokens.list() == listOf<String>())
 
         val response2 = router(Request.toy())
         assertTrue("route is hit", response2.status == Status.ok)
-        assertTrue("all array middleware run", tokens == listOf("A", "B", "C", "D"))
+        assertTrue("all array middleware run", tokens.list() == listOf("A", "B", "C", "D"))
     }
 }
 
