@@ -1,7 +1,7 @@
 
 # kog [![Kotlin](https://img.shields.io/badge/Kotlin-1.1.1-orange.svg)](https://kotlinlang.org/)
 
-A simple, experimental, vapor-ware Kotlin web framework inspired by Clojure's Ring.
+A simple, experimental Kotlin web framework inspired by Clojure's Ring.
 
 Built on top of [Jetty](http://www.eclipse.org/jetty/). 
 
@@ -353,8 +353,8 @@ val router = Router {
     use(ensureAdmin()) // only runs if routes in this group are hit
     get("/") { Response().text("admin panel") }
   }
-  // routes take an optional array of route-level middleware
-  get("/foo", arrayOf(mw1, mw2, mw3)) { Response() }
+  // routes takes optional route-level middleware varargs
+  get("/foo", mw1, mw2, mw3) { Response() }
 }
 
 fun main(args: Array<String>) {
@@ -466,7 +466,7 @@ val authenticateUser: Middleware = { handler -> fun(req: Request): Response {
 }}
 
 val router = Router {
-    websocket("/", arrayOf(authenticateUser)) { request: Request, socket: WebSocket ->
+    websocket("/", authenticateUser) { request: Request, socket: WebSocket ->
         val id = java.util.UUID.randomUUID()
         println("[$id] a client connected")
         socket.onError = { cause: Throwable -> println("[$id] onError ${cause.message}") }

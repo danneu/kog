@@ -51,15 +51,15 @@ class Group(val path: String, init: Group.() -> Unit = {}) {
         wares.push(route.middleware())
     }
 
-    fun get(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.get)(path, composeMiddleware(*mws), handler)
-    fun put(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.put)(path, composeMiddleware(*mws), handler)
-    fun post(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.post)(path, composeMiddleware(*mws), handler)
-    fun head(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.head)(path, composeMiddleware(*mws), handler)
-    fun patch(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.patch)(path, composeMiddleware(*mws), handler)
-    fun delete(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.delete)(path, composeMiddleware(*mws), handler)
-    fun options(path: String, mws: Array<Middleware> = emptyArray(), handler: Handler) = method(Method.options)(path, composeMiddleware(*mws), handler)
+    fun get(path: String, vararg mws: Middleware, handler: Handler) = method(Method.get)(path, composeMiddleware(*mws), handler)
+    fun put(path: String, vararg mws: Middleware, handler: Handler) = method(Method.put)(path, composeMiddleware(*mws), handler)
+    fun post(path: String, vararg mws: Middleware, handler: Handler) = method(Method.post)(path, composeMiddleware(*mws), handler)
+    fun head(path: String, vararg mws: Middleware, handler: Handler) = method(Method.head)(path, composeMiddleware(*mws), handler)
+    fun patch(path: String, vararg mws: Middleware, handler: Handler) = method(Method.patch)(path, composeMiddleware(*mws), handler)
+    fun delete(path: String, vararg mws: Middleware, handler: Handler) = method(Method.delete)(path, composeMiddleware(*mws), handler)
+    fun options(path: String, vararg mws: Middleware, handler: Handler) = method(Method.options)(path, composeMiddleware(*mws), handler)
 
-    fun websocket(path: String, mws: Array<Middleware> = emptyArray(), accept: WebSocketAcceptor) = method(Method.get)(path, composeMiddleware(*mws), {
+    fun websocket(path: String, vararg mws: Middleware, accept: WebSocketAcceptor) = method(Method.get)(path, composeMiddleware(*mws), {
         Response.websocket(path, accept)
     })
 
