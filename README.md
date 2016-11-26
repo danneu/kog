@@ -470,9 +470,9 @@ import com.danneu.kog.Server
 import com.danneu.kog.Response
 import com.danneu.kog.WebSocket
 
-val authenticateUser: Middleware = { handler -> fun(req: Request): Response {
-    req.cookies["session_id"] != "xxx" && return Response(Status.forbidden)
-    return handler(req)
+val authenticateUser: Middleware = { handler -> handler@ { req ->
+    req.cookies["session_id"] != "xxx" && return@handler Response(Status.forbidden)
+    handler(req)
 }}
 
 val router = Router {
