@@ -150,7 +150,8 @@ Response().text("Hello")                       // text/plain
 Response().html("<h1>Hello</h1>")              // text/html
 Response().json(JE.jsonObject("number" to 42)) // application/json {"number": 42}
 Response().json(JE.jsonArray(1, 2, 3))         // application/json [1, 2, 3]
-Response().stream(File("video.mp4"), "video/mp4")
+Response().file(File("video.mp4"))                 // video/mp4 (determines response headers from File metadata)
+Response().stream(File("video.mp4"), "video/mp4")  // video/mp4
 Response().setHeader("Content-Type", "application/json")
 Response().appendHeader("X-Fruit", "orange")
 Response().redirect("/")                           // 302 redirect
@@ -437,17 +438,13 @@ val router: Router = Router {
           )
         ))
     }
-    post("/upload") { req ->
+    post("/upload", multipart()) {
         Response().text("Upload: ${req.uploads["myFile"]}")
     }
 }
 
 fun main(args: Array<String>) {
-    val middleware = composeMiddleware(
-      multipart()
-    )
-    val server = Server(middleware(router.handler()))
-    server.listen(9000)
+    Server(router.handler()).listen(9000)
 }
 ```
 
@@ -563,3 +560,5 @@ There's so much missing that it feels silly writing a TODO list, but here are so
   InputStream after it has already been consumed upstream. For example,
   maybe consuming it transitions it into some sort of consumed stream
   type so that you must handle that case?
+- When Kotlin's async/await is stable, I'd like to experiment with migrating
+  to an asynchronous abstraction instead of the current n-thread approach.
