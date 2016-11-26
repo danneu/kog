@@ -373,6 +373,8 @@ import com.danneu.kog.batteries.logger
 Server(logger(handler)).listen()
 ```
 
+![logger screenshot](https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/_5c9x02w.png)
+
 ## Static File Serving (Middleware)
 
 The serveStatic middleware checks the `request.path` against a directory
