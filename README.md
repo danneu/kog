@@ -350,8 +350,8 @@ val router = Router {
     get("/") { Response().text("list users") }
     get("/:id") { Response().text("show user") }
   }
-  group("/admin") {
-    use(ensureAdmin()) // only runs if routes in this group are hit
+  group("/admin", ensureAdmin()) { // ensureAdmin() only runs if routes in this group are hit
+    // use(ensureAdmin())          // <-- .use() immediately inside a group has the same effect
     get("/") { Response().text("admin panel") }
   }
   // routes takes optional route-level middleware varargs

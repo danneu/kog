@@ -143,13 +143,33 @@ class RouterTests {
     }}
 
     @Test
-    fun arrayRouteMiddleware() {
+    fun varargRouteMiddleware() {
         var tokens: MutableList<String> = mutableListOf()
         val router = Router {
             get("/", token(tokens, "A"), token(tokens, "B")) { Response() }
         }
         val response = router(Request.toy())
         assertTrue("all array middleware run", tokens == listOf("A", "B"))
+    }
+
+    @Test
+    fun varargGroupMiddleware() {
+        var tokens: MutableList<String> = mutableListOf()
+        val router = Router {
+            group("/", token(tokens, "A"), token(tokens, "B")) {
+                use(token(tokens, "C"), token(tokens, "D"))
+                get("/") { Response() }
+            }
+            get("/after") { Response() }
+        }
+
+        val response1 = router(Request.toy(path = "/after"))
+        assertTrue("route is hit", response1.status == Status.ok)
+        assertTrue("no middleware was hit", tokens == listOf<String>())
+
+        val response2 = router(Request.toy())
+        assertTrue("route is hit", response2.status == Status.ok)
+        assertTrue("all array middleware run", tokens == listOf("A", "B", "C", "D"))
     }
 }
 

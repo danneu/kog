@@ -38,11 +38,17 @@ sealed class StackItem {
 }
 
 
-class Group(val path: String, init: Group.() -> Unit = {}) {
+class Group(val path: String, mws: Array<out Middleware> = emptyArray(), init: Group.() -> Unit = {}) {
     val routes = Stack<Route>()
     val stack = Stack<StackItem>()
     val wares = Stack<Middleware>()
-    init { init() }
+
+    init {
+        for (mw in mws) {
+            use(mw)
+        }
+        init()
+    }
 
     fun method(method: Method): (String, Middleware, Handler) -> Unit = { path: String, middleware: Middleware, handler: Handler ->
         val route = Route(method, toPath(this.path, path), middleware(handler))
@@ -63,8 +69,8 @@ class Group(val path: String, init: Group.() -> Unit = {}) {
         Response.websocket(path, accept)
     })
 
-    fun group(path: String, subinit: Group.() -> Unit): Group {
-        val group = Group(toPath(this.path, path), subinit)
+    fun group(path: String, vararg mws: Middleware, subinit: Group.() -> Unit): Group {
+        val group = Group(toPath(this.path, path), mws, subinit)
         stack.push(StackItem.Group(group))
         wares.push({ handler -> { req ->
             if (group.matches(req)) {
@@ -86,6 +92,12 @@ class Group(val path: String, init: Group.() -> Unit = {}) {
 
     fun use(middleware: Middleware) {
         wares.push(middleware)
+    }
+
+    fun use(vararg middlewares: Middleware) {
+        for (middleware in middlewares) {
+            wares.push(middleware)
+        }
     }
 
     fun matches(request: Request): Boolean {
