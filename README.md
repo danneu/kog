@@ -566,7 +566,7 @@ val router: Router = Router {
             </form>
         """)
     }
-    post("/upload", multipart(Whitelist.only(setOf("file1")))) handler@ { req ->
+    post("/upload", multipart(Whitelist.only(setOf("file1")))) { req ->
         val upload = req.uploads["file1"]
         Response().text("You uploaded ${upload?.length ?: "--"} bytes")
     }
