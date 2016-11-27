@@ -24,7 +24,7 @@ fun handler(req: Request): Response {
   return Response().html("<h1>Hello world</h1>")
 }
 
-// or, even better:
+// or use the Handler typealias:
 
 val handler: Handler = { req ->
   Response().html("<h1>Hello world</h1>") 
@@ -118,8 +118,6 @@ socket.onmessage = function (payload) {
   console.log('server said:', payload.data)
 }
 ```
-
-Non-websocket requests get routed to your kog handler.
 
 ## Goals
 
@@ -332,6 +330,9 @@ val handler = { request ->
 ## Router
 
 Out of the box, kog comes with a simple but naive router.
+
+Kog's router isn't special. It's just a DSL that spits out a handler function. 
+It's optional and replaceable.
 
 ``` kotlin
 import com.danneu.kog.Request
