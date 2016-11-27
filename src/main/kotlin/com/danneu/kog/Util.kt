@@ -1,6 +1,7 @@
 package com.danneu.kog
 
 import java.net.URLDecoder
+import java.net.URLEncoder
 
 
 // Decodes www-form-urlencoded. Doesn't do any nesting for now.
@@ -14,8 +15,28 @@ fun formDecode(encoded: String?): Map<String, String> {
 }
 
 
-fun urlDecode(str: String, encoding: String = "UTF-8"): String {
-    return URLDecoder.decode(str, encoding)
+fun urlDecode(string: String, encoding: String = "utf-8"): String {
+    return URLDecoder.decode(string, encoding)
 }
 
+// Note: space becomes "+"
+fun urlEncode(string: String): String {
+    return URLEncoder.encode(string, "utf-8")
+}
+
+// Note: space becomes "%20"
+fun percentEncode(string: String): String {
+    return URLEncoder.encode(string, "utf-8").replace("+", "%20")
+}
+
+fun percentDecode(string: String): String {
+    return URLDecoder.decode(string, "utf-8")
+}
+
+
 fun <K, V> Map<K, V>.mutableCopy(): MutableMap<K, V> = java.util.HashMap(this)
+
+
+
+
+

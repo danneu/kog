@@ -17,7 +17,6 @@ import org.eclipse.jetty.io.EofException
 import com.danneu.kog.adapters.Servlet
 import org.eclipse.jetty.server.handler.ContextHandler
 import org.eclipse.jetty.server.handler.HandlerCollection
-import org.eclipse.jetty.server.handler.HandlerList
 import org.eclipse.jetty.websocket.server.WebSocketServerFactory
 import org.eclipse.jetty.websocket.server.WebSocketHandler as JettyWebSocketHandler
 import org.eclipse.jetty.server.Request as JettyServerRequest
@@ -96,13 +95,13 @@ class Server(val handler: Handler = { Response(Status.notFound) }, val websocket
 // MIDDLEWARE
 
 
-// The server's stack of top-level middleware. This should always
-// wrap the user's final handler.
+// The server's stack of top-level middleware. This should always wrap the user's final handler.
 fun Server.Companion.middleware(): Middleware = composeMiddleware(
     // First middleware in this list touches request first and response last
     wrapHead(),
     wrapFinalize(),
-    wrapErrorHandler()
+    wrapErrorHandler(),
+    wrapCookies()
 )
 
 
@@ -146,3 +145,27 @@ internal fun Server.Companion.wrapErrorHandler(): Middleware = { handler -> { re
         Response(Status.internalError)
     }
 }}
+
+
+// TODO: Doesn't really make sense as battery middleware at the moment since request cookies are currently lazy-parsed and
+// it's silly to need middleware just to flush the Request#cookies data-structure. But I'm going to leave
+// this here as a stub since in the future I'd like to lean more heavily on middleware. Though right now
+// I'm not sure how to do that without turning everything into MutableMap<String, Any?> which I don't want to do.
+//
+// Til I think of something better, this middleware is part of the default Server#middleware stack
+// so that the user doesn't need to plug it since the distinction is weak.
+internal fun Server.Companion.wrapCookies(): Middleware {
+    fun cookieResponse(response: Response): Response {
+        for ((name, cookie) in response.cookies.iterator()) {
+            response.appendHeader("Set-Cookie", cookie.serialize(name))
+        }
+        return response
+    }
+
+    return { handler -> { request -> cookieResponse(handler(request)) }}
+}
+
+
+
+
+

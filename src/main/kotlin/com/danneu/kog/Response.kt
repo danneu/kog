@@ -1,6 +1,7 @@
 
 package com.danneu.kog
 
+import com.danneu.kog.cookies.Cookie
 import com.danneu.kog.json.JsonValue
 import java.io.File
 import java.io.InputStream
@@ -16,6 +17,8 @@ internal fun Response.Companion.websocket(key: String, accept: WebSocketAcceptor
 }
 
 class Response(var status: Status = Status.ok, var body: ResponseBody = ResponseBody.None, var webSocket: Pair<String, WebSocketAcceptor>? = null) : HasHeaders<Response> {
+
+    val cookies by lazy { mutableMapOf<String, Cookie>() }
 
     override var headers: MutableList<Pair<String, String>> = mutableListOf()
 

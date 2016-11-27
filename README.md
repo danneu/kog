@@ -374,6 +374,60 @@ group("/foo") { ... }
 group("/foo", mw1(), mw2()) { ... }
 ```
 
+## Cookies
+
+### Request Cookies
+
+`Request#cookies` is a `MutableMap<String, String>` which maps cookie names
+to cookie values received in the request.
+
+### Response Cookies
+
+`Response#cookies` is a `MutableMap<String, Cookie>` which maps cookie names
+to cookie objects that will get sent to the client.
+
+Here's a handler that increments a counter cookie on every request that
+will expire in three days:
+
+``` kotlin
+import com.danneu.kog.Response
+import com.danneu.kog.Handler
+import com.danneu.kog.Server
+import com.danneu.kog.cookies.Cookie
+import com.danneu.kog.cookies.Duration
+import org.joda.time.DateTime
+
+fun Request.parseCounter(): Int = try {
+    cookies.getOrDefault("counter", "0").toInt()
+} catch(e: NumberFormatException) {
+    0
+}
+
+fun Response.setCounter(count: Int): Response = apply {
+    cookies["counter"] = Cookie(count.toString(), duration = Duration.Expires(DateTime().plusDays(3)))
+}
+
+val handler: Handler = { request ->
+    val count = request.parseCounter() + 1
+    Response().text("count: $count").setCounter(count)
+}
+
+fun main(args: Array<String>) {
+  Server(handler).listen(9000)
+}
+```
+
+Demo:
+
+```
+$ http --session=kog-example --body localhost:9000
+count: 1
+$ http --session=kog-example --body localhost:9000
+count: 2
+$ http --session=kog-example --body localhost:9000
+count: 3
+```
+
 ## Development Logger (Middleware)
 
 The logger middleware prints basic info about the request and response 
@@ -618,7 +672,6 @@ There's so much missing that it feels silly writing a TODO list, but here are so
   change.
 - Organize the Jetty/Servlet code. I have no experience working with Jetty nor Servlets,
   so I copied Ring's adapter. It definitely needs some deliberate TLC.
-- Implement response cookies.
 - Finish enumerating Status.kt codes.
 - Investigate having a ./gradle/wrapper folder. Seems every Kotlin project has this which I assume packages the
   gradle build step dependency with the project instead of relying on system gradle?
