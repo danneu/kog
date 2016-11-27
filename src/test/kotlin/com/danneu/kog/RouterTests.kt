@@ -184,6 +184,67 @@ class RouterTests {
         assertTrue("route is hit", response2.status == Status.ok)
         assertTrue("all array middleware run", tokens.list() == listOf("A", "B", "C", "D"))
     }
+
+
+    // TRAILING SLASH
+
+
+    @Test
+    fun routeCanHaveTrailingSlash() {
+        val router = Router {
+            get("/no-trailing") { Response().text(it.path) }
+            get("/trailing/") { Response().text(it.path) }
+        }
+
+        val response1 = router(Request.toy(path = "/no-trailing"))
+        assertTrue("non-trailing slash hit", response1.body.toString() == "/no-trailing")
+
+        val response2 = router(Request.toy(path = "/trailing/"))
+        assertTrue("trailing slash hit", response2.body.toString() == "/trailing/")
+    }
+
+
+    @Test
+    fun groupCanHaveTrailingSlash() {
+        val router = Router {
+            group("/a/") {
+                get("/") { Response().text(it.path) }
+            }
+            group("/b") {
+                get("/") { Response().text(it.path) }
+            }
+        }
+
+        run {
+            val r1 = router(Request.toy(path = "/a/"))
+            assertTrue("trailing slash hit", r1.body.toString() == "/a/")
+            val r2 = router(Request.toy(path = "/a"))
+            assertTrue("404s when it should", r2.status == Status.notFound)
+        }
+        run {
+            val r1 = router(Request.toy(path = "/b"))
+            println("${r1.status}, ${r1.body}")
+            assertTrue("non-slash still works", r1.body.toString() == "/b")
+            val r2 = router(Request.toy(path = "/b/"))
+            assertTrue("404s when it should", r2.status == Status.notFound)
+        }
+    }
+
+    @Test
+    fun nestedRoutesCanHaveTrailingSlash() {
+        val router = Router {
+            group("/a") {
+                group("/b/") {
+                    get("/") { Response() }
+                }
+            }
+        }
+
+        val r1 = router(Request.toy(path = "/a/b/"))
+        assertTrue("trailing slash hit", r1.status == Status.ok)
+        val r2 = router(Request.toy(path = "/a/b"))
+        assertTrue("404s when it should", r2.status == Status.notFound)
+    }
 }
 
 

@@ -6,8 +6,11 @@ import java.util.Stack
 // HELPERS
 
 
-private fun toPath(vararg paths: String): String {
-    return "/" + paths.flatMap { it.split("/") }.filter(String::isNotEmpty).joinToString("/")
+fun toPath(vararg paths: String): String {
+    return ("/" + paths
+      .filter { it != "/" }
+      .joinToString("/")
+    ).replace(Regex("/{2,}"), "/")
 }
 
 
