@@ -3,12 +3,15 @@ package com.danneu.kog.batteries
 import com.danneu.kog.Request
 import com.danneu.kog.Middleware
 import com.danneu.kog.Response
+import com.danneu.kog.batteries.multipart.SavedUpload
+import com.danneu.kog.batteries.multipart.Whitelist
 import org.apache.commons.fileupload.FileItemIterator
 import org.apache.commons.fileupload.FileItemStream
 import org.apache.commons.fileupload.FileUpload
 import org.apache.commons.fileupload.UploadContext
 import java.io.File
 import java.io.InputStream
+
 
 private fun fileSequence(iter: FileItemIterator): Sequence<FileItemStream> = generateSequence {
     if (iter.hasNext()) {
@@ -18,11 +21,14 @@ private fun fileSequence(iter: FileItemIterator): Sequence<FileItemStream> = gen
     }
 }
 
+
 private fun Request.context() = object : UploadContext {
     // RequestContext
     override fun getCharacterEncoding(): String = this@context.charset ?: "utf-8"
     override fun getContentLength(): Int = this@context.length ?: -1
-    override fun getContentType(): String = this@context.type!! // guarantee this exists before trying to get context
+    // needs the full header (i.e. with the boundary) which is why we can't just use this.type
+    // TODO: What happens when content-type is not of a format UploadContext expects?
+    override fun getContentType(): String = this@context.getHeader("content-type") ?: ""
     override fun getInputStream(): InputStream = this@context.body
     // UploadContext (Note: Jetty's Request has Int content-length so this can't actually be a Long in practice)
     override fun contentLength(): Long = this@context.length?.toLong() ?: -1
@@ -35,10 +41,10 @@ private fun backgroundThread(f: Runnable) {
     thread.start()
 }
 
+// whitelist = set of fieldnames to handle so that we don't do unnecessary work
 // ttl = delete upload temp files after `ttl` milliseconds (default = 1 hour)
 // interval = check for expired temp files every `interval` milliseconds (default = 10 seconds)
-// TODO: field whitelist?
-fun multipart(ttl: Long = 3600 * 1000, interval: Long = 10000): Middleware = { handler ->
+fun multipart(whitelist: Whitelist, ttl: Long = 3600 * 1000, interval: Long = 10000): Middleware = { handler ->
     // Set of temp files that we need to delete once expired
     val fileSet: MutableSet<File> = mutableSetOf()
 
@@ -69,7 +75,10 @@ fun multipart(ttl: Long = 3600 * 1000, interval: Long = 10000): Middleware = { h
         val upload = FileUpload()
         val iter: FileItemIterator = upload.getItemIterator(req.context())
 
-        fileSequence(iter).map { item ->
+        fileSequence(iter).filter {
+            // only parse fields in our whitelist
+            whitelist.contains(it.fieldName)
+        }.map { item ->
             if (item.isFormField) {
                 // If we're in this branch, it means ${Streams.asString(item.openStream(), "utf-8")} is going
                 // to be the name of the uploaded file. Not sure we need this.
@@ -89,11 +98,3 @@ fun multipart(ttl: Long = 3600 * 1000, interval: Long = 10000): Middleware = { h
         return handler(req)
     }
 }
-
-
-class SavedUpload(val file: File, val filename: String, val contentType: String, val length: Long) {
-    override fun toString(): String {
-        return "[SavedUpload filename=$filename contentType=$contentType length=$length]"
-    }
-}
-

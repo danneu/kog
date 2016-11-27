@@ -1,6 +1,6 @@
 package com.danneu.kog
 
-import com.danneu.kog.batteries.SavedUpload
+import com.danneu.kog.batteries.multipart.SavedUpload
 import com.danneu.kog.cookies.parse
 import com.danneu.kog.json.Decoder
 import com.github.kittinunf.result.Result

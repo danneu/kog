@@ -419,7 +419,52 @@ If we have a `./public` folder in our project root with a file
 
 ## Multipart File Uploads (Middleware)
 
-Check out the following HTML Templating section for an example.
+(Check out the following HTML Templating section for an example.)
+
+To handle file uploads, use the `com.danneu.kog.batteries.multipart` middleware.
+
+This middleware parses file uploads out of `"multipart/form-data"` requests
+and populates `request.uploads : MutableMap<String, SavedUpload>` for your
+handler to access which is a mapping of field names to `File` representations.
+
+``` kotlin
+package com.danneu.kog.batteries.multipart
+
+class SavedUpload(val file: java.io.File, val filename: String, val contentType: String, val length: Long)
+```
+
+In this early implementation, by the time your handler is executed, the
+file uploads have already been piped into temporary files in the file-system
+which will get automatically deleted.
+
+``` kotlin
+import com.danneu.kog.Router
+import com.danneu.kog.batteries.multipart
+import com.danneu.kog.batteries.multipart.Whitelist
+
+val router: Router = Router {
+  post("/upload", multipart(Whitelist.only(setOf("myFile")))) handler@ { req ->
+    val upload = req.uploads["myFile"] ?: return@handler Response(Status.badRequest)
+    Response().text("You uploaded ${upload.length} bytes")
+  }
+}
+
+fun main() {
+  Server(router.handler()).listen(3000)
+}
+```
+
+Pass a whitelist into `multipart()` to only process field names that
+you expect.
+
+
+``` kotlin
+import com.danneu.kog.batteries.multipart
+import com.danneu.kog.batteries.multipart.Whitelist
+
+multipart(whitelist = Whitelist.all)
+multipart(whitelist = Whitelist.only(setOf("field1", "field2")))
+```
 
 ## HTML Templating
 
@@ -435,6 +480,7 @@ import com.danneu.kog.Router
 import com.danneu.kog.Response
 import com.danneu.kog.Server
 import com.danneu.kog.batteries.multipart
+import com.danneu.kog.batteries.multipart.Whitelist
 
 fun layout(vararg tags: ContainerTag): String = document().render() + html().with(
   body().with(*tags)
@@ -449,7 +495,7 @@ val router: Router = Router {
           )
         ))
     }
-    post("/upload", multipart()) {
+    post("/upload", multipart(Whitelist.only(setOf("myFile")))) {
         Response().text("Upload: ${req.uploads["myFile"]}")
     }
 }
@@ -573,3 +619,5 @@ There's so much missing that it feels silly writing a TODO list, but here are so
   type so that you must handle that case?
 - When Kotlin's async/await is stable, I'd like to experiment with migrating
   to an asynchronous abstraction instead of the current n-thread approach.
+- Multipart: Let handler optionally get a mapping of upload streams instead
+  of temporary files so that it can handle streams directly if it wants.
