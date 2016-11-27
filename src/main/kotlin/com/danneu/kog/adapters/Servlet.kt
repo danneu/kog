@@ -47,7 +47,7 @@ class Servlet(val handler: Handler) : HttpServlet() {
               method = Method.fromString(r.method.toLowerCase(Locale.ENGLISH)),
               protocol = r.protocol,
               headers = expandHeaders(r),
-              type = r.contentType?.split(";", limit = 1)?.get(0)?.toLowerCase(),
+              type = r.contentType?.split(";", limit = 2)?.get(0)?.toLowerCase(),
               length = if (r.contentLength >= 0) { r.contentLength } else { null },
               charset = r.characterEncoding?.toLowerCase(),
               //sslClientCert = r.getAttribute("javax.servlet.request.X509Certificate").first()
