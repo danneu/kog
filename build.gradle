@@ -1,7 +1,7 @@
 
 buildscript {
     //ext.kotlin_version = "1.0.5"
-    ext.kotlin_version = "1.1-M02"
+    ext.kotlin_version = "1.1-M03"
     ext.shadow_version = "1.2.3"
     ext.funktionale_version = "0.8"
     ext.kovenant_version = "3.3.0"
@@ -24,7 +24,7 @@ buildscript {
 
     dependencies {
         //classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version", "com.github.jengelman.gradle.plugins:shadow:$shadow_version", "org.junit.platform:junit-platform-gradle-plugin:1.0.0-M2"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.1-M02", "com.github.jengelman.gradle.plugins:shadow:$shadow_version", "org.junit.platform:junit-platform-gradle-plugin:1.0.0-M2"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version", "com.github.jengelman.gradle.plugins:shadow:$shadow_version", "org.junit.platform:junit-platform-gradle-plugin:1.0.0-M2"
     }
 }
 
