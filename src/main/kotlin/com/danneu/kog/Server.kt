@@ -46,21 +46,16 @@ class JettyHandler(val handler: Handler, val insertContextHandler: (String, WebS
 
 
 class Server(val handler: Handler = { Response(Status.notFound) }, val websockets: Map<String, WebSocketAcceptor> = emptyMap()) {
-    val jettyServer: org.eclipse.jetty.server.Server
+    val jettyServer: JettyServer = makeJettyServer()
 
-    init {
-        val threadPool = QueuedThreadPool(50)
-        val server = org.eclipse.jetty.server.Server(threadPool)
-        val httpConfig = HttpConfiguration()
-        httpConfig.sendServerVersion = false
-        val httpFactory = HttpConnectionFactory(httpConfig)
-        val serverConnector = ServerConnector(server, httpFactory)
-        serverConnector.idleTimeout = 200000
-        server.addConnector(serverConnector)
-        jettyServer = server
+    fun stop() {
+        println("kog server stopping...")
+        jettyServer.stop()
+        jettyServer.handler = null
+        println("kog server stopped")
     }
 
-    fun listen(port: Int): Server {
+    fun listen(port: Int, wait: Boolean = true, onStart: (Server) -> Unit = {}): Server {
         (jettyServer.connectors.first() as ServerConnector).port = port
 
         val handlers = HandlerCollection(true)
@@ -79,16 +74,33 @@ class Server(val handler: Handler = { Response(Status.notFound) }, val websocket
         jettyServer.handler = handlers
 
         try {
+            println("kog server starting...")
             jettyServer.start()
-            jettyServer.join()
+            println("kog server started on port $port")
+            onStart(this)
+            if (wait) {
+                jettyServer.join()
+            }
             return this
-        } catch (ex: Exception) {
+        } catch (e: Exception) {
             jettyServer.stop()
-            throw ex
+            throw e
         }
     }
 
-    companion object
+    companion object {
+        fun makeJettyServer(): JettyServer {
+            val threadPool = QueuedThreadPool(50)
+            val server = JettyServer(threadPool)
+            val httpConfig = HttpConfiguration()
+            httpConfig.sendServerVersion = false
+            val httpFactory = HttpConnectionFactory(httpConfig)
+            val serverConnector = ServerConnector(server, httpFactory)
+            serverConnector.idleTimeout = 200000
+            server.addConnector(serverConnector)
+            return server
+        }
+    }
 }
 
 
