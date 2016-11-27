@@ -99,14 +99,15 @@ class Server(val handler: Handler = { Response(Status.notFound) }, val websocket
 // The server's stack of top-level middleware. This should always
 // wrap the user's final handler.
 fun Server.Companion.middleware(): Middleware = composeMiddleware(
-  wrapFinalize(),  // <-- Touches request first and response last
-  wrapHead(),
-  wrapErrorHandler()
+    // First middleware in this list touches request first and response last
+    wrapHead(),
+    wrapFinalize(),
+    wrapErrorHandler()
 )
 
 
 // Must be last middleware to touch the response
-private fun wrapFinalize(): Middleware = { handler -> { req ->
+internal fun Server.Companion.wrapFinalize(): Middleware = { handler -> { req ->
     handler(req).finalize()
 }}
 
@@ -118,7 +119,9 @@ private fun wrapFinalize(): Middleware = { handler -> { req ->
 // NOTE: We can't treat a HEAD as a GET at this stage since we want to
 // let the user perceive HEAD requests in their own middleware, so that's
 // why we assume a downstream router routed it as a GET.
-private fun wrapHead(): Middleware {
+//
+// TODO: Is there a way to implement this without relying on downstream routers to route HEAD->GET?
+internal fun Server.Companion.wrapHead(): Middleware {
     fun headResponse(request: Request, response: Response): Response {
         return when (request.method) {
             Method.head -> response.setBody(ResponseBody.None)
@@ -131,7 +134,7 @@ private fun wrapHead(): Middleware {
 
 
 // Catches uncaught errors and lifts them into 500 responses
-private fun wrapErrorHandler(): Middleware = { handler -> { req ->
+internal fun Server.Companion.wrapErrorHandler(): Middleware = { handler -> { req ->
     try {
         handler(req)
     } catch (ex: EofException) {

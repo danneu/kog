@@ -5,6 +5,9 @@ import org.junit.Test
 import java.util.Stack
 
 
+// TODO: Refactor all assertTrue's into assertEquals since assertEquals prints out expects vs actual values
+
+
 // generates middleware for testing
 class Tokenware() {
     private val stack = Stack<String>()
@@ -244,6 +247,27 @@ class RouterTests {
         assertTrue("trailing slash hit", r1.status == Status.ok)
         val r2 = router(Request.toy(path = "/a/b"))
         assertTrue("404s when it should", r2.status == Status.notFound)
+    }
+
+
+    // HEAD
+
+
+    @Test
+    fun headGetsRoutedAsGet() {
+        val router = Router {
+            get("/") { Response().text("homepage") }
+        }
+
+        run {
+            val res = router(Request.toy(method = Method.head))
+            assertEquals("HEAD routed as GET", "homepage", res.body.toString())
+        }
+
+        run {
+            val res = router(Request.toy(method = Method.head, path = "/not-found"))
+            assertEquals("routes 404", Status.notFound, res.status)
+        }
     }
 }
 
