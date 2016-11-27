@@ -471,6 +471,67 @@ If we have a `./public` folder in our project root with a file
     $ http localhost:3000/../passwords.txt
     HTTP/1.1 400 Bad Request
 
+## Not-Modified / ETag Browser Caching (Middleware)
+
+This middleware adds `Last-Modified` or `ETag` headers to each downstream
+response which the browser will echo back on subsequent requests.
+
+If the response's `Last-Modified`/`ETag` matches the request,
+then this middleware instead responds with `304 Not Modified` which tells the
+browser to use its cache.
+
+### ETag
+
+`notModified(etag = true)` will generate an ETag header for each
+downstream response.
+
+``` kotlin
+val router = Router {
+    use(notModified(etag = true))
+    get("/") { Response().text("Hello, world!") }
+}
+```
+
+First request gives us an ETag.
+
+``` bash
+$ http localhost:9000
+HTTP/1.1 200 OK
+Content-Length: 13
+Content-Type: text/plain
+ETag: "d-bNNVbesNpUvKBgtMOUeYOQ"
+
+Hello, world!
+```
+
+When we echo back the ETag, the server lets us know that
+the response hasn't changed:
+
+``` bash
+$ http localhost:9000 If-None-Match:'"d-bNNVbesNpUvKBgtMOUeYOQ"'
+HTTP/1.1 304 Not Modified
+```
+
+### Last-Modified
+
+`notModified(etag = false)` will only add a `Last-Modified` header
+to downstream responses if `response.body is ResponseBody.File` since
+kog can read the mtime from the File's metadata.
+
+If the response body is not a `ResponseBody.File` type, then no header
+will be added.
+
+This is only useful for serving static assets from the filesystem since
+ETags are unnecessary to generate when you have a file's modification time.
+
+``` kotlin
+val router = Router {
+    // TODO: kog doesn't yet support mounting middleware on a prefix
+    use("/assets", notModified(etag = false), serveStatic("public"))
+    get("/") { Response().text("homepage")
+}
+```
+
 ## Multipart File Uploads (Middleware)
 
 To handle file uploads, use the `com.danneu.kog.batteries.multipart` middleware.
@@ -683,3 +744,5 @@ There's so much missing that it feels silly writing a TODO list, but here are so
   to an asynchronous abstraction instead of the current n-thread approach.
 - Multipart: Let handler optionally get a mapping of upload streams instead
   of temporary files so that it can handle streams directly if it wants.
+- Replace Charsets.getName()/Charset.defaultCharset() 
+  with kotlin's `Charsets.UTF_8`.

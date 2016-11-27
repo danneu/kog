@@ -2,6 +2,7 @@ package com.danneu.kog
 
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.security.MessageDigest
 
 
 // Decodes www-form-urlencoded. Doesn't do any nesting for now.
@@ -37,6 +38,52 @@ fun percentDecode(string: String): String {
 fun <K, V> Map<K, V>.mutableCopy(): MutableMap<K, V> = java.util.HashMap(this)
 
 
+// decimal digit to hex nibble lookup
+private val nibble = arrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f')
+
+fun Byte.toHexString(): String {
+    val digit = this.toInt()
+    val nib1 = nibble[digit shr 4 and 0x0f]
+    val nib2 = nibble[digit and 0x0f]
+    return "$nib1$nib2"
+}
+
+fun ByteArray.toHexString(): String {
+    return StringBuilder().apply {
+        for (b in this@toHexString) {
+            append(b.toHexString())
+        }
+    }.toString()
+}
+
+fun Int.toHexString(): String {
+    return Integer.toHexString(this)
+}
+
+fun Long.toHexString(): String {
+    return java.lang.Long.toHexString(this)
+}
+
+
+fun ByteArray.utf8(): String {
+    return this.toString(Charsets.UTF_8)
+}
+
+fun ByteArray.md5(): ByteArray {
+    return MessageDigest.getInstance("MD5").digest(this)
+}
+
+fun ByteArray.base64(padding: Boolean): ByteArray {
+    return Base64.encode(this, padding)
+}
+
+
+object Base64 {
+    fun encode(input: kotlin.ByteArray, padding: Boolean): ByteArray {
+        val encoder = java.util.Base64.getEncoder().let { if (padding) it else it.withoutPadding() }
+        return encoder.encode(input)
+    }
+}
 
 
 

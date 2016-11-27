@@ -11,13 +11,17 @@ interface HasHeaders <out T> {
         return headers.find { it.first.toLowerCase() == key.toLowerCase() }?.second
     }
 
-    fun setHeader(key: String, value: String): T {
+    // if value is null, then the header does not get set
+    fun setHeader(key: String, value: String?): T {
+        if (value == null) return this as T
         removeHeader(key)
         appendHeader(key, value)
         return this as T
     }
 
-    fun appendHeader(key: String, value: String): T {
+    // if value is null, then the header does not get set
+    fun appendHeader(key: String, value: String?): T {
+        if (value == null) return this as T
         headers.add(Pair(key, value))
         return this as T
     }
