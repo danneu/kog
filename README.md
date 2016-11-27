@@ -419,8 +419,6 @@ If we have a `./public` folder in our project root with a file
 
 ## Multipart File Uploads (Middleware)
 
-(Check out the following HTML Templating section for an example.)
-
 To handle file uploads, use the `com.danneu.kog.batteries.multipart` middleware.
 
 This middleware parses file uploads out of `"multipart/form-data"` requests
@@ -443,14 +441,24 @@ import com.danneu.kog.batteries.multipart
 import com.danneu.kog.batteries.multipart.Whitelist
 
 val router: Router = Router {
-  post("/upload", multipart(Whitelist.only(setOf("myFile")))) handler@ { req ->
-    val upload = req.uploads["myFile"] ?: return@handler Response(Status.badRequest)
-    Response().text("You uploaded ${upload.length} bytes")
-  }
+    get("/") {
+        Response().html("""
+            <!doctype html>
+            <form method="POST" action="/upload" enctype="multipart/form-data">
+                File1: <input type="file" name="file1">
+                File2 (Ignored): <input type="file" name="file2">
+                <button type="submit">Upload</button>
+            </form>
+        """)
+    }
+    post("/upload", multipart(Whitelist.only(setOf("file1")))) handler@ { req ->
+        val upload = req.uploads["file1"]
+        Response().text("You uploaded ${upload?.length ?: "--"} bytes")
+    }
 }
 
-fun main() {
-  Server(router.handler()).listen(3000)
+fun main(args: Array<String>) {
+    Server(router.handler()).listen(3000)
 }
 ```
 
@@ -476,6 +484,7 @@ Here's an example server with a "/" route that renders a file-upload form that p
 
 ``` kotlin
 import j2html.TagCreator.*
+import j2html.tags.ContainerTag
 import com.danneu.kog.Router
 import com.danneu.kog.Response
 import com.danneu.kog.Server
@@ -496,7 +505,7 @@ val router: Router = Router {
         ))
     }
     post("/upload", multipart(Whitelist.only(setOf("myFile")))) {
-        Response().text("Upload: ${req.uploads["myFile"]}")
+        Response().text("Uploaded ${req.uploads["myFile"]?.length ?: "--"} bytes")
     }
 }
 
