@@ -21,7 +21,13 @@ private fun composeHandler(wares: Array<Middleware>): Handler {
 
 
 data class Route(val method: Method, val path: String, val handler: Handler) {
-    fun matches(request: Request): Boolean = request.method == method && request.path == path
+    fun matches(request: Request): Boolean {
+        // Treat HEAD like GET
+        return request.path == path && when (request.method) {
+            Method.head -> Method.get
+            else -> request.method
+        } == method
+    }
     operator fun invoke(request: Request): Response = handler(request)
     override fun toString(): String = "[Route ${method.name} \"$path\"]"
 

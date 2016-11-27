@@ -99,29 +99,47 @@ class Server(val handler: Handler = { Response(Status.notFound) }, val websocket
 // The server's stack of top-level middleware. This should always
 // wrap the user's final handler.
 fun Server.Companion.middleware(): Middleware = composeMiddleware(
-  ::finalizer,
-  ::errorHandler
+  wrapFinalize(),  // <-- Touches request first and response last
+  wrapHead(),
+  wrapErrorHandler()
 )
 
 
 // Must be last middleware to touch the response
-private fun finalizer(handler: Handler): Handler {
-    return { req -> handler(req).finalize() }
+private fun wrapFinalize(): Middleware = { handler -> { req ->
+    handler(req).finalize()
+}}
+
+
+// NOTE: Jetty already handles HEAD requests, but we'll apply this anyways.
+// This middleware assumes that a downstream router handled the HEAD request
+// like a GET request. But now we remove the body.
+//
+// NOTE: We can't treat a HEAD as a GET at this stage since we want to
+// let the user perceive HEAD requests in their own middleware, so that's
+// why we assume a downstream router routed it as a GET.
+private fun wrapHead(): Middleware {
+    fun headResponse(request: Request, response: Response): Response {
+        return when (request.method) {
+            Method.head -> response.setBody(ResponseBody.None)
+            else -> response
+        }
+    }
+
+    return { handler -> { request -> headResponse(request, handler(request)) }}
 }
 
 
 // Catches uncaught errors and lifts them into 500 responses
-private fun errorHandler(handler: Handler): Handler {
-    return { req ->
-        try {
-            handler(req)
-        } catch (ex: EofException) {
-            // We can't do anything about early client hangup
-            Response(Status.internalError)
-        } catch (ex: Exception) {
-            System.err.print("Unhandled error: ")
-            ex.printStackTrace(System.err)
-            Response(Status.internalError)
-        }
+private fun wrapErrorHandler(): Middleware = { handler -> { req ->
+    try {
+        handler(req)
+    } catch (ex: EofException) {
+        // We can't do anything about early client hangup
+        Response(Status.internalError)
+    } catch (ex: Exception) {
+        System.err.print("Unhandled error: ")
+        ex.printStackTrace(System.err)
+        Response(Status.internalError)
     }
-}
+}}

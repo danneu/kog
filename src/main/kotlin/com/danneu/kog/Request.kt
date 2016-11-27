@@ -46,6 +46,10 @@ class Request(
         body.readBytes().toString(Charset.forName("UTF-8"))
     }
 
+    fun setMethod(newMethod: Method): Request {
+        return this.apply { method = newMethod }
+    }
+
     override fun toString(): String {
         return listOf(
           "serverPort" to serverPort,
