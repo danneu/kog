@@ -1,6 +1,5 @@
 package com.danneu.kog
 
-import java.security.MessageDigest
 import java.util.Base64
 import javax.servlet.ServletOutputStream
 
@@ -36,7 +35,7 @@ sealed class ResponseBody : OutStreamable, ETaggable {
         override fun pipe(output: ServletOutputStream) = body.inputStream().copyTo(output)
         override fun etag(): kotlin.String {
             if (body.isEmpty()) return ETaggable.empty()
-            val hash64 = body.md5().base64(padding = false).utf8()
+            val hash64 = Base64.getEncoder().withoutPadding().encode(body.md5()).utf8()
             return "\"${body.size.toHexString()}-$hash64\""
         }
     }

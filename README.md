@@ -679,37 +679,32 @@ fun main(args: Array<String>) {
 }
 ```
 
-## Performance
+## Basic Auth (Middleware)
 
-Just for fun, here's how kog's hello world benchmarks next to Node.js' hello world.
+Just pass a `(name, password) -> Boolean` predicate to the
+`basicAuth()` middleware. 
 
-Kog is written naively with no thought yet given to performance, so this is a testament to how amazing Jetty is
-since kog is doing more work than the Node.js example.
-
-Node.js:
-
-``` javascript
-require('http').createServer((req, res) => res.end('Hello, World!')).listen(3000)
-```
-
-Kog:
+Your handler won't get called unless the user satisfies it.
 
 ``` kotlin
-class Main {
-  companion object {
-    @JvmStatic fun main(args: Array<String>) {
-      Server({ Response().text("Hello, World!") }).listen(9000)
+import com.danneu.kog.batteries.basicAuth
+
+fun String.sha256(): ByteArray {
+    return java.security.MessageDigest.getInstance("SHA-256").digest(this.toByteArray())
+}
+
+val secretHash = "a man a plan a canal panama".sha256()
+
+fun isAuthenticated(name: String, pass: String): Boolean {
+    return java.util.Arrays.equals(pass.sha256(), secretHash)
+}
+
+val router = Router {
+    get("/", basicAuth(::isAuthenticated)) {
+        Response().text("You are authenticated!")
     }
-  }
 }
 ```
-
-Benching with 2 threads and 1,000 concurrent connections:
-
-| Platform | Benchmark                           | Requests     | Per Second     |
-| -------- | ----------------------------------- | ------------ | -------------- |
-| Node.js  | `wrk -c 1000 http://localhost:3000` | 120,000 reqs | 12,000 req/sec |
-| Kog      | `wrk -c 1000 http://localhost:9000` | 350,000 reqs | 35,000 req/sec |
 
 ## TODO
 

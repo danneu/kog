@@ -49,10 +49,9 @@ class Server(val handler: Handler = { Response.notFound() }, val websockets: Map
     val jettyServer: JettyServer = makeJettyServer()
 
     fun stop() {
-        println("kog server stopping...")
         jettyServer.stop()
         jettyServer.handler = null
-        println("kog server stopped")
+        println(":: <kog> stopped")
     }
 
     fun listen(port: Int, wait: Boolean = true, onStart: (Server) -> Unit = {}): Server {
@@ -74,9 +73,8 @@ class Server(val handler: Handler = { Response.notFound() }, val websockets: Map
         jettyServer.handler = handlers
 
         try {
-            println("kog server starting...")
             jettyServer.start()
-            println("kog server started on port $port")
+            println(":: <kog> listening on http://localhost:$port")
             onStart(this)
             if (wait) {
                 jettyServer.join()

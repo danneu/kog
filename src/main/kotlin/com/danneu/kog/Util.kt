@@ -64,7 +64,6 @@ fun Long.toHexString(): String {
     return java.lang.Long.toHexString(this)
 }
 
-
 fun ByteArray.utf8(): String {
     return this.toString(Charsets.UTF_8)
 }
@@ -72,18 +71,4 @@ fun ByteArray.utf8(): String {
 fun ByteArray.md5(): ByteArray {
     return MessageDigest.getInstance("MD5").digest(this)
 }
-
-fun ByteArray.base64(padding: Boolean): ByteArray {
-    return Base64.encode(this, padding)
-}
-
-
-object Base64 {
-    fun encode(input: kotlin.ByteArray, padding: Boolean): ByteArray {
-        val encoder = java.util.Base64.getEncoder().let { if (padding) it else it.withoutPadding() }
-        return encoder.encode(input)
-    }
-}
-
-
 
