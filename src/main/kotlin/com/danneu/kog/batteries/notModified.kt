@@ -1,5 +1,6 @@
 package com.danneu.kog.batteries
 
+import com.danneu.kog.Header
 import com.danneu.kog.Method
 import com.danneu.kog.Middleware
 import com.danneu.kog.Request
@@ -14,7 +15,7 @@ fun notModified(etag: Boolean): Middleware = { handler -> handler@ { request ->
     val response = handler(request)
 
     // only consider HEAD and GET requests
-    if (request.method != Method.get && request.method != Method.head) {
+    if (request.method != Method.Get && request.method != Method.Head) {
         return@handler response
     }
 
@@ -25,13 +26,13 @@ fun notModified(etag: Boolean): Middleware = { handler -> handler@ { request ->
 
     // add etag header
     if (etag) {
-        response.setHeader("ETag", response.body.etag())
+        response.setHeader(Header.Etag, response.body.etag())
     }
 
     // add last-modified header if body has that info
     response.body.apply {
         if (this is ResponseBody.File) {
-            response.setHeader("Last-Modified", HttpDate.toString(DateTime(body.lastModified())))
+            response.setHeader(Header.LastModified, HttpDate.toString(DateTime(body.lastModified())))
         }
     }
 
@@ -52,8 +53,8 @@ private fun isCached(request: Request, response: Response): Boolean {
 
 private fun notModifiedSince(request: Request, response: Response): Boolean {
     // ensure headers exist
-    val modifiedAtString = response.getHeader("last-modified") ?: return false
-    val targetString = request.getHeader("if-modified-since") ?: return false
+    val modifiedAtString = response.getHeader(Header.LastModified) ?: return false
+    val targetString = request.getHeader(Header.IfModifiedSince) ?: return false
 
     // ensure headers parse into dates
     val modifiedAt = HttpDate.fromString(modifiedAtString) ?: return false
@@ -65,7 +66,7 @@ private fun notModifiedSince(request: Request, response: Response): Boolean {
 
 
 private fun etagsMatch(request: Request, response: Response): Boolean {
-    val etag = response.getHeader("etag") ?: return false
-    val target = request.getHeader("if-none-match") ?: return false
+    val etag = response.getHeader(Header.Etag) ?: return false
+    val target = request.getHeader(Header.IfNoneMatch) ?: return false
     return etag == target
 }

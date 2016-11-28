@@ -1,5 +1,6 @@
 package com.danneu.kog.batteries
 
+import com.danneu.kog.Header
 import com.danneu.kog.Request
 import com.danneu.kog.Middleware
 import com.danneu.kog.Response
@@ -28,7 +29,7 @@ private fun Request.context() = object : UploadContext {
     override fun getContentLength(): Int = this@context.length ?: -1
     // needs the full header (i.e. with the boundary) which is why we can't just use this.type
     // TODO: What happens when content-type is not of a format UploadContext expects?
-    override fun getContentType(): String = this@context.getHeader("content-type") ?: ""
+    override fun getContentType(): String = this@context.getHeader(Header.ContentType) ?: ""
     override fun getInputStream(): InputStream = this@context.body
     // UploadContext (Note: Jetty's Request has Int content-length so this can't actually be a Long in practice)
     override fun contentLength(): Long = this@context.length?.toLong() ?: -1

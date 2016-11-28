@@ -30,14 +30,14 @@ class RouterTests {
     @Test
     fun testEmpty() {
         val router = Router {}
-        val response = router(Request.toy(method = Method.get, path = "/"))
+        val response = router(Request.toy(method = Method.Get, path = "/"))
         assertTrue("empty router 404s", response.status == Status.notFound)
     }
 
     @Test
     fun hitsOnlyRoute() {
         val router = Router { get("/") { Response().text("ok")} }
-        val response = router(Request.toy(method = Method.get, path = "/"))
+        val response = router(Request.toy(method = Method.Get, path = "/"))
         assertTrue("is 200", response.status == Status.ok)
         assertTrue("has right body", (response.body as ResponseBody.String).body == "ok")
     }
@@ -45,7 +45,7 @@ class RouterTests {
     @Test
     fun missesOnlyRoute() {
         val router = Router { get("/") { Response().text("ok")} }
-        val response = router(Request.toy(method = Method.post, path = "/"))
+        val response = router(Request.toy(method = Method.Post, path = "/"))
         assertTrue("is 404", response.status == Status.notFound)
     }
 
@@ -68,12 +68,12 @@ class RouterTests {
         val router = Router {
             use { handler -> { req ->
                 val response = handler(req)
-                response.setHeader("test", "x")
+                response.setHeader(Header.Custom("test"), "x")
             }}
             get("/") { Response().text("ok")}
         }
         val response = router(Request.toy())
-        assertTrue("middleware sets header", response.getHeader("test") == "x")
+        assertTrue("middleware sets header", response.getHeader(Header.Custom("test")) == "x")
     }
 
     @Test
@@ -151,10 +151,10 @@ class RouterTests {
             post("/a/b/c") { Response() }
             options("/d/e/f") { Response() }
         }
-        val response1 = router(Request.toy(method = Method.post,path = "/a/b/c"))
+        val response1 = router(Request.toy(method = Method.Post,path = "/a/b/c"))
         assertTrue("POST works", response1.status == Status.ok)
 
-        val response2 = router(Request.toy(method = Method.options,path = "/d/e/f"))
+        val response2 = router(Request.toy(method = Method.Options,path = "/d/e/f"))
         assertTrue("OPTIONS works", response2.status == Status.ok)
     }
 
@@ -260,12 +260,12 @@ class RouterTests {
         }
 
         run {
-            val res = router(Request.toy(method = Method.head))
+            val res = router(Request.toy(method = Method.Head))
             assertEquals("HEAD routed as GET", "homepage", res.body.toString())
         }
 
         run {
-            val res = router(Request.toy(method = Method.head, path = "/not-found"))
+            val res = router(Request.toy(method = Method.Head, path = "/not-found"))
             assertEquals("routes 404", Status.notFound, res.status)
         }
     }

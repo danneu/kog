@@ -16,7 +16,7 @@ class HeadTests {
     @Test
     fun testBody() {
         val handler: Handler = Server.wrapHead()({ Response().text("abc") })
-        val response = handler(Request.toy(method = Method.head))
+        val response = handler(Request.toy(method = Method.Head))
         assertEquals("body is removed", ResponseBody.None, response.body)
     }
 
@@ -25,12 +25,12 @@ class HeadTests {
     fun testHeadersPreserved() {
         val handler: Handler = Server.wrapHead()({
             Response().text("abc")
-                .setHeader("content-length", "3")
-                .setHeader("foo", "bar")
+                .setHeader(Header.ContentLength, "3")
+                .setHeader(Header.Custom("foo"), "bar")
         })
-        val response = handler(Request.toy(method = Method.head))
-        assertEquals("header 'content-length' still set", "3", response.getHeader("content-length"))
-        assertEquals("custom header 'foo' still set", "bar", response.getHeader("foo"))
+        val response = handler(Request.toy(method = Method.Head))
+        assertEquals("header 'content-length' still set", "3", response.getHeader(Header.ContentLength))
+        assertEquals("custom header 'foo' still set", "bar", response.getHeader(Header.Custom("foo")))
     }
 
 
@@ -38,10 +38,10 @@ class HeadTests {
     fun testMethod() {
         val middleware = Server.wrapHead()
         val handler: Handler = { req ->
-            assertEquals("method is preserved", Method.head, req.method)
+            assertEquals("method is preserved", Method.Head, req.method)
             Response()
         }
-        middleware(handler)(Request.toy(method = Method.head))
+        middleware(handler)(Request.toy(method = Method.Head))
     }
 }
 

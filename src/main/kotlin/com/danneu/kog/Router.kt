@@ -24,7 +24,7 @@ data class Route(val method: Method, val path: String, val handler: Handler) {
     fun matches(request: Request): Boolean {
         // Treat HEAD like GET
         return request.path == path && when (request.method) {
-            Method.head -> Method.get
+            Method.Head -> Method.Get
             else -> request.method
         } == method
     }
@@ -66,15 +66,15 @@ class Group(val path: String, mws: Array<out Middleware> = emptyArray(), init: G
         wares.push(route.middleware())
     }
 
-    fun get(path: String, vararg mws: Middleware, handler: Handler) = method(Method.get)(path, composeMiddleware(*mws), handler)
-    fun put(path: String, vararg mws: Middleware, handler: Handler) = method(Method.put)(path, composeMiddleware(*mws), handler)
-    fun post(path: String, vararg mws: Middleware, handler: Handler) = method(Method.post)(path, composeMiddleware(*mws), handler)
-    fun head(path: String, vararg mws: Middleware, handler: Handler) = method(Method.head)(path, composeMiddleware(*mws), handler)
-    fun patch(path: String, vararg mws: Middleware, handler: Handler) = method(Method.patch)(path, composeMiddleware(*mws), handler)
-    fun delete(path: String, vararg mws: Middleware, handler: Handler) = method(Method.delete)(path, composeMiddleware(*mws), handler)
-    fun options(path: String, vararg mws: Middleware, handler: Handler) = method(Method.options)(path, composeMiddleware(*mws), handler)
+    fun get(path: String, vararg mws: Middleware, handler: Handler) = method(Method.Get)(path, composeMiddleware(*mws), handler)
+    fun put(path: String, vararg mws: Middleware, handler: Handler) = method(Method.Put)(path, composeMiddleware(*mws), handler)
+    fun post(path: String, vararg mws: Middleware, handler: Handler) = method(Method.Post)(path, composeMiddleware(*mws), handler)
+    fun head(path: String, vararg mws: Middleware, handler: Handler) = method(Method.Head)(path, composeMiddleware(*mws), handler)
+    fun patch(path: String, vararg mws: Middleware, handler: Handler) = method(Method.Patch)(path, composeMiddleware(*mws), handler)
+    fun delete(path: String, vararg mws: Middleware, handler: Handler) = method(Method.Delete)(path, composeMiddleware(*mws), handler)
+    fun options(path: String, vararg mws: Middleware, handler: Handler) = method(Method.Options)(path, composeMiddleware(*mws), handler)
 
-    fun websocket(path: String, vararg mws: Middleware, accept: WebSocketAcceptor) = method(Method.get)(path, composeMiddleware(*mws), {
+    fun websocket(path: String, vararg mws: Middleware, accept: WebSocketAcceptor) = method(Method.Get)(path, composeMiddleware(*mws), {
         Response.websocket(path, accept)
     })
 

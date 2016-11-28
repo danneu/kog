@@ -1,5 +1,6 @@
 package com.danneu.kog.batteries
 
+import com.danneu.kog.Header
 import com.danneu.kog.Request
 import com.danneu.kog.Method
 import com.danneu.kog.Middleware
@@ -13,7 +14,7 @@ fun serveStatic(publicRootString: String, maxAge: Long = 0): Middleware = { hand
 
     fun(request: Request): Response {
         // Only serve assets to HEAD or GET
-        if (request.method != Method.head && request.method != Method.get) {
+        if (request.method != Method.Head && request.method != Method.Get) {
             return handler(request)
         }
 
@@ -35,7 +36,7 @@ fun serveStatic(publicRootString: String, maxAge: Long = 0): Middleware = { hand
 
         return Response()
           .file(asset)
-          .setHeader("Cache-Control", "public, max-age=$maxAge")
+          .setHeader(Header.CacheControl, "public, max-age=$maxAge")
     }
 }
 

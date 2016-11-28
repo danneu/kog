@@ -19,7 +19,7 @@ class Request(
   val scheme: String,
   var method: Method,
   val protocol: String,
-  override val headers: MutableList<Header>,
+  override val headers: MutableList<HeaderPair>,
   val type: String?,
   val length: Int?, // Either >= 0 or null
   val charset: String?,
@@ -33,7 +33,7 @@ class Request(
     // multipart middleware populates this with name -> file mappings for multipart uploads
     val uploads: MutableMap<String, SavedUpload> = mutableMapOf()
 
-    val cookies: MutableMap<String, String> by lazy { parse(this.getHeader("cookie")).mutableCopy() }
+    val cookies: MutableMap<String, String> by lazy { parse(getHeader(Header.Cookie)).mutableCopy() }
 
     // TODO: At framework level, need to avoid reading stream when it is already being/been consumed or come up with a deliberate gameplan.
     fun <T : Any> json(decoder: Decoder<T>): Result<T, Exception> {
@@ -72,7 +72,7 @@ class Request(
 }
 
 
-fun Request.Companion.toy(method: Method = Method.get, path: String = "/", queryString: String = "foo=bar"): Request {
+fun Request.Companion.toy(method: Method = Method.Get, path: String = "/", queryString: String = "foo=bar"): Request {
     return Request(
       serverPort = 3000,
       serverName = "name",

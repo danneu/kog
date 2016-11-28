@@ -20,7 +20,7 @@ class Response(var status: Status = Status.ok, var body: ResponseBody = Response
 
     val cookies by lazy { mutableMapOf<String, Cookie>() }
 
-    override var headers: MutableList<Pair<String, String>> = mutableListOf()
+    override var headers: MutableList<HeaderPair> = mutableListOf()
 
     fun setStatus(status: Status): Response {
         this.status = status
@@ -35,35 +35,35 @@ class Response(var status: Status = Status.ok, var body: ResponseBody = Response
     }
 
     fun html(html: String): Response {
-        return setHeader("Content-Type", "text/html")
+        return setHeader(Header.ContentType, "text/html")
             .setBody(ResponseBody.String(html))
     }
 
     fun text(text: String): Response {
-        return setHeader("Content-Type", "text/plain")
+        return setHeader(Header.ContentType, "text/plain")
             .setBody(ResponseBody.String(text))
     }
 
     fun none(): Response {
-        return removeHeader("Content-Type")
+        return removeHeader(Header.ContentType)
             .setBody(ResponseBody.None)
     }
 
     fun json(value: JsonValue): Response {
-        return setHeader("Content-Type", "application/json")
+        return setHeader(Header.ContentType, "application/json")
             .setBody(ResponseBody.String(value.toString()))
     }
 
     fun stream(input: InputStream, contentType: String = "application/octet-stream"): Response {
-        return setHeader("Content-Type", contentType)
+        return setHeader(Header.ContentType, contentType)
             .setBody(ResponseBody.InputStream(input))
     }
 
     fun file(file: File, contentType: String? = null): Response {
         return setBody(ResponseBody.File(file))
             // Hmm, already doing it at finalize time. TODO: Rethink streamable interface. need length?
-            .setHeader("Content-Length", file.length().toString())
-            .setHeader("Content-Type", contentType ?: Mime.fromExtension(file.extension))
+            .setHeader(Header.ContentLength, file.length().toString())
+            .setHeader(Header.ContentType, contentType ?: Mime.fromExtension(file.extension))
     }
 
     // FINALIZE
@@ -83,8 +83,8 @@ class Response(var status: Status = Status.ok, var body: ResponseBody = Response
         }
 
         when (body.length) {
-            null -> setHeader("Transfer-Encoding", "chunked")
-            else -> setHeader("Content-Length", body.length.toString())
+            null -> setHeader(Header.TransferEncoding, "Chunked")
+            else -> setHeader(Header.ContentLength, body.length.toString())
         }
 
         return this
@@ -95,7 +95,7 @@ class Response(var status: Status = Status.ok, var body: ResponseBody = Response
     // 301: .movedPermanently
     // 302: .found
     fun redirect(uri: String, permanent: Boolean = false): Response {
-        return setHeader("Location", uri)
+        return setHeader(Header.Location, uri)
             .setStatus(if (permanent) {
                 Status.movedPermanently
             } else {
@@ -104,7 +104,7 @@ class Response(var status: Status = Status.ok, var body: ResponseBody = Response
     }
 
     fun redirectBack(request: Request, altUri: String): Response {
-        return redirect(getHeader("Referer") ?: altUri)
+        return redirect(getHeader(Header.Referer) ?: altUri)
     }
 
     // MISC

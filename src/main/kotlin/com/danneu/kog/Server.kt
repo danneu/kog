@@ -135,7 +135,7 @@ internal fun Server.Companion.wrapFinalize(): Middleware = { handler -> { req ->
 internal fun Server.Companion.wrapHead(): Middleware {
     fun headResponse(request: Request, response: Response): Response {
         return when (request.method) {
-            Method.head -> response.setBody(ResponseBody.None)
+            Method.Head -> response.setBody(ResponseBody.None)
             else -> response
         }
     }
@@ -169,7 +169,7 @@ internal fun Server.Companion.wrapErrorHandler(): Middleware = { handler -> { re
 internal fun Server.Companion.wrapCookies(): Middleware {
     fun cookieResponse(response: Response): Response {
         for ((name, cookie) in response.cookies.iterator()) {
-            response.appendHeader("Set-Cookie", cookie.serialize(name))
+            response.appendHeader(Header.SetCookie, cookie.serialize(name))
         }
         return response
     }

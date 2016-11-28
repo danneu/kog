@@ -2,6 +2,8 @@ package com.danneu.kog.adapters
 
 import javax.servlet.http.HttpServlet
 import com.danneu.kog.Handler
+import com.danneu.kog.Header
+import com.danneu.kog.HeaderPair
 import com.danneu.kog.Method
 import com.danneu.kog.Request
 import com.danneu.kog.Response
@@ -24,11 +26,11 @@ class Servlet(val handler: Handler) : HttpServlet() {
 
             // Set headers
             for ((k, v) in response.headers.iterator()) {
-                servletResponse.addHeader(k, v)
+                servletResponse.addHeader(k.toString(), v)
             }
 
             // Some headers have special setters
-            val type = response.getHeader("Content-Type")
+            val type = response.getHeader(Header.ContentType)
             if (type != null) {
                 servletResponse.contentType = type
             }
@@ -59,10 +61,10 @@ class Servlet(val handler: Handler) : HttpServlet() {
 }
 
 
-fun expandHeaders(r: HttpServletRequest): MutableList<Pair<String, String>> {
+fun expandHeaders(r: HttpServletRequest): MutableList<HeaderPair> {
     return r.headerNames.asSequence().flatMap { name ->
         r.getHeaders(name).asSequence().map { value ->
-            name to value
+            Header.fromString(name) to value
         }
     }.toMutableList()
 }

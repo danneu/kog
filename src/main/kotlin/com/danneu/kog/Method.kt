@@ -1,48 +1,27 @@
 package com.danneu.kog
 
-import java.util.Locale
 
 enum class Method {
-    // Common
-    get,
-    put,
-    post,
-    head,
-    patch,
-    delete,
-    options,
+    // COMMON
 
-    // Uncommon
-    copy,
-    lock,
-    move,
-    mkcol,
-    merge,
-    purge,
-    trace,
-    report,
-    unlock,
-    search,
-    notify,
-    connect,
-    msearch,
-    checkout,
-    propfind,
-    proppatch,
-    subscribe,
-    mkactivity,
-    unsubscribe,
+    Get,
+    Head,
+    Post,
+    Put,
+    Delete,
+    Options,
+    Trace,
+    Patch,
 
-    // Internal
-    unknown;
+    // INTERNAL
+
+    Unknown;
 
     companion object {
-        fun fromString(value: String): Method {
-            try {
-                return valueOf(value.toLowerCase(Locale.ENGLISH))
-            } catch (_: Exception) {
-                return unknown
-            }
+        fun fromString(value: String): Method = try {
+            enumValueOf<Method>(value.toLowerCase().capitalize())
+        } catch (_: IllegalArgumentException) {
+            Unknown
         }
     }
 }

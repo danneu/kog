@@ -49,6 +49,8 @@ repositories {
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile group: 'org.jetbrains.kotlin', name: 'kotlin-reflect', version: kotlin_version
+
 
     testCompile "junit:junit:$junit_version"
 
@@ -60,6 +62,9 @@ dependencies {
     compile "com.github.salomonbrys.kotson:kotson:$kotson_version"
     compile "commons-fileupload:commons-fileupload:$commons_fileupload_version"
     compile "joda-time:joda-time:$joda_time_version"
+    // https://mvnrepository.com/artifact/com.google.guava/guava
+    compile group: 'com.google.guava', name: 'guava', version: '20.0'
+
 }
 
 //publish {
