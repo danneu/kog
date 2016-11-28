@@ -24,7 +24,7 @@ fun serveStatic(publicRootString: String, maxAge: Long = 0): Middleware = { hand
         // Note: This is actually handled by Jetty which throws a 400 on a malicious path and kog doesn't even
         //       get the request. But I left this logic in anyways.
         if (!publicRoot.isParentOf(assetPath)) {
-            return Response(Status.badRequest)
+            return Response.badRequest()
         }
 
         val asset = assetPath.toFile()

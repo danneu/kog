@@ -20,7 +20,7 @@ fun notModified(etag: Boolean): Middleware = { handler -> handler@ { request ->
     }
 
     // only consider 200 responses
-    if (response.status != Status.ok) {
+    if (response.status != Status.Ok) {
         return@handler response
     }
 
@@ -42,7 +42,7 @@ fun notModified(etag: Boolean): Middleware = { handler -> handler@ { request ->
     }
 
     // tell client that their cache is still valid
-    Response(Status.notModified)
+    Response.notModified()
 }}
 
 

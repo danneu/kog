@@ -143,7 +143,8 @@ import com.danneu.kog.Encoder as JE
 import java.util.File
 
 Response()                                     // skeleton 200 response
-Response(Status.notFound)                      // 404 response
+Response(Status.NotFound)                      // 404 response
+Response.notFound()       <-- Sugar            // 404 response
 Response().text("Hello")                       // text/plain
 Response().html("<h1>Hello</h1>")              // text/html
 Response().json(JE.jsonObject("number" to 42)) // application/json {"number": 42}
@@ -238,7 +239,7 @@ but you can fix this by using a `label@`:
 
 ``` kotlin
 val middleware: Middleware = { handler -> handler@ { req -> 
-    val data = req.query.get("data") ?: return@handler Response(Status.BadRequest)
+    val data = req.query.get("data") ?: return@handler Response.badRequest()
     Response().text("You sent: $data")
 }}
 ```
@@ -306,7 +307,7 @@ val handler = { request ->
     Response().json(JE.jsonObject("sum" to nums.sum()))
   }, { parseException -> 
     // failure
-    Response(Status.badRequest)
+    Response.badRequest()
   })
 }
 ```
@@ -659,7 +660,7 @@ import com.danneu.kog.Response
 import com.danneu.kog.WebSocket
 
 val authenticateUser: Middleware = { handler -> handler@ { req ->
-    req.cookies["session_id"] != "xxx" && return@handler Response(Status.forbidden)
+    req.cookies["session_id"] != "xxx" && return@handler Response.forbidden()
     handler(req)
 }}
 

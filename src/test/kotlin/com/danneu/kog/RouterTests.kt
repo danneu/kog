@@ -5,9 +5,6 @@ import org.junit.Test
 import java.util.Stack
 
 
-// TODO: Refactor all assertTrue's into assertEquals since assertEquals prints out expects vs actual values
-
-
 // generates middleware for testing
 class Tokenware() {
     private val stack = Stack<String>()
@@ -31,22 +28,22 @@ class RouterTests {
     fun testEmpty() {
         val router = Router {}
         val response = router(Request.toy(method = Method.Get, path = "/"))
-        assertTrue("empty router 404s", response.status == Status.notFound)
+        assertEquals("empty router 404s", Status.NotFound, response.status)
     }
 
     @Test
     fun hitsOnlyRoute() {
         val router = Router { get("/") { Response().text("ok")} }
         val response = router(Request.toy(method = Method.Get, path = "/"))
-        assertTrue("is 200", response.status == Status.ok)
-        assertTrue("has right body", (response.body as ResponseBody.String).body == "ok")
+        assertEquals("is 200", Status.Ok, response.status)
+        assertEquals("has right body", "ok", (response.body as ResponseBody.String).body)
     }
 
     @Test
     fun missesOnlyRoute() {
         val router = Router { get("/") { Response().text("ok")} }
         val response = router(Request.toy(method = Method.Post, path = "/"))
-        assertTrue("is 404", response.status == Status.notFound)
+        assertEquals("is 404", Status.NotFound, response.status)
     }
 
     @Test
@@ -60,7 +57,7 @@ class RouterTests {
             get("/alt") { Response().text("alt")}
         }
         val response = router(Request.toy())
-        assertTrue("middleware re-routes request to /alt", (response.body as ResponseBody.String).body == "alt")
+        assertEquals("middleware re-routes request to /alt", "alt", (response.body as ResponseBody.String).body)
     }
 
     @Test
@@ -73,7 +70,7 @@ class RouterTests {
             get("/") { Response().text("ok")}
         }
         val response = router(Request.toy())
-        assertTrue("middleware sets header", response.getHeader(Header.Custom("test")) == "x")
+        assertEquals("middleware sets header", "x", response.getHeader(Header.Custom("test")))
     }
 
     @Test
@@ -85,7 +82,7 @@ class RouterTests {
             }
         }
         val response = router(Request.toy(path = "/nest"))
-        assertTrue("request hits nest", (response.body as ResponseBody.String).body == "nest root")
+        assertEquals("request hits nest", "nest root", (response.body as ResponseBody.String).body)
     }
 
     @Test
@@ -106,10 +103,10 @@ class RouterTests {
             get("/outside") { Response().text("ok")}
         }
         router(Request.toy(path = "/nest"))
-        assertTrue("middleware fires in group", tokens.list() == listOf("A"))
+        assertEquals("middleware fires in group", listOf("A"), tokens.list())
 
         router(Request.toy(path = "/outside"))
-        assertTrue("outer route hits middleware outside of group", tokens.list() == listOf("A", "B"))
+        assertEquals("outer route hits middleware outside of group", listOf("A", "B"), tokens.list())
     }
 
     @Test
@@ -123,7 +120,7 @@ class RouterTests {
             use { handler -> { req -> tokens.add("D"); handler(req) }}
         }
         router(Request.toy(path = "/"))
-        assertTrue("hits multiple middleware before short-circuiting", tokens.list() == listOf("A", "B", "C"))
+        assertEquals("hits multiple middleware before short-circuiting", listOf("A", "B", "C"), tokens.list())
 
         tokens.clear()
         router(Request.toy(path = "/not-found"))
@@ -142,7 +139,7 @@ class RouterTests {
             }
         }
         val response = router(Request.toy(path = "/a/b/c/d"))
-        assertTrue("request can hit deep nesting", response.status == Status.ok)
+        assertEquals("request can hit deep nesting", Status.Ok, response.status)
     }
 
     @Test
@@ -152,10 +149,10 @@ class RouterTests {
             options("/d/e/f") { Response() }
         }
         val response1 = router(Request.toy(method = Method.Post,path = "/a/b/c"))
-        assertTrue("POST works", response1.status == Status.ok)
+        assertEquals("POST works", Status.Ok, response1.status)
 
         val response2 = router(Request.toy(method = Method.Options,path = "/d/e/f"))
-        assertTrue("OPTIONS works", response2.status == Status.ok)
+        assertEquals("OPTIONS works", Status.Ok, response2.status)
     }
 
     @Test
@@ -165,7 +162,7 @@ class RouterTests {
             get("/", tokens.mw("A"), tokens.mw("B")) { Response() }
         }
         val response = router(Request.toy())
-        assertTrue("all array middleware run", tokens.list() == listOf("A", "B"))
+        assertEquals("all array middleware run", listOf("A", "B"), tokens.list())
     }
 
     @Test
@@ -180,12 +177,12 @@ class RouterTests {
         }
 
         val response1 = router(Request.toy(path = "/after"))
-        assertTrue("route is hit", response1.status == Status.ok)
-        assertTrue("no middleware was hit", tokens.list() == listOf<String>())
+        assertEquals("route is hit", Status.Ok, response1.status)
+        assertEquals("no middleware was hit", listOf<String>(), tokens.list())
 
         val response2 = router(Request.toy())
-        assertTrue("route is hit", response2.status == Status.ok)
-        assertTrue("all array middleware run", tokens.list() == listOf("A", "B", "C", "D"))
+        assertEquals("route is hit", Status.Ok, response2.status)
+        assertEquals("all array middleware run", listOf("A", "B", "C", "D"), tokens.list())
     }
 
 
@@ -200,10 +197,10 @@ class RouterTests {
         }
 
         val response1 = router(Request.toy(path = "/no-trailing"))
-        assertTrue("non-trailing slash hit", response1.body.toString() == "/no-trailing")
+        assertEquals("non-trailing slash hit", "/no-trailing", response1.body.toString())
 
         val response2 = router(Request.toy(path = "/trailing/"))
-        assertTrue("trailing slash hit", response2.body.toString() == "/trailing/")
+        assertEquals("trailing slash hit", "/trailing/", response2.body.toString())
     }
 
 
@@ -220,16 +217,15 @@ class RouterTests {
 
         run {
             val r1 = router(Request.toy(path = "/a/"))
-            assertTrue("trailing slash hit", r1.body.toString() == "/a/")
+            assertEquals("trailing slash hit", "/a/", r1.body.toString())
             val r2 = router(Request.toy(path = "/a"))
-            assertTrue("404s when it should", r2.status == Status.notFound)
+            assertEquals("404s when it should", Status.NotFound, r2.status)
         }
         run {
             val r1 = router(Request.toy(path = "/b"))
-            println("${r1.status}, ${r1.body}")
-            assertTrue("non-slash still works", r1.body.toString() == "/b")
+            assertEquals("non-slash still works", "/b", r1.body.toString())
             val r2 = router(Request.toy(path = "/b/"))
-            assertTrue("404s when it should", r2.status == Status.notFound)
+            assertEquals("404s when it should", Status.NotFound, r2.status)
         }
     }
 
@@ -244,9 +240,9 @@ class RouterTests {
         }
 
         val r1 = router(Request.toy(path = "/a/b/"))
-        assertTrue("trailing slash hit", r1.status == Status.ok)
+        assertEquals("trailing slash hit", Status.Ok, r1.status)
         val r2 = router(Request.toy(path = "/a/b"))
-        assertTrue("404s when it should", r2.status == Status.notFound)
+        assertEquals("404s when it should", Status.NotFound, r2.status)
     }
 
 
@@ -266,7 +262,7 @@ class RouterTests {
 
         run {
             val res = router(Request.toy(method = Method.Head, path = "/not-found"))
-            assertEquals("routes 404", Status.notFound, res.status)
+            assertEquals("routes 404", Status.NotFound, res.status)
         }
     }
 }

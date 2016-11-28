@@ -38,10 +38,11 @@ interface HasHeaders <out T> {
 
 
 sealed class Header {
-    //fun equals(other: Header):Boolean = true
-
     class Custom(key: String) : Header() {
+        // Keys are canonicalized on creation. Nitpick: Maybe it should be done at another time.
         val key = key.toCookieCase()
+
+        // Support Custom("foo") == Custom("FOO")
         override fun equals(other: Any?): Boolean = when (other) {
             is Custom -> key == other.key
             else -> false
@@ -231,7 +232,7 @@ sealed class Header {
 
 // "foo-bar-qux" -> "Foo-Bar-Qux"
 fun String.toCookieCase(): String {
-    return this
+    return this.toLowerCase()
+        // Capitalize the first letter after each boundary
         .replace(Regex("""(?<=\b)([a-z])"""), { it.value.toUpperCase() })
-        .replace(Regex("""(?<=\b[A-Z])([^-]+)"""), { it.value.toLowerCase() })
 }

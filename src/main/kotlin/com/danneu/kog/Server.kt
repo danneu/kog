@@ -29,7 +29,7 @@ class JettyHandler(val handler: Handler, val insertContextHandler: (String, WebS
     override fun handle(target: String, baseRequest: JettyServerRequest, servletRequest: HttpServletRequest, servletResponse: HttpServletResponse) {
         val request = Servlet.intoKogRequest(servletRequest)
         val response = handler(request)
-        if (response.status == Status.switchingProtocols && response.webSocket != null && WebSocketServerFactory().isUpgradeRequest(servletRequest, servletResponse)) {
+        if (response.status == Status.SwitchingProtocols && response.webSocket != null && WebSocketServerFactory().isUpgradeRequest(servletRequest, servletResponse)) {
             val (key, accept) = response.webSocket!!
             if (!installedSocketHandlers.contains(key)) {
                 installedSocketHandlers.add(key)
@@ -45,7 +45,7 @@ class JettyHandler(val handler: Handler, val insertContextHandler: (String, WebS
 }
 
 
-class Server(val handler: Handler = { Response(Status.notFound) }, val websockets: Map<String, WebSocketAcceptor> = emptyMap()) {
+class Server(val handler: Handler = { Response.notFound() }, val websockets: Map<String, WebSocketAcceptor> = emptyMap()) {
     val jettyServer: JettyServer = makeJettyServer()
 
     fun stop() {
@@ -150,11 +150,11 @@ internal fun Server.Companion.wrapErrorHandler(): Middleware = { handler -> { re
         handler(req)
     } catch (ex: EofException) {
         // We can't do anything about early client hangup
-        Response(Status.internalError)
+        Response.internalError()
     } catch (ex: Exception) {
         System.err.print("Unhandled error: ")
         ex.printStackTrace(System.err)
-        Response(Status.internalError)
+        Response.internalError()
     }
 }}
 

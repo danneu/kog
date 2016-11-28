@@ -15,7 +15,7 @@ fun toPath(vararg paths: String): String {
 
 
 private fun composeHandler(wares: Array<Middleware>): Handler {
-    val notFound: Handler = { Response(Status.notFound) }
+    val notFound: Handler = { Response.notFound() }
     return wares.reversed().fold(notFound, { handler: Handler, ware: Middleware -> ware(handler) })
 }
 
@@ -95,7 +95,7 @@ class Group(val path: String, mws: Array<out Middleware> = emptyArray(), init: G
         if (matches(req)) {
             (composeHandler(this.wares.toTypedArray()))(req)
         } else {
-            Response(Status.notFound)
+            Response.notFound()
         }
     }
 
