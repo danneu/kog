@@ -148,10 +148,10 @@ Response().text("Hello")                       // text/plain
 Response().html("<h1>Hello</h1>")              // text/html
 Response().json(JE.jsonObject("number" to 42)) // application/json {"number": 42}
 Response().json(JE.jsonArray(1, 2, 3))         // application/json [1, 2, 3]
-Response().file(File("video.mp4"))                 // video/mp4 (determines response headers from File metadata)
+Response().file(File("video.mp4"))             // video/mp4 (determines response headers from File metadata)
 Response().stream(File("video.mp4"), "video/mp4")  // video/mp4
-Response().setHeader("Content-Type", "application/json")
-Response().appendHeader("X-Fruit", "orange")
+Response().setHeader(Header.ContentType, "application/json")
+Response().appendHeader(Header.Custom("X-Fruit"), "orange")
 Response().redirect("/")                           // 302 redirect
 Response().redirect("/", permanent = true)         // 301 redirect
 Response().redirectBack(request, "/")              // 302 redirect 
@@ -159,22 +159,23 @@ Response().redirectBack(request, "/")              // 302 redirect
 
 ``` kotlin
 import com.danneu.kog.json.Decoder as JD
+import com.danneu.kog.Header
 
 // GET http://example.com/users?sort=created,  json body is {"foo": "bar"}
 var handler: Handler = { request
-  request.url                      // http://example.com/users?sort=created
+  request.href                     // http://example.com/users?sort=created
   request.path                     // "/users"
   request.method                   // Method.get
   request.json(decoder)            // Result<*, Exception>
   request.utf8()                   // "{\"foo\": \"bar\"}"
-  request.headers                  // [("host", "example.com"), ...]
-  request.getHeader("host")        // "example.com"?
-  request.getHeader("xxxxx")       // null
-  request.setHeader("key", "val")  // Request
+  request.headers                  // [(Header.Host, "example.com"), ...]
+  request.getHeader(Header.Host)   // "example.com"?
+  request.getHeader(Header.Custom("xxx"))                 // null
+  request.setHeader(Header.UserAgent, "MyCrawler/0.0.1")  // Request
 }
 ```
 
-### Handler = (Request) -> Response
+### Handler
 
 ``` kotlin
 typealias Handler = (Request) -> Response
@@ -192,7 +193,7 @@ fun main(args: Array<String>) {
 }
 ```
 
-### Middleware = (Handler) -> Handler
+### Middleware
 
 ``` kotlin
 typealias Middleware = (Handler) -> Handler
@@ -224,6 +225,22 @@ import com.danneu.kog.composeMiddleware
 // `logger` will touch the request first and the response last
 val middleware = composeMiddleware(logger, cookieParser, loadCurrentUser)
 Server(middleware(handler)).listen(3000)
+```
+
+#### **Tip:** Short-Circuiting Lambdas
+
+You often want to bail early when writing middleware and handlers,
+like short-circuiting your handler with a `400 Bad Request` when the
+client gives you invalid data.
+
+The compiler will complain if you `return` inside a lambda expression,
+but you can fix this by using a `label@`:
+
+``` kotlin
+val middleware: Middleware = { handler -> handler@ { req -> 
+    val data = req.query.get("data") ?: return@handler Response(Status.BadRequest)
+    Response().text("You sent: $data")
+}}
 ```
 
 ## JSON
