@@ -18,10 +18,25 @@ enum class Method {
     Unknown;
 
     companion object {
-        fun fromString(value: String): Method = try {
-            enumValueOf<Method>(value.toLowerCase().capitalize())
-        } catch (_: IllegalArgumentException) {
-            Unknown
+        val GET = "GET"
+        val HEAD = "HEAD"
+        val POST = "POST"
+        val PUT = "PUT"
+        val DELETE = "DELETE"
+        val OPTIONS = "OPTIONS"
+        val TRACE = "TRACE"
+        val PATCH = "PATCH"
+
+        fun fromString(value: String): Method = when (value.toUpperCase()) {
+            GET -> Get
+            HEAD -> Head
+            POST -> Post
+            PUT -> Put
+            DELETE -> Delete
+            OPTIONS -> Options
+            TRACE -> Trace
+            PATCH -> Patch
+            else -> Unknown
         }
     }
 }

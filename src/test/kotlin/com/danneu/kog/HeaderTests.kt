@@ -43,12 +43,12 @@ class HeaderStoreTests {
 class HeaderSerializeTests {
     @Test
     fun testSerializeObject() {
-        assertEquals("Set-Cookie", Header.SetCookie.toString())
+        assertEquals("set-cookie", Header.SetCookie.toString())
     }
 
     @Test
     fun testSerializeCustom() {
-        assertEquals("Foo-Bar", Header.Custom("foo-bar").toString())
+        assertEquals("foo-bar", Header.Custom("foo-bar").toString())
     }
 }
 
@@ -75,8 +75,8 @@ class HeaderEqualityTests {
         val a = Header.Custom("FOO-bar")
         val b = Header.Custom("foo-BAR")
         assertEquals("custom headers are equal even with different capitalization", a, b)
-        assertEquals("Foo-Bar", a.key)
-        assertEquals("Foo-Bar", b.key)
+        assertEquals("foo-bar", a.key)
+        assertEquals("foo-bar", b.key)
     }
 
     // OBJECT
