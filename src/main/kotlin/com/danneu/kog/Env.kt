@@ -22,7 +22,7 @@ private fun readEnvFile(): Map<String, String> {
 }
 
 
-private fun readSystemProps: Map<String, String> {
+private fun readSystemProps(): Map<String, String> {
     return System.getProperties().map { entry -> entry.key.toString() to entry.value.toString() }.toMap()
 }
 
