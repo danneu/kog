@@ -7,7 +7,7 @@ class Main {
             val router = Router {
                 get("/") {
                     Response()
-                      .setHeader("Access-Control-Allow-Origin", "*")
+                      .setHeader(Header.AccessControlAllowOrigin, "*")
                       .text("Hello, World!")
                 }
                 websocket("/foo") { request: Request, socket: WebSocket ->
