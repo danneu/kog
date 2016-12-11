@@ -1,5 +1,5 @@
 
-# kog [![Kotlin](https://img.shields.io/badge/Kotlin-1.1.1-blue.svg)](https://kotlinlang.org/) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog)
+# kog [![Kotlin](https://img.shields.io/badge/kotlin-1.1.1-blue.svg)](https://kotlinlang.org/) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog) ![Heroku](https://img.shields.io/badge/heroku-ready-9b59b6.svg)
 
 A simple, experimental Kotlin web framework inspired by Clojure's Ring.
 
