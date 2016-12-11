@@ -91,7 +91,7 @@ fun multipart(whitelist: Whitelist, ttl: Duration = Duration.ofHours(1), interva
                 fileSet.add(file)
                 item.openStream().copyTo(file.outputStream())
                 val savedUpload = SavedUpload(file, item.name, item.contentType, file.length())
-                Pair(item.fieldName, savedUpload)
+                item.fieldName to savedUpload
             }
         }.filterNotNull().forEach { pair ->
             req.uploads[pair.first] = pair.second

@@ -209,7 +209,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
                     val array = it.asArray()
                     if (array.size() == 2) {
                         Result.all(left(array[0]), right(array[1])).map { vals ->
-                            Pair(vals[0] as A, vals[1] as B)
+                            (vals[0] as A) to (vals[1] as B)
                         }
                     } else {
                         Result.error(Exception("Expected Pair but got array with ${array.size()} items"))

@@ -8,9 +8,9 @@ import java.security.MessageDigest
 // Decodes www-form-urlencoded. Doesn't do any nesting for now.
 fun formDecode(encoded: String?): Map<String, String> {
     if (encoded == null) { return emptyMap() }
-    return encoded.split("&")
+    return encoded.split("&", limit = 100)
         .map { it.split("=", limit = 2) }
-        .map { list -> if (list.size == 2) { Pair(list[0], list[1]) } else { null }}
+        .map { list -> if (list.size == 2) { list[0] to list[1] } else { null }}
         .filterNotNull()
         .toMap()
 }
