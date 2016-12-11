@@ -1,5 +1,5 @@
 
-# kog [![Kotlin](https://img.shields.io/badge/Kotlin-1.1.1-orange.svg)](https://kotlinlang.org/)
+# kog [![Kotlin](https://img.shields.io/badge/Kotlin-1.1.1-blue.svg)](https://kotlinlang.org/) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog)
 
 A simple, experimental Kotlin web framework inspired by Clojure's Ring.
 
