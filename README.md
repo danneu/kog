@@ -11,6 +11,12 @@ Disclaimer: I'm new to Kotlin and Java. Implementing and abandoning the start of
 
 TODO
 
+## Goals
+
+1. Simplicity
+2. Middleware
+3. Functional composition
+
 ## Hello World
 
 ### Basic
@@ -118,12 +124,6 @@ socket.onmessage = function (payload) {
   console.log('server said:', payload.data)
 }
 ```
-
-## Goals
-
-1. Simplicity
-2. Middleware
-3. Functional composition
 
 ## Concepts
 
