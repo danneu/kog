@@ -59,18 +59,26 @@ import com.danneu.kog.Router
 
 val router = Router {
   use({ handler -> { req -> 
-    // this middleware runs on every request served by this router
-    println("middleware")
-    handler(req) 
+      // this middleware runs on every request served by this router
+      println("middleware")
+      handler(req)
   }})
-  get("/") { Response().text("homepage") }
+  get("/") {
+      Response().text("homepage")
+  }
   group("/users") {
-    get("/") { Response().text("list users") }
-    get("/:id") { Response().text("show user") }
+      get("/") {
+          Response().text("list users")
+      }
+      get("/:id") {
+          Response().text("show user")
+      }
   }
   group("/admin") {
-    use(ensureAdmin()) // only runs if routes in this group are hit
-    get("/") { Response().text("admin panel") }
+      use(ensureAdmin()) // only runs if routes in this group are hit
+      get("/") {
+          Response().text("admin panel")
+      }
   }
 }
 
@@ -755,16 +763,9 @@ There's so much missing that it feels silly writing a TODO list, but here are so
   change.
 - Organize the Jetty/Servlet code. I have no experience working with Jetty nor Servlets,
   so I copied Ring's adapter. It definitely needs some deliberate TLC.
-- Finish enumerating Status.kt codes.
-- Investigate having a ./gradle/wrapper folder. Seems every Kotlin project has this which I assume packages the
-  gradle build step dependency with the project instead of relying on system gradle?
 - Figure how to handle middleware/handlers trying to read the `request.body`
   InputStream after it has already been consumed upstream. For example,
   maybe consuming it transitions it into some sort of consumed stream
   type so that you must handle that case?
-- When Kotlin's async/await is stable, I'd like to experiment with migrating
-  to an asynchronous abstraction instead of the current n-thread approach.
 - Multipart: Let handler optionally get a mapping of upload streams instead
   of temporary files so that it can handle streams directly if it wants.
-- Replace Charsets.getName()/Charset.defaultCharset() 
-  with kotlin's `Charsets.UTF_8`.
