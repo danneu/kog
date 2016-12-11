@@ -31,7 +31,7 @@ class Request(
     val query: MutableMap<String, String> by lazy { formDecode(queryString).mutableCopy() }
 
     // multipart middleware populates this with name -> file mappings for multipart uploads
-    val uploads: MutableMap<String, SavedUpload> = mutableMapOf()
+    val uploads: MutableMap<String, SavedUpload> by lazy { mutableMapOf<String, SavedUpload>() }
 
     val cookies: MutableMap<String, String> by lazy { parse(getHeader(Header.Cookie)).mutableCopy() }
 
