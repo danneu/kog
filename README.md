@@ -9,7 +9,15 @@ Disclaimer: I'm new to Kotlin and Java. Implementing and abandoning the start of
 
 ## Install
 
-TODO
+``` groovy
+repositories {
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    compile "com.github.danneu:kog:0.0.1"
+}
+```
 
 ## Goals
 
