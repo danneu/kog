@@ -42,6 +42,11 @@ fun serveStatic(publicRootString: String, maxAge: Duration = Duration.ZERO): Mid
 }
 
 
+/**
+ * Returns true if `other` path is downstream from this path.
+ *
+ * i.e. If this path is a prefix of `other` path.
+ */
 private fun Path.isParentOf(other: Path): Boolean {
     return other.startsWith(this)
 }

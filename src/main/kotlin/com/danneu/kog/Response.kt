@@ -10,60 +10,61 @@ import java.io.InputStream
 typealias WebSocketAcceptor = (Request, WebSocket) -> Unit
 
 
+/**
+ * HACK: If a response has the status 101 Switching Protocols, Kog registers the websocket handler with Jetty.
+ */
 internal fun Response.Companion.websocket(key: String, accept: WebSocketAcceptor): Response {
     return Response.switchingProtocols().apply {
         this.webSocket = key to accept
     }
 }
 
-class Response(var status: Status = Status.Ok, var body: ResponseBody = ResponseBody.None, var webSocket: Pair<String, WebSocketAcceptor>? = null) : HasHeaders<Response> {
+class Response(
+    var status: Status = Status.Ok,
+    var body: ResponseBody = ResponseBody.None,
+    var webSocket: Pair<String, WebSocketAcceptor>? = null
+) : HasHeaders<Response> {
 
     val cookies by lazy { mutableMapOf<String, Cookie>() }
 
     override var headers: MutableList<HeaderPair> = mutableListOf()
 
-    fun setStatus(status: Status): Response {
-        this.status = status
-        return this
-    }
+    fun setStatus(status: Status) = apply { this.status = status }
 
     // BODIES
 
-    fun setBody(body: ResponseBody): Response {
-        this.body = body
-        return this
+    fun setBody(body: ResponseBody) = apply { this.body = body }
+
+    fun html(html: String) = apply {
+        setHeader(Header.ContentType, "text/html")
+        setBody(ResponseBody.String(html))
     }
 
-    fun html(html: String): Response {
-        return setHeader(Header.ContentType, "text/html")
-            .setBody(ResponseBody.String(html))
+    fun text(text: String) = apply {
+        setHeader(Header.ContentType, "text/plain")
+        setBody(ResponseBody.String(text))
     }
 
-    fun text(text: String): Response {
-        return setHeader(Header.ContentType, "text/plain")
-            .setBody(ResponseBody.String(text))
+    fun none() = apply {
+        removeHeader(Header.ContentType)
+        setBody(ResponseBody.None)
     }
 
-    fun none(): Response {
-        return removeHeader(Header.ContentType)
-            .setBody(ResponseBody.None)
+    fun json(value: JsonValue) = apply {
+        setHeader(Header.ContentType, "application/json")
+        setBody(ResponseBody.String(value.toString()))
     }
 
-    fun json(value: JsonValue): Response {
-        return setHeader(Header.ContentType, "application/json")
-            .setBody(ResponseBody.String(value.toString()))
+    fun stream(input: InputStream, contentType: String = "application/octet-stream") = apply {
+        setHeader(Header.ContentType, contentType)
+        setBody(ResponseBody.InputStream(input))
     }
 
-    fun stream(input: InputStream, contentType: String = "application/octet-stream"): Response {
-        return setHeader(Header.ContentType, contentType)
-            .setBody(ResponseBody.InputStream(input))
-    }
-
-    fun file(file: File, contentType: String? = null): Response {
-        return setBody(ResponseBody.File(file))
-            // Hmm, already doing it at finalize time. TODO: Rethink streamable interface. need length?
-            .setHeader(Header.ContentLength, file.length().toString())
-            .setHeader(Header.ContentType, contentType ?: Mime.fromExtension(file.extension))
+    fun file(file: File, contentType: String? = null) = apply {
+        setBody(ResponseBody.File(file))
+        // Hmm, already doing it at finalize time. TODO: Rethink streamable interface. need length?
+        setHeader(Header.ContentLength, file.length().toString())
+        setHeader(Header.ContentType, contentType ?: Mime.fromExtension(file.extension))
     }
 
     // FINALIZE
@@ -94,18 +95,12 @@ class Response(var status: Status = Status.Ok, var body: ResponseBody = Response
 
     // 301: .MovedPermanently
     // 302: .Found
-    fun redirect(uri: String, permanent: Boolean = false): Response {
-        return setHeader(Header.Location, uri)
-            .setStatus(if (permanent) {
-                Status.MovedPermanently
-            } else {
-                Status.Found
-            })
+    fun redirect(uri: String, permanent: Boolean = false) = apply {
+        setHeader(Header.Location, uri)
+        setStatus(if (permanent) Status.MovedPermanently else Status.Found)
     }
 
-    fun redirectBack(request: Request, altUri: String): Response {
-        return redirect(request.getHeader(Header.Referer) ?: altUri)
-    }
+    fun redirectBack(request: Request, altUri: String) = redirect(request.getHeader(Header.Referer) ?: altUri)
 
     // MISC
 

@@ -4,17 +4,33 @@ import java.util.Base64
 import javax.servlet.ServletOutputStream
 
 
-// etag() is null if there's no sensible way to generate a tag from an entity
+/**
+ * A response body is ETaggable if it knows how to generate its own etag.
+ */
 interface ETaggable {
+    /**
+     * Returns null if there's no sensible way to generate a tag from an entity.
+     */
     fun etag(): String?
 
     companion object {
+        /**
+         * The ETag for 0-length empty body.
+         */
         fun empty(): String = "\"0-1B2M2Y8AsgTpgAmY7PhCfg\""
     }
 }
 
+
+/**
+ * An object can be streamed to the response output stream if it knows how to pipe itself.
+ */
 interface OutStreamable {
     fun pipe(output: ServletOutputStream): Any
+
+    /**
+     * Byte length is not always known ahead of time, like when response body is an input stream.
+     */
     val length: Long?
 }
 
