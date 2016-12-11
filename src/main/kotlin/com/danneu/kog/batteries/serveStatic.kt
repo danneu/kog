@@ -5,11 +5,12 @@ import com.danneu.kog.Request
 import com.danneu.kog.Method
 import com.danneu.kog.Middleware
 import com.danneu.kog.Response
-import com.danneu.kog.Status
 import java.io.File
 import java.nio.file.Path
+import java.time.Duration
 
-fun serveStatic(publicRootString: String, maxAge: Long = 0): Middleware = { handler ->
+
+fun serveStatic(publicRootString: String, maxAge: Duration = Duration.ZERO): Middleware = { handler ->
     val publicRoot = File(publicRootString).toPath().normalize().toAbsolutePath()
 
     fun(request: Request): Response {
@@ -36,7 +37,7 @@ fun serveStatic(publicRootString: String, maxAge: Long = 0): Middleware = { hand
 
         return Response()
           .file(asset)
-          .setHeader(Header.CacheControl, "public, max-age=$maxAge")
+          .setHeader(Header.CacheControl, "public, max-age=${maxAge.seconds}")
     }
 }
 

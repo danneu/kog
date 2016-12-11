@@ -12,6 +12,7 @@ import org.apache.commons.fileupload.FileUpload
 import org.apache.commons.fileupload.UploadContext
 import java.io.File
 import java.io.InputStream
+import java.time.Duration
 
 
 private fun fileSequence(iter: FileItemIterator): Sequence<FileItemStream> = generateSequence {
@@ -45,19 +46,19 @@ private fun backgroundThread(f: Runnable) {
 // whitelist = set of fieldnames to handle so that we don't do unnecessary work
 // ttl = delete upload temp files after `ttl` milliseconds (default = 1 hour)
 // interval = check for expired temp files every `interval` milliseconds (default = 10 seconds)
-fun multipart(whitelist: Whitelist, ttl: Long = 3600 * 1000, interval: Long = 10000): Middleware = { handler ->
+fun multipart(whitelist: Whitelist, ttl: Duration = Duration.ofHours(1), interval: Duration = Duration.ofSeconds(10)): Middleware = { handler ->
     // Set of temp files that we need to delete once expired
     val fileSet: MutableSet<File> = mutableSetOf()
 
     Runtime.getRuntime().addShutdownHook(Thread(Runnable { for (file in fileSet.iterator()) { file.delete() } }))
 
-    fun expired(file: File): Boolean = file.lastModified() < System.currentTimeMillis() - ttl
+    fun expired(file: File): Boolean = file.lastModified() < System.currentTimeMillis() - ttl.toMillis()
 
     // TODO: Instead of starting a fileSet + concurrent cleanup every time this is invoked, use some
     // sort of central store / schedule.
     backgroundThread(Runnable {
         while (true) {
-            Thread.sleep(interval)
+            Thread.sleep(interval.toMillis())
             val iter = fileSet.iterator()
             for (file in iter) {
                 if (expired(file)) {

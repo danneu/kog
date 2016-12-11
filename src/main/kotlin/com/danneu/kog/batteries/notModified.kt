@@ -8,7 +8,9 @@ import com.danneu.kog.Response
 import com.danneu.kog.ResponseBody
 import com.danneu.kog.Status
 import com.danneu.kog.util.HttpDate
-import org.joda.time.DateTime
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
 
 
 fun notModified(etag: Boolean): Middleware = { handler -> handler@ { request ->
@@ -32,7 +34,9 @@ fun notModified(etag: Boolean): Middleware = { handler -> handler@ { request ->
     // add last-modified header if body has that info
     response.body.apply {
         if (this is ResponseBody.File) {
-            response.setHeader(Header.LastModified, HttpDate.toString(DateTime(body.lastModified())))
+            val instant = Instant.ofEpochMilli(body.lastModified())
+            val datetime = OffsetDateTime.ofInstant(instant, ZoneId.systemDefault())
+            response.setHeader(Header.LastModified, HttpDate.toString(datetime))
         }
     }
 

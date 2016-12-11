@@ -413,7 +413,7 @@ import com.danneu.kog.Response
 import com.danneu.kog.Handler
 import com.danneu.kog.Server
 import com.danneu.kog.cookies.Cookie
-import com.danneu.kog.cookies.Duration
+import com.danneu.kog.cookies.Ttl
 import org.joda.time.DateTime
 
 fun Request.parseCounter(): Int = try {
@@ -423,7 +423,7 @@ fun Request.parseCounter(): Int = try {
 }
 
 fun Response.setCounter(count: Int): Response = apply {
-    cookies["counter"] = Cookie(count.toString(), duration = Duration.Expires(DateTime().plusDays(3)))
+    cookies["counter"] = Cookie(count.toString(), duration = Ttl.Expires(DateTime().plusDays(3)))
 }
 
 val handler: Handler = { request ->

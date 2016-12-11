@@ -1,11 +1,13 @@
 package com.danneu.kog.util
 
-import org.joda.time.format.DateTimeFormat
-import java.util.Locale
-import org.joda.time.DateTime
+
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 
-// Implements de/serializations between joda DateTime<->String for dates
+// Implements de/serializations between DateTime<->String for dates
 // in http headers like Last-Modified and cookie Expires.
 //
 // Example HTTP date: "Wed, 15 Nov 1995 04:58:08 GMT"
@@ -14,18 +16,14 @@ import org.joda.time.DateTime
 
 
 object HttpDate {
-    fun toString(date: DateTime): String {
-        return date.toString(HttpDateFormatter)
+    fun toString(date: OffsetDateTime): String {
+        return date.format(HttpDateFormatter)
     }
 
-    fun fromString(string: String): DateTime? {
-        return DateTime.parse(string, HttpDateFormatter)
+    fun fromString(string: String): OffsetDateTime? {
+        return OffsetDateTime.parse(string, HttpDateFormatter)
     }
 
     // rfc2616 explains rfc1123
-    // NOTE: java has java.time.format.DateTimeFormatter.RFC_1123_DATE_TIME
-    private val HttpDateFormatter = DateTimeFormat
-        .forPattern("EEE, dd MMM yyyy HH:mm:ss 'GMT'")
-        .withZoneUTC()
-        .withLocale(Locale.US)
+    private val HttpDateFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
 }
