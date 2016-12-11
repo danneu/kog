@@ -15,7 +15,9 @@ repositories {
 }
 
 dependencies {
-    compile "com.github.danneu:kog:0.0.1"
+    compile "com.danneu:kog:0.0.3"
+    // Or always get latest
+    compile "com.danneu:kog:master-SNAPSHOT"
 }
 ```
 
@@ -720,6 +722,88 @@ val router = Router {
         Response().text("You are authenticated!")
     }
 }
+```
+
+## Heroku Deploy
+
+This example application will be called "com.danneu.kogtest".
+
+In `./system.properties`:
+
+```
+java.runtime.version=1.8
+```
+
+In `./build.gradle`:
+
+``` groovy
+buildscript {
+    ext.kotlin_version = "1.1-M03"
+    ext.shadow_version = "1.2.3"
+
+    repositories {
+        jcenter()
+        maven { url  "http://dl.bintray.com/kotlin/kotlin-eap-1.1" }
+    }
+
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version", "com.github.jengelman.gradle.plugins:shadow:$shadow_version"
+    }
+}
+
+apply plugin: 'kotlin'
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'application'
+
+mainClassName = 'com.danneu.kogtest.Main' // <--------------- CHANGE ME
+
+repositories {
+    jcenter()
+    maven { url  "http://dl.bintray.com/kotlin/kotlin-eap-1.1" }
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    compile 'com.danneu:kog:master-SNAPSHOT'
+}
+
+task stage(dependsOn: ['shadowJar', 'clean'])
+```
+
+In `./src/main/kotlin/com/danneu/kogtest/main.kt`:
+
+``` kotlin
+package com.danneu.kogtest
+
+import com.danneu.kog.Env
+import com.danneu.kog.Handler
+import com.danneu.kog.Response
+import com.danneu.kog.Server
+
+class Main {
+    companion object {
+        @JvmStatic fun main(args: Array<String>) {
+            val handler: Handler = { Response().text("Hello, world!") }
+            // Heroku gives us a system env var "PORT" that we must bind to
+            Server(handler).listen(Env.int("PORT") ?: 3000)
+        }
+    }
+}
+```
+
+In `./Procfile`:
+
+```
+web: java -jar build/libs/kogtest-all.jar
+```
+
+Create and push to Heroku app:
+
+```
+heroku apps:create my-app
+commit -am 'Initial commit'
+git push heroku master
 ```
 
 ## TODO
