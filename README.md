@@ -724,6 +724,47 @@ val router = Router {
 }
 ```
 
+## Passing in environment variables
+
+Kog's `Env` object provides a central way to access any customizations passed into an application.
+
+First it reads from an optional `.env` file, then it reads from system properties, and finally it reads
+from system environment variables (highest precedence). Any conflicts will be overwritten in that order.
+
+For instance, if we had `PORT=3000` in an `.env` file and then launched our application with:
+
+    PORT=9999 java -jar app.java
+
+Then this is what we'd see in our code:
+
+``` kotlin
+import com.danneu.kog.Env
+
+Env.int("PORT") == 9999
+```
+
+For example, when deploying an application to Heroku, you want to bind to the port that Heroku gives you
+via the `"PORT"` env variable. But you may want to default to port 3000 in development when there is no port
+configured:
+
+``` kotlin
+import com.danneu.kog.Server
+import com.danneu.kog.Env
+
+fun main(args: Array<String>) {
+    Server(router.handler()).listen(Env.int("PORT") ?: 3000)
+}
+```
+
+`Env` provides some conveniences:
+
+- `Env.string(key)`
+- `Env.int(key)`
+- `Env.float(key)`
+- `Env.bool(key)`: True iff the value is `"true"`, e.g. `VALUE=true java -jar app.java`
+
+If the parse fails, `null` is returned.
+
 ## Heroku Deploy
 
 This example application will be called "com.danneu.kogtest".
