@@ -30,6 +30,9 @@ class Request(
 
     val query: MutableMap<String, String> by lazy { formDecode(queryString).mutableCopy() }
 
+    // TODO: Do what things like ratpack do and store the class in the registry so that they get coerced?
+    val params: MutableMap<String, Any> = mutableMapOf()
+
     // multipart middleware populates this with name -> file mappings for multipart uploads
     val uploads: MutableMap<String, SavedUpload> by lazy { mutableMapOf<String, SavedUpload>() }
 

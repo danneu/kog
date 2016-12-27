@@ -20,36 +20,38 @@ private fun composeHandler(wares: Array<Middleware>): Handler {
 }
 
 
-data class Route(val method: Method, val path: String, val handler: Handler) {
-    fun matches(request: Request): Boolean {
-        // Treat HEAD like GET
-        return request.path == path && when (request.method) {
-            Method.Head -> Method.Get
-            else -> request.method
-        } == method
-    }
-    operator fun invoke(request: Request): Response = handler(request)
-    override fun toString(): String = "[Route ${method.name} \"$path\"]"
-
-    fun middleware(): Middleware = { handler -> { req ->
-        if (matches(req)) {
-            this.handler(req)
-        } else {
-            handler(req)
+private object Private {
+    data class Route(val method: Method, val path: String, val handler: Handler) {
+        fun matches(request: Request): Boolean {
+            // Treat HEAD like GET
+            return request.path == path && when (request.method) {
+                Method.Head -> Method.Get
+                else -> request.method
+            } == method
         }
-    }}
+        operator fun invoke(request: Request): Response = handler(request)
+        override fun toString(): String = "[Route ${method.name} \"$path\"]"
+
+        fun middleware(): Middleware = { handler -> { req ->
+            if (matches(req)) {
+                this.handler(req)
+            } else {
+                handler(req)
+            }
+        }}
+    }
 }
 
 
-sealed class StackItem {
-    class Route(val route: com.danneu.kog.Route): StackItem()
+private sealed class StackItem {
+    class Route(val route: Private.Route): StackItem()
     class Group(val group: com.danneu.kog.Group): StackItem()
 }
 
 
 class Group(val path: String, mws: Array<out Middleware> = emptyArray(), init: Group.() -> Unit = {}) {
-    val routes = Stack<Route>()
-    val stack = Stack<StackItem>()
+    private val routes = Stack<Private.Route>()
+    private val stack = Stack<StackItem>()
     val wares = Stack<Middleware>()
 
     init {
@@ -60,7 +62,7 @@ class Group(val path: String, mws: Array<out Middleware> = emptyArray(), init: G
     }
 
     fun method(method: Method): (String, Middleware, Handler) -> Unit = { path: String, middleware: Middleware, handler: Handler ->
-        val route = Route(method, toPath(this.path, path), middleware(handler))
+        val route = Private.Route(method, toPath(this.path, path), middleware(handler))
         routes.push(route)
         stack.push(StackItem.Route(route))
         wares.push(route.middleware())
@@ -120,7 +122,7 @@ class Group(val path: String, mws: Array<out Middleware> = emptyArray(), init: G
     }
 
     override fun toString(): String {
-        return "[Group \"$path\" routes=${routes.size} ${routes.map(Route::toString).joinToString(" ")}]"
+        return "[Group \"$path\" routes=${routes.size} ${routes.map(Private.Route::toString).joinToString(" ")}]"
     }
 }
 

@@ -185,6 +185,7 @@ var handler: Handler = { request
   request.href                     // http://example.com/users?sort=created
   request.path                     // "/users"
   request.method                   // Method.get
+  request.params                   // Map<String, Any>
   request.json(decoder)            // Result<*, Exception>
   request.utf8()                   // "{\"foo\": \"bar\"}"
   request.headers                  // [(Header.Host, "example.com"), ...]
