@@ -1,5 +1,8 @@
 package com.danneu.kog
 
+import java.text.NumberFormat
+import java.text.ParseException
+
 /**
  * A crude work-in-progress rewrite of the original kog.Router for url-param
  * support.
@@ -40,40 +43,42 @@ class Router2(vararg mws: Middleware, block: Router2.() -> Router2) {
     })
 }
 
-sealed class Segment(val name: kotlin.String) {
+// Allow class reopening so user can define Path extensions
+//
+// FIXME: I'm parsing in matches() and then again in coerce(). Ideally there'd be just one parse.
+abstract class Segment(val name: kotlin.String) {
     abstract fun matches(part: kotlin.String): Boolean
+    // Guaranteed to run after matches(), so can assume the coercion will succeed.
     abstract fun coerce(part: kotlin.String): Any
 
     class Static(name: kotlin.String) : Segment(name) {
-        override fun matches(part: kotlin.String): Boolean {
-            return name == part
-        }
-
+        override fun matches(part: kotlin.String) = name == part
         override fun coerce(part: kotlin.String) = part
-
         override fun toString(): kotlin.String = "Static(\"$name\")"
     }
 
     class Int(name: kotlin.String) : Segment(name) {
         override fun matches(part: kotlin.String): Boolean = try {
-            part.toInt()
-            true
-        } catch(e: NumberFormatException) {
-            false
-        }
-
+            part.toInt().let { true }
+        } catch(e: NumberFormatException) { false }
         override fun coerce(part: kotlin.String) = part.toInt()
-
         override fun toString(): kotlin.String = "Int"
     }
 
+    // Matches an int at the start of a string, e.g. "42-abc" -> 42
+    //
+    // Note: NumberFormat.getInstance().parse("9999999999999999999999999999999999999").toInt() == 2147483647
+    class IntPrefix(name: kotlin.String) : Segment(name) {
+        override fun matches(part: kotlin.String): Boolean = try {
+            NumberFormat.getInstance().parse(part).toInt().let { true }
+        } catch(e: ParseException) { false }
+        override fun coerce(part: kotlin.String) = NumberFormat.getInstance().parse(part).toInt()
+        override fun toString(): kotlin.String = "IntPrefix"
+    }
+
     class String(name: kotlin.String) : Segment(name) {
-        override fun matches(part: kotlin.String): Boolean {
-            return true
-        }
-
+        override fun matches(part: kotlin.String): Boolean = true
         override fun coerce(part: kotlin.String) = part
-
         override fun toString(): kotlin.String = "String"
     }
 }
@@ -104,14 +109,17 @@ fun toParts(path: String): List<String> {
     return path.split("/").filter(String::isNotBlank)
 }
 
+// TODO: Consider DRYing up Segment/Path
 class Path(val segments: List<Segment>) {
     fun static(name: String): Path = Path(segments.plus(Segment.Static(name)))
     fun int(name: String): Path = Path(segments.plus(Segment.Int(name)))
+    fun intPrefix(name: String): Path = Path(segments.plus(Segment.IntPrefix(name)))
     fun string(name: String): Path = Path(segments.plus(Segment.String(name)))
     companion object {
         val root = Path(emptyList())
         fun static(name: String) = Path(listOf(Segment.Static(name)))
         fun int(name: String) = Path(listOf(Segment.Int(name)))
+        fun intPrefix(name: String) = Path(listOf(Segment.IntPrefix(name)))
         fun string(name: String) = Path(listOf(Segment.String(name)))
     }
 }
@@ -127,6 +135,10 @@ fun main(args: Array<String>) {
     val router = Router2(mw("a"), mw("b")) {
         get { req ->
            Response().text("homepage")
+        }
+        get(Path.static("stories").intPrefix("id")) { req ->
+            val id = req.params["id"] as Int
+            Response().text("Story $id")
         }
         get(Path.static("users").int("id"), mw(1), mw(2)) { req ->
             val id = req.params["id"] as Int
