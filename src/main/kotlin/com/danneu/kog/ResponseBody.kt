@@ -46,6 +46,10 @@ sealed class ResponseBody : OutStreamable, ETaggable {
         override fun pipe(output: ServletOutputStream) = body.byteInputStream().copyTo(output)
         override fun toString(): kotlin.String = body.toString()
         override fun etag(): kotlin.String = ByteArray(body.toByteArray()).etag()
+        override fun equals(other: Any?) = when (other) {
+            is ResponseBody.String -> body == other.body
+            else -> false
+        }
     }
     class ByteArray(val body: kotlin.ByteArray) : ResponseBody() {
         override val length: Long = body.size.toLong()
