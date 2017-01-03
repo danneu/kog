@@ -72,7 +72,7 @@ class Template(val pattern: String, val types: List<KType> = emptyList()) {
     }
 }
 
-class Route3(val method: Method, val pattern: String, val middleware: Middleware = identity, val recv: Function<Handler>) {
+class Route(val method: Method, val pattern: String, val middleware: Middleware = identity, val recv: Function<Handler>) {
     constructor(method: Method, pattern: String, recv: Function<Handler>):
         this(method, pattern, { x -> x }, recv)
 
@@ -103,7 +103,7 @@ class Route3(val method: Method, val pattern: String, val middleware: Middleware
 
 
 class SafeRouter(vararg wares: Middleware, block: SafeRouter.() -> Unit) {
-    var routes = mutableListOf<Route3>()
+    var routes = mutableListOf<Route>()
     var middleware = composeMiddleware(*wares)
 
     init {
@@ -112,20 +112,20 @@ class SafeRouter(vararg wares: Middleware, block: SafeRouter.() -> Unit) {
 
     // TODO: Come up with a better way to DRY this up, perhaps in upstream constructor.
     // TODO: Add the rest of the http verbs
-    fun get(pattern: String, recv: Function<Handler>) = routes.add(Route3(Method.Get, pattern, recv))
-    fun get(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route3(Method.Get, pattern, composeMiddleware(*wares.toTypedArray()), recv))
-    fun put(pattern: String, recv: Function<Handler>) = routes.add(Route3(Method.Put, pattern, recv))
-    fun put(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route3(Method.Put, pattern, composeMiddleware(*wares.toTypedArray()), recv))
-    fun post(pattern: String, recv: Function<Handler>) = routes.add(Route3(Method.Post, pattern, recv))
-    fun post(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route3(Method.Post, pattern, composeMiddleware(*wares.toTypedArray()), recv))
-    fun delete(pattern: String, recv: Function<Handler>) = routes.add(Route3(Method.Delete, pattern, recv))
-    fun delete(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route3(Method.Delete, pattern, composeMiddleware(*wares.toTypedArray()), recv))
-    fun patch(pattern: String, recv: Function<Handler>) = routes.add(Route3(Method.Patch, pattern, recv))
-    fun patch(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route3(Method.Patch, pattern, composeMiddleware(*wares.toTypedArray()), recv))
-    fun head(pattern: String, recv: Function<Handler>) = routes.add(Route3(Method.Head, pattern, recv))
-    fun head(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route3(Method.Head, pattern, composeMiddleware(*wares.toTypedArray()), recv))
-    fun options(pattern: String, recv: Function<Handler>) = routes.add(Route3(Method.Head, pattern, recv))
-    fun options(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route3(Method.Head, pattern, composeMiddleware(*wares.toTypedArray()), recv))
+    fun get(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Get, pattern, recv))
+    fun get(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Get, pattern, composeMiddleware(*wares.toTypedArray()), recv))
+    fun put(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Put, pattern, recv))
+    fun put(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Put, pattern, composeMiddleware(*wares.toTypedArray()), recv))
+    fun post(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Post, pattern, recv))
+    fun post(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Post, pattern, composeMiddleware(*wares.toTypedArray()), recv))
+    fun delete(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Delete, pattern, recv))
+    fun delete(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Delete, pattern, composeMiddleware(*wares.toTypedArray()), recv))
+    fun patch(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Patch, pattern, recv))
+    fun patch(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Patch, pattern, composeMiddleware(*wares.toTypedArray()), recv))
+    fun head(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, recv))
+    fun head(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, composeMiddleware(*wares.toTypedArray()), recv))
+    fun options(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, recv))
+    fun options(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, composeMiddleware(*wares.toTypedArray()), recv))
 
     fun handler(): Handler = middleware { req ->
         routes.firstNotNull { route -> route.run(req) } ?: Response.notFound()
