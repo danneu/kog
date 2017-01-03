@@ -58,19 +58,41 @@ import com.danneu.kog.Request
 import com.danneu.kog.Response
 import com.danneu.kog.Server
 import com.danneu.kog.SafeRouter
+import com.danneu.kog.json.Encoder as JE
 
 val router = SafeRouter {
     get("/", fun(): Handler = { req ->
         Response().text("homepage")
     })
+    
     get("/users", fun(): Handler = { req ->
         Response().text("list users")
     })
+    
     get("/users/<id>", fun(id: Int): Handler = { req ->
-        Response().text("show user :id")
+        Response().text("show user $id")
     })
-    get("/admin", listOf(ensureAdmin()), fun(): Handler = { req ->
-        Response().text("admin panel")
+    
+    get("/users/<id>/edit", fun(id: Int): Handler = { req ->
+        Response().text("edit user $id")
+    })
+    
+    delete("/admin/users/<id>", listOf(ensureAdmin()), fun(id: Int): Handler = { req ->
+        Response().text("admin panel, delete user $id")
+    })
+    
+    get("/<a>/<b>/<c>", fun(a: Int, b: Int, c: Int): Handler = { req ->
+        Response().json(JE.jsonObject("sum" to a + b + c))
+    })
+    
+    // A route only runs if its pattern and handler arguments agree, and if the url can be coerced into the arguments.
+    
+    get("/hello/world", fun(a: Int, b: String): Handler = {
+        Response().text("this route will *never* match since its handler expects url params that the route pattern does not specify")
+    })
+    
+    get("/hello/world", fun(): Handler = {
+        Response().text("this route *will* run")
     })
   }
 }
@@ -150,7 +172,7 @@ Example junk-drawer:
 
 ``` kotlin
 import com.danneu.kog.Status
-import com.danneu.kog.Encoder as JE
+import com.danneu.kog.json.Encoder as JE
 import java.util.File
 
 Response()                                     // skeleton 200 response
