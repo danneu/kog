@@ -1,11 +1,13 @@
 package com.danneu.kog
 
 import java.text.NumberFormat
+import java.util.UUID
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
 import kotlin.reflect.createType
 import kotlin.reflect.jvm.reflect
 import kotlin.reflect.valueParameters
+import kotlin.text.RegexOption.IGNORE_CASE
 
 // TODO: Spit out warnings when routes are found that cannot match their recv handlers.
 
@@ -50,8 +52,14 @@ class Template(val pattern: String, val types: List<KType> = emptyList()) {
                 when (type) {
                     kotlin.Int::class.createType() ->
                         // Note: Will get set to max integer if it exceeds max integer
-                        if (Regex("""^\d+$""").matches(b)) {
+                        if (Regex("""\d+""").matches(b)) {
                             NumberFormat.getInstance().parse(b).toInt()
+                        } else {
+                            return null
+                        }
+                    UUID::class.createType() ->
+                        if (Regex("""[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}""", IGNORE_CASE).matches(b)) {
+                            UUID.fromString(b)
                         } else {
                             return null
                         }
