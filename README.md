@@ -294,6 +294,10 @@ import com.danneu.kog.json.Encoder as JE
 
 val handler: Handler = { req ->
   Response().json(JE.jsonObject("hello" to "world"))
+  
+  // Or, use the Response's convenience short-cut:
+  
+  Response().jsonObject("hello" to "world")
 }
 ```
 
@@ -302,8 +306,11 @@ import com.danneu.kog.json.Encoder as JE
 
 val handler: Handler = { req ->
   Response().json(JE.jsonArray("a", "b", "c"))
-  // or
-  Response().json(JE.jsonArray(listOf("a", "b", "c")))
+  
+  // Or, the short-cuts:
+  
+  Response().jsonArray(listOf("a", "b", "c"))
+  Response().jsonArray("a", "b", "c")
 }
 ```
 

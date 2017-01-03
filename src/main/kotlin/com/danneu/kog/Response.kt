@@ -3,6 +3,7 @@ package com.danneu.kog
 
 import com.danneu.kog.cookies.Cookie
 import com.danneu.kog.json.JsonValue
+import com.danneu.kog.json.Encoder as JE
 import java.io.File
 import java.io.InputStream
 
@@ -54,6 +55,14 @@ class Response(
         setHeader(Header.ContentType, "application/json")
         setBody(ResponseBody.String(value.toString()))
     }
+
+    fun jsonObject(vararg pairs: Pair<String, *>) = json(JE.jsonObject(*pairs))
+    fun jsonObject(pairs: Iterable<Pair<String, *>>) = json(JE.jsonObject(pairs))
+    fun jsonObject(pairs: Sequence<Pair<String, *>>) = json(JE.jsonObject(pairs))
+
+    fun jsonArray(vararg values: Any) = json(JE.jsonArray(values))
+    fun jsonArray(values: Iterable<*>) = json(JE.jsonArray(values))
+    fun jsonArray(values: Sequence<*>) = json(JE.jsonArray(values))
 
     fun stream(input: InputStream, contentType: String = "application/octet-stream") = apply {
         setHeader(Header.ContentType, contentType)
