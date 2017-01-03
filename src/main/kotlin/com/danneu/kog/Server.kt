@@ -45,8 +45,14 @@ class JettyHandler(val handler: Handler, val insertContextHandler: (String, WebS
 }
 
 
-class Server(val handler: Handler = { Response.notFound() }, val websockets: Map<String, WebSocketAcceptor> = emptyMap()) {
-    val jettyServer: JettyServer = makeJettyServer()
+class Server(
+    val handler: Handler = { Response.notFound() },
+    val websockets: Map<String, WebSocketAcceptor> = emptyMap(),
+    val minThreads: Int = 8,
+    val maxThreads: Int = 50
+
+) {
+    val jettyServer = makeJettyServer()
 
     fun stop() {
         jettyServer.stop()
@@ -86,19 +92,23 @@ class Server(val handler: Handler = { Response.notFound() }, val websockets: Map
         }
     }
 
-    companion object {
-        fun makeJettyServer(): JettyServer {
-            val threadPool = QueuedThreadPool(50)
-            val server = JettyServer(threadPool)
-            val httpConfig = HttpConfiguration()
-            httpConfig.sendServerVersion = false
-            val httpFactory = HttpConnectionFactory(httpConfig)
-            val serverConnector = ServerConnector(server, httpFactory)
-            serverConnector.idleTimeout = 200000
-            server.addConnector(serverConnector)
-            return server
+    fun makeJettyServer(): JettyServer {
+        val threadPool = QueuedThreadPool(maxThreads).apply {
+            this.minThreads = minThreads
         }
+        val server = JettyServer(threadPool)
+        val httpConfig = HttpConfiguration().apply {
+            this.sendServerVersion = false
+        }
+        val httpFactory = HttpConnectionFactory(httpConfig)
+        val serverConnector = ServerConnector(server, httpFactory).apply {
+            this.idleTimeout = 200000
+        }
+        server.addConnector(serverConnector)
+        return server
     }
+
+    companion object
 }
 
 
