@@ -1,5 +1,5 @@
 
-# kog ![Jitpack](https://jitpack.io/v/com.danneu/kog.svg) [![Kotlin](https://img.shields.io/badge/kotlin-1.1.1-blue.svg)](https://kotlinlang.org/) ![Heroku](https://img.shields.io/badge/heroku-ready-9b59b6.svg) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog)  
+# kog [![Jitpack](https://jitpack.io/v/com.danneu/kog.svg)](https://jitpack.io/#com.danneu/kog) [![Kotlin](https://img.shields.io/badge/kotlin-1.1.1-blue.svg)](https://kotlinlang.org/) ![Heroku](https://img.shields.io/badge/heroku-ready-8b59b6.svg) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog)  
 
 A simple, experimental Kotlin web framework inspired by Clojure's Ring.
 
@@ -7,7 +7,7 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
 
 ## Install
 
-![Jitpack](https://jitpack.io/v/com.danneu/kog.svg)
+[![Jitpack](https://jitpack.io/v/com.danneu/kog.svg)](https://jitpack.io/#com.danneu/kog)
 
 ``` groovy
 repositories {
