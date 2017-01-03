@@ -96,6 +96,7 @@ class Route(val method: Method, val pattern: String, val middleware: Middleware 
         // array<class<java.lang.Integer>)
         val classes = values.map { it::class.javaPrimitiveType ?: it.javaClass }
         val method: java.lang.reflect.Method = recv.javaClass.getMethod("invoke", *classes.toTypedArray())
+        method.isAccessible = true
         val handler = method.invoke(recv, *values.toTypedArray()) as Handler
         return middleware(handler)(req)
     }
