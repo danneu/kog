@@ -10,9 +10,7 @@ import org.junit.Assert.*
 import org.junit.Test
 import kotlin.reflect.createType
 
-// TODO: Test middleware
-
-class Router3Tests {
+class SafeRouterTests {
     @Test
     fun testStaticMatches() {
         assertNotNull(Template("/").extractValues("/"))
@@ -38,17 +36,17 @@ class Router3Tests {
     @Test
     fun testRouting() {
         run {
-            val router = Router3 { get("/foo", fun(): Handler = { Response() }) }
+            val router = SafeRouter { get("/foo", fun(): Handler = { Response() }) }
             assertEquals(Ok, router.handler()(Request.toy(Get, "/foo")).status)
         }
         run {
-            val router = Router3 { get("/<foo>", fun(foo: String): Handler = { Response() }) }
+            val router = SafeRouter { get("/<foo>", fun(foo: String): Handler = { Response() }) }
             assertEquals(Ok, router.handler()(Request.toy(Get, "/foo")).status)
             assertEquals(Ok, router.handler()(Request.toy(Get, "/bar")).status)
             assertEquals(Ok, router.handler()(Request.toy(Get, "/42")).status)
         }
         run {
-            val router = Router3 { get("/<foo>/<bar>", fun(foo: String, bar: Int): Handler = { Response() }) }
+            val router = SafeRouter { get("/<foo>/<bar>", fun(foo: String, bar: Int): Handler = { Response() }) }
             assertEquals(Ok,       router.handler()(Request.toy(Get, "/a/42")).status)
             assertEquals(NotFound, router.handler()(Request.toy(Get, "/42/a")).status)
             assertEquals(Ok,       router.handler()(Request.toy(Get, "/42/42")).status)
@@ -56,7 +54,7 @@ class Router3Tests {
             assertEquals(NotFound, router.handler()(Request.toy(Get, "/a/b/c")).status)
         }
         run {
-            val router = Router3 {
+            val router = SafeRouter {
                 get("/a", fun(): Handler = { Response().text("first") })
                 get("/a", fun(): Handler = { Response().text("second") })
                 get("/a", fun(): Handler = { Response().text("third") })
@@ -64,7 +62,7 @@ class Router3Tests {
             assertEquals("matches first route", ResponseBody.String("first"), router.handler()(Request.toy(Get, "/a")).body)
         }
         run {
-            val router = Router3 {
+            val router = SafeRouter {
                 post("/a", fun(): Handler = { Response() })
                 put("/a", fun(): Handler = { Response() })
                 delete("/a", fun(): Handler = { Response() })
@@ -78,24 +76,24 @@ class Router3Tests {
     @Test
     fun testNotFoundRouting() {
         run {
-            val router = Router3 { get("/<foo>", fun(): Handler = { Response() }) }
+            val router = SafeRouter { get("/<foo>", fun(): Handler = { Response() }) }
             assertEquals("does not match when recv expects no params", NotFound, router.handler()(Request.toy(Get, "/foo")).status)
         }
         run {
-            val handler = Router3 { get("/foo", fun(): Handler = { Response() }) }.handler()
+            val handler = SafeRouter { get("/foo", fun(): Handler = { Response() }) }.handler()
             assertEquals(NotFound, handler(Request.toy(Post, "/foo")).status)
             assertEquals(NotFound, handler(Request.toy(Delete, "/foo")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/foo/bar")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/bar")).status)
         }
         run {
-            val handler = Router3 { get("/<id>", fun(id: String): Handler = { Response() }) }.handler()
+            val handler = SafeRouter { get("/<id>", fun(id: String): Handler = { Response() }) }.handler()
             assertEquals(NotFound, handler(Request.toy(Post, "/foo")).status)
             assertEquals(NotFound, handler(Request.toy(Delete, "/foo")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/foo/bar")).status)
         }
         run {
-            val handler = Router3 { get("/<a>/<b>", fun(a: String, b: String): Handler = { Response() }) }.handler()
+            val handler = SafeRouter { get("/<a>/<b>", fun(a: String, b: String): Handler = { Response() }) }.handler()
             assertEquals(NotFound, handler(Request.toy(Get, "/a/b/c")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/a")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/a/")).status)
@@ -107,14 +105,14 @@ class Router3Tests {
     @Test
     fun testTrailingSlash() {
         run {
-            val handler = Router3 { get("/a/b", fun(): Handler = { Response() }) }.handler()
+            val handler = SafeRouter { get("/a/b", fun(): Handler = { Response() }) }.handler()
             assertEquals(Ok, handler(Request.toy(Get, "/a/b")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/a/b/")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/a/b/c")).status)
             assertEquals(NotFound, handler(Request.toy(Delete, "/a/b")).status)
         }
         run {
-            val handler = Router3 { get("/<a>/<b>", fun(a: String, b: String): Handler = { Response() }) }.handler()
+            val handler = SafeRouter { get("/<a>/<b>", fun(a: String, b: String): Handler = { Response() }) }.handler()
             assertEquals(Ok, handler(Request.toy(Get, "/a/b")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/a/b/")).status)
         }
@@ -124,20 +122,20 @@ class Router3Tests {
     fun testParams() {
         run {
             // String
-            val handler = Router3 { get("/<a>", fun(a: String): Handler = { Response().text(a) }) }.handler()
+            val handler = SafeRouter { get("/<a>", fun(a: String): Handler = { Response().text(a) }) }.handler()
             assertEquals(ResponseBody.String("a"), handler(Request.toy(Get, "/a")).body)
             assertEquals(ResponseBody.String("foo"), handler(Request.toy(Get, "/foo")).body)
         }
         run {
             // Int
-            val handler = Router3 { get("/<a>", fun(a: Int): Handler = { Response().text(a.toString()) }) }.handler()
+            val handler = SafeRouter { get("/<a>", fun(a: Int): Handler = { Response().text(a.toString()) }) }.handler()
             assertEquals(ResponseBody.String("42"), handler(Request.toy(Get, "/42")).body)
             assertEquals(ResponseBody.String("0"), handler(Request.toy(Get, "/000")).body)
             assertEquals("negative ints not supported", NotFound, handler(Request.toy(Get, "/-1")).status)
         }
         run {
             // Int, Int
-            val handler = Router3 {
+            val handler = SafeRouter {
                 get("/<a>/<b>", fun(a: Int, b: Int): Handler = { Response().text((a + b).toString()) })
             }.handler()
             assertEquals(ResponseBody.String("3"), handler(Request.toy(Get, "/1/2")).body)
@@ -152,7 +150,7 @@ class Router3Tests {
         }
         run {
             // Static, Int, Static
-            val handler = Router3 {
+            val handler = SafeRouter {
                 get("/a/<b>/c", fun(b: Int): Handler = { Response().text(b.toString()) })
             }.handler()
             assertEquals(ResponseBody.String("42"), handler(Request.toy(Get, "/a/42/c")).body)
@@ -164,11 +162,12 @@ class Router3Tests {
         }
     }
 
-    // TODO: Support sub-segment params
+    // Not yet implemented
+
     // @Test
     // fun testSubSegmentParams() {
     //     run {
-    //         val handler = Router3 {
+    //         val handler = SafeRouter {
     //             get("/<file>.txt", fun(file: String): Handler = { Response().text(file) })
     //         }.handler()
     //         assertEquals(ResponseBody.String("foo"), handler(Request.toy(Get, "/foo.txt")).body)

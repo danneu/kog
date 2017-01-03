@@ -1,11 +1,9 @@
 
-# kog [![Kotlin](https://img.shields.io/badge/kotlin-1.1.1-blue.svg)](https://kotlinlang.org/) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog) ![Heroku](https://img.shields.io/badge/heroku-ready-9b59b6.svg)
+# kog ![Jitpack](https://jitpack.io/v/com.danneu/kog.svg) [![Kotlin](https://img.shields.io/badge/kotlin-1.1.1-blue.svg)](https://kotlinlang.org/) ![Heroku](https://img.shields.io/badge/heroku-ready-9b59b6.svg) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog)  
 
 A simple, experimental Kotlin web framework inspired by Clojure's Ring.
 
 Built on top of [Jetty](http://www.eclipse.org/jetty/). 
-
-Disclaimer: I'm new to Kotlin and Java. Implementing and abandoning the start of a web framework is a hobby of mine.
 
 ## Install
 
@@ -51,36 +49,29 @@ fun main(args: Array<String>) {
 }
 ```
 
-### With Routing and Middleware
+### Type-Safe Routing and Middleware
+
+`SafeRouter` is a work-in-progress type-safe rewrite of the original naive `Router`.
 
 ``` kotlin
 import com.danneu.kog.Request
 import com.danneu.kog.Response
 import com.danneu.kog.Server
-import com.danneu.kog.Router
+import com.danneu.kog.SafeRouter
 
-val router = Router {
-  use({ handler -> { req -> 
-      // this middleware runs on every request served by this router
-      println("middleware")
-      handler(req)
-  }})
-  get("/") {
-      Response().text("homepage")
-  }
-  group("/users") {
-      get("/") {
-          Response().text("list users")
-      }
-      get("/:id") {
-          Response().text("show user")
-      }
-  }
-  group("/admin") {
-      use(ensureAdmin()) // only runs if routes in this group are hit
-      get("/") {
-          Response().text("admin panel")
-      }
+val router = SafeRouter() {
+    get("/", fun(): Handler = { req ->
+        Response().text("homepage")
+    })
+    get("/users", fun(): Handler = { req ->
+        Response().text("list users")
+    })
+    get("/users/<id>", fun(id: Int): Handler = { req ->
+        Response().text("show user :id")
+    })
+    get("/admin", listOf(ensureAdmin()), fun(): Handler = { req ->
+        Response().text("admin panel")
+    })
   }
 }
 
@@ -92,6 +83,8 @@ fun main(args: Array<String>) {
 ```
 
 ### WebSockets
+
+Note: Currently only supported by `Router`, not `SafeRouter`.
 
 This example starts a websocket server that echoes back
 to clients whatever they send the server.
@@ -364,12 +357,15 @@ val handler = { request ->
 }
 ```
 
-## Router
+## (Old) Router
 
-Out of the box, kog comes with a simple but naive router.
+Note: `Router` is currently being replaced with `SafeRouter`,
+but until then they live alongside each other.
 
-Kog's router isn't special. It's just a DSL that spits out a handler function. 
-It's optional and replaceable.
+Out of the box, kog comes with a simple but naive `Router`.
+
+Kog's routers aren't special. They are just DSLs that spit out a handler function. 
+They are optional and replaceable.
 
 ``` kotlin
 import com.danneu.kog.Request
@@ -852,17 +848,7 @@ git push heroku master
 
 There's so much missing that it feels silly writing a TODO list, but here are some short-term reminders.
 
-- Router should parse :params from the URL.
-
-  ``` kotlin
-  get("/users/:id") { req -> 
-    Response().text("User ${req.params.get(":id")}") 
-  }
-  ```
-
-  Bonus points for type safety.
-- Look into Kotlin's `inline` functionality for handlers.
-- I've started on an uncomitted decoder inspired by my JSON decoder for doing type-safe unwrapping of things
+- Idea: I've started on an uncomitted decoder inspired by my JSON decoder for doing type-safe unwrapping of things
   like the request's `query` map. I'm trying to figure out the best way to continue generalizing the idea
   to short-circuit on bad input and validation failure:
 

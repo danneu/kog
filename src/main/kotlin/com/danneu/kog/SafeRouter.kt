@@ -102,7 +102,7 @@ class Route3(val method: Method, val pattern: String, val middleware: Middleware
 }
 
 
-class Router3(vararg wares: Middleware, block: Router3.() -> Unit) {
+class SafeRouter(vararg wares: Middleware, block: SafeRouter.() -> Unit) {
     var routes = mutableListOf<Route3>()
     var middleware = composeMiddleware(*wares)
 
@@ -140,7 +140,7 @@ fun main(args: Array<String>) {
         response
     }}
 
-    val router = Router3(mw("start1"), mw("start2")) {
+    val router = SafeRouter(mw("start1"), mw("start2")) {
         get("/<id>", listOf(mw("a"), mw("b")), fun(id: Int): Handler = {
             Response().text("id is $id")
         })
