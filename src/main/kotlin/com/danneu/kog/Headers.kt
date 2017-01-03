@@ -239,7 +239,7 @@ sealed class Header(val key: String) {
         val CONTENT_RANGE = "content-range"
         val CONTENT_SECURITY_POLICY = "content-security-policy"
         val CONTENT_SECURITY_POLICY_REPORT_ONLY = "content-security-policy-report-only"
-        val CONTENT_TYPE = "content-Type"
+        val CONTENT_TYPE = "content-type"
         val COOKIE = "cookie"
         val COOKIE2 = "cookie2"
         val DATE = "date"
