@@ -59,7 +59,7 @@ import com.danneu.kog.Response
 import com.danneu.kog.Server
 import com.danneu.kog.SafeRouter
 
-val router = SafeRouter() {
+val router = SafeRouter {
     get("/", fun(): Handler = { req ->
         Response().text("homepage")
     })
