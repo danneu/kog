@@ -7,13 +7,15 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
 
 ## Install
 
+![Jitpack](https://jitpack.io/v/com.danneu/kog.svg)
+
 ``` groovy
 repositories {
     maven { url "https://jitpack.io" }
 }
 
 dependencies {
-    compile "com.danneu:kog:0.0.3"
+    compile "com.danneu:kog:x.y.z"
     // Or always get latest
     compile "com.danneu:kog:master-SNAPSHOT"
 }
