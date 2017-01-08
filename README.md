@@ -32,8 +32,9 @@ dependencies {
 ### Basic
 
 ``` kotlin
-import com.danneu.kog.Request
 import com.danneu.kog.Response
+import com.danneu.kog.Request
+import com.danneu.kog.Handler
 import com.danneu.kog.Server
 
 fun handler(req: Request): Response {
@@ -56,11 +57,12 @@ fun main(args: Array<String>) {
 `SafeRouter` is a work-in-progress type-safe rewrite of the original naive `Router`.
 
 ``` kotlin
-import com.danneu.kog.Request
-import com.danneu.kog.Response
-import com.danneu.kog.Server
-import com.danneu.kog.SafeRouter
 import com.danneu.kog.json.Encoder as JE
+import com.danneu.kog.SafeRouter
+import com.danneu.kog.Response
+import com.danneu.kog.Request
+import com.danneu.kog.Handler
+import com.danneu.kog.Server
 
 val router = SafeRouter {
     get("/", fun(): Handler = { req ->

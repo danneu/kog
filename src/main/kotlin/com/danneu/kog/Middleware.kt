@@ -1,9 +1,8 @@
 package com.danneu.kog
 
-typealias Middleware = (Handler) -> Handler
+import com.danneu.kog.middleware.identity
 
-// Used as a pass-through noop
-val identity: Middleware = { handler -> handler }
+typealias Middleware = (Handler) -> Handler
 
 fun composeMiddleware(vararg wares: Middleware): Middleware {
     return wares.fold(identity, { final, next -> { handler -> final(next(handler)) } })
