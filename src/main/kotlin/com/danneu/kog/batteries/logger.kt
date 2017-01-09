@@ -10,7 +10,6 @@ fun logger(): Middleware = { handler -> { request ->
     val start = System.currentTimeMillis()
     val response = handler(request)
     logResponse(request, response, start)
-    response
 }}
 
 
@@ -22,8 +21,8 @@ private fun logRequest(req: Request) {
 }
 
 
-private fun logResponse(req: Request, res: Response, start: Long) {
-    val color: Color = when (res.status.code) {
+private fun logResponse(request: Request, response: Response, start: Long): Response {
+    val color: Color = when (response.status.code) {
         in 500..600-1 -> Color.Red
         in 400..500-1 -> Color.Yellow
         in 300..400-1 -> Color.Cyan
@@ -32,7 +31,9 @@ private fun logResponse(req: Request, res: Response, start: Long) {
         else -> Color.Red
     }
 
-    println("${Color.Gray.wrap("<--")} ${req.method.name.toUpperCase()} ${Color.Gray.wrap(req.path)} ${color.wrap(res.status.code.toString())} ${time(start)}")
+    println("${Color.Gray.wrap("<--")} ${request.method.name.toUpperCase()} ${Color.Gray.wrap(request.path)} ${color.wrap(response.status.code.toString())} ${time(start)}")
+
+    return response
 }
 
 
@@ -54,7 +55,5 @@ private enum class Color(val code: String) {
 
     val escape = "${String(Character.toChars(0x001B))}["
 
-    fun wrap (str: String): String {
-        return "$escape${this.code}$str$escape${None.code}"
-    }
+    fun wrap(str: String) = "$escape$code$str$escape${None.code}"
 }
