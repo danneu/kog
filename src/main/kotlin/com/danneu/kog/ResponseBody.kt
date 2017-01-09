@@ -44,8 +44,9 @@ sealed class ResponseBody : OutStreamable, ETaggable {
     class String(val body: kotlin.String) : ResponseBody() {
         override val length: Long = body.length.toLong()
         override fun pipe(output: ServletOutputStream) = body.byteInputStream().copyTo(output)
-        override fun toString(): kotlin.String = body.toString()
+        override fun toString(): kotlin.String = body
         override fun etag(): kotlin.String = ByteArray(body.toByteArray()).etag()
+        override fun hashCode() = body.hashCode()
         override fun equals(other: Any?) = when (other) {
             is ResponseBody.String -> body == other.body
             else -> false
@@ -61,7 +62,7 @@ sealed class ResponseBody : OutStreamable, ETaggable {
         }
     }
     class File(val body: java.io.File) : ResponseBody() {
-        override val length: Long = body.length().toLong()
+        override val length: Long = body.length()
         override fun pipe(output: ServletOutputStream) = body.inputStream().copyTo(output)
         override fun etag(): kotlin.String {
             return "\"${body.length().toHexString()}-${body.lastModified().toHexString()}\""

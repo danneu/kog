@@ -46,7 +46,7 @@ class Request(
 
     // TODO: Handle case where body stream is already read
     val utf8: String by lazy {
-        body.readBytes().toString(Charset.forName("UTF-8"))
+        body.readBytes().toString(Charsets.UTF_8)
     }
 
     fun setMethod(method: Method) = apply { this.method = method }

@@ -39,23 +39,23 @@ object Env {
         .apply { putAll(readSystemEnv()) } // Highest precedence, overwrites all other sources
 
     fun string(key: String): String? {
-        return env.get(key)
+        return env[key]
     }
 
     fun int(key: String): Int? = try {
-        env.get(key)?.toInt()
+        env[key]?.toInt()
     } catch(e: NumberFormatException) {
         null
     }
 
     fun long(key: String): Long? = try {
-        env.get(key)?.toLong()
+        env[key]?.toLong()
     } catch(e: NumberFormatException) {
         null
     }
 
     fun float(key: String): Float? = try {
-        env.get(key)?.toFloat()
+        env[key]?.toFloat()
     } catch(e: NumberFormatException) {
         null
     }
@@ -63,6 +63,6 @@ object Env {
     /**
      * An env var is true iff it's the string "true".
      */
-    fun bool(key: String): Boolean = env.get(key) == "true"
+    fun bool(key: String): Boolean = env[key] == "true"
 }
 

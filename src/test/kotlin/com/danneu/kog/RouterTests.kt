@@ -6,7 +6,7 @@ import java.util.Stack
 
 
 // generates middleware for testing
-class Tokenware() {
+class Tokenware {
     private val stack = Stack<String>()
 
     fun list() = stack.toList()
