@@ -27,7 +27,7 @@ enum class Method {
         val TRACE = "TRACE"
         val PATCH = "PATCH"
 
-        fun fromString(value: String): Method = when (value.toUpperCase()) {
+        fun fromString(value: String) = when (value.toUpperCase()) {
             GET -> Get
             HEAD -> Head
             POST -> Post

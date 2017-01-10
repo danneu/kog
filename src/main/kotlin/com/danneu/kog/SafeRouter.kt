@@ -1,8 +1,16 @@
-package com.danneu.kog
+package com.danneu.kog.sandbox
 
-import com.danneu.kog.middleware.identity
+import com.danneu.kog.Handler
+import com.danneu.kog.Method
+import com.danneu.kog.Middleware
+import com.danneu.kog.Request
+import com.danneu.kog.Response
+import com.danneu.kog.Server
+import com.danneu.kog.composeMiddleware
 import java.text.NumberFormat
 import java.util.UUID
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
 import kotlin.reflect.createType
@@ -10,137 +18,146 @@ import kotlin.reflect.jvm.reflect
 import kotlin.reflect.valueParameters
 import kotlin.text.RegexOption.IGNORE_CASE
 
-// TODO: Spit out warnings when routes are found that cannot match their recv handlers.
 
-/** Applies `process` to each iterable item until it returns non-null, returning the result of the application.
- *
- */
-fun <A, B: Any> Iterable<A>.firstNotNull(process: (A) -> B?): B? = asSequence().firstNotNull(process)
-fun <A, B: Any> Sequence<A>.firstNotNull(process: (A) -> B?): B? = mapNotNull { process(it) }.firstOrNull()
-
+// Don't call matcher.find() before this
+// Note: starts at 1. group 0 is the whole expr.
+fun Matcher.firstMatchingGroupNumber(): Int? {
+    if (!this.find()) return null
+    // There is a match
+    var num = 0
+    while (num++ < this.groupCount()) {
+        if (this.group(num) != null) return num
+    }
+    return null
+}
 fun String.isParam(): Boolean = startsWith("<") && endsWith(">")
-fun String.segments(): List<String> = split("/").filter(String::isNotEmpty)
+fun String.segments(): List<String> = split("/").drop(1)
+fun <A> List<A>.valuesAt(indexes: List<Int>): List<A> {
+    return this.filterIndexed { idx, _ -> idx in indexes }
+}
 
-/** A template is a pattern with potential <wildcard> params and a list of types that the handler expects.
- *
- * The template gets applied to a request path and returns a list of values that will get passed into the handler.
- */
-class Template(val pattern: String, val types: List<KType> = emptyList()) {
-    // Returns null if no match.
-    //
-    // Note: Below, `return null` short-circuits the function, `null` doesn't. I don't like this code.
-    fun extractValues(reqPath: String): List<Any>? {
-        val segments1 = pattern.segments()
-        val segments2 = reqPath.segments()
+class Route(val method: Method, val pattern: String, val recv: Function<Handler>, wares: List<Middleware> = emptyList()) {
+    val middleware = composeMiddleware(*wares.toTypedArray())
+    val types = recv.types()
 
-        // Bail if trailing slash is different
-        if (pattern.endsWith("/") && !reqPath.endsWith("/")) return null
-        if (!pattern.endsWith("/") && reqPath.endsWith("/")) return null
+    val paramIdxs = pattern.segments().mapIndexed { idx, seg ->
+        if (seg.isParam()) { idx } else { null }
+    }.filterNotNull()
 
-        // Route doesn't match if it has a different number of segments than request path
-        // e.g. "/a/b/<id>" vs "/a/b"
-        if (segments1.size != segments2.size) return null
+    override fun toString(): String {
+        return "Route($method '$pattern' ${types.map{it}} ${paramIdxs})"
+    }
 
-        // Route doesn't match if its handler specifies a different number of arguments than path params
-        // e.g. "/faq" vs fun(username: String)
-        if (segments1.filter { it.isParam() }.size != types.size) return null
+    fun toRegex(): Regex? {
+        // Route cannot match if type count isn't same as param count
+        if (paramIdxs.size != types.size) {
+            println("Warning: Route ${this} handler expects different arguments than the provided url pattern")
+            return null
+        }
 
         var paramIdx = 0
 
-        return segments1.zip(segments2).mapNotNull { (a, b) ->
-            if (a.isParam()) {
+        return pattern.segments().mapIndexed { idx, segment ->
+            if (idx in paramIdxs) {
                 val type = types[paramIdx++]
                 when (type) {
                     kotlin.Int::class.createType() ->
-                        // Note: Will get set to max integer if it exceeds max integer
-                        if (Regex("""\d+""").matches(b)) {
-                            NumberFormat.getInstance().parse(b).toInt()
-                        } else {
-                            return null
-                        }
-                    UUID::class.createType() ->
-                        if (Regex("""[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}""", IGNORE_CASE).matches(b)) {
-                            UUID.fromString(b)
-                        } else {
-                            return null
-                        }
+                        """/[0-9]+"""
                     kotlin.String::class.createType() ->
-                        b
+                        """/[^\/]+"""
+                    UUID::class.createType() ->
+                        """[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"""
                     else ->
-                        return null
+                        ""
                 }
-            } else if (a != b) {
-                // If we get here, we are comparing static segments, like "foo" != "bar" in "/a/foo" vs "/a/bar"
-                // and short-circuit function execution
-                return null
             } else {
-                // If we get here, the static segments matched, so we continue on to the next .all() iteration.
-                null
+                // static segment
+                "/$segment"
+            }
+        }.let { Regex("^($method:${it.joinToString("")})$", IGNORE_CASE) }
+    }
+
+    fun handle(request: Request): Response {
+        val args = request.path.segments().valuesAt(paramIdxs).zip(types).map { (seg, type) ->
+            when (type) {
+                kotlin.Int::class.createType() -> {
+                    NumberFormat.getInstance().parse(seg).toInt()
+                }
+                kotlin.String::class.createType() -> {
+                    seg
+                }
+                UUID::class.createType() -> {
+                    UUID.fromString(seg)
+                }
+                else -> {
+                    throw java.lang.IllegalStateException("Impossible")
+                }
             }
         }
-    }
-}
 
-class Route(val method: Method, val pattern: String, val middleware: Middleware = identity, val recv: Function<Handler>) {
-    constructor(method: Method, pattern: String, recv: Function<Handler>):
-        this(method, pattern, { x -> x }, recv)
-
-    constructor(method: Method, pattern: String, wares: Array<Middleware>, recv: Function<Handler>):
-        this(method, pattern, composeMiddleware(*wares), recv)
-
-    val template = run {
-        val params: List<KParameter> = recv.reflect()?.valueParameters!!
-        val types: List<KType> = params.map { it.type }
-        Template(pattern, types)
-    }
-
-    fun run(req: Request): Response? {
-        // Bail if method doesn't match the request
-        if (method != req.method) return null
-
-        // FIXME: Brittle hackjob
-        val values = template.extractValues(req.path) ?: return null
-        // javaPrimitiveType seemed to fix an issue I had where arrayOf(kotlin.Int::class.java)
-        // worked in getMethod (returns [int]), but `values.map { it::class.java }` didn't work (returns
-        // array<class<java.lang.Integer>)
-        val classes = values.map { it::class.javaPrimitiveType ?: it.javaClass }
+        val classes = args.map { it::class.javaPrimitiveType ?: it.javaClass }
         val method: java.lang.reflect.Method = recv.javaClass.getMethod("invoke", *classes.toTypedArray())
         method.isAccessible = true
-        val handler = method.invoke(recv, *values.toTypedArray()) as Handler
-        return middleware(handler)(req)
+        val handler = method.invoke(recv, *args.toTypedArray()) as Handler
+        return middleware(handler)(request)
     }
 }
 
+fun Function<Handler>.types(): List<KType> {
+    val params: List<KParameter> = this.reflect()?.valueParameters!!
+    val types: List<KType> = params.map { it.type }
+    return types
+}
+
+class Dispatcher(val routes: List<Route>) {
+    val regex: Pattern = routes
+        .map(Route::toRegex)
+        .map { it ?: Regex("""^(#)$""") } // cannot be matched
+        .map(Regex::pattern)
+        .joinToString("|")
+        .let(Pattern::compile)
+
+    fun matchingRoute(request: Request): Route? {
+        val key = "${request.method}:${request.path}"
+        val groupNum = regex.matcher(key).firstMatchingGroupNumber() ?: return null
+        return routes[groupNum - 1]
+    }
+
+    fun handler(): Handler = { request -> matchingRoute(request)?.handle(request) ?: Response.notFound() }
+
+    override fun toString(): String {
+        return "Dispatcher(${regex.pattern()})"
+    }
+}
 
 class SafeRouter(vararg wares: Middleware, block: SafeRouter.() -> Unit) {
-    var routes = mutableListOf<Route>()
-    var middleware = composeMiddleware(*wares)
+    val middleware = composeMiddleware(*wares)
+    val routes = mutableListOf<Route>()
+    val dispatcher: Dispatcher
 
     init {
-        block(this)
+        this.block()
+        dispatcher = Dispatcher(routes)
     }
 
-    // TODO: Come up with a better way to DRY this up, perhaps in upstream constructor.
-    // TODO: Add the rest of the http verbs
     fun get(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Get, pattern, recv))
-    fun get(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Get, pattern, composeMiddleware(*wares.toTypedArray()), recv))
     fun put(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Put, pattern, recv))
-    fun put(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Put, pattern, composeMiddleware(*wares.toTypedArray()), recv))
     fun post(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Post, pattern, recv))
-    fun post(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Post, pattern, composeMiddleware(*wares.toTypedArray()), recv))
     fun delete(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Delete, pattern, recv))
-    fun delete(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Delete, pattern, composeMiddleware(*wares.toTypedArray()), recv))
     fun patch(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Patch, pattern, recv))
-    fun patch(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Patch, pattern, composeMiddleware(*wares.toTypedArray()), recv))
     fun head(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, recv))
-    fun head(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, composeMiddleware(*wares.toTypedArray()), recv))
-    fun options(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, recv))
-    fun options(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, composeMiddleware(*wares.toTypedArray()), recv))
+    fun options(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Options, pattern, recv))
+    fun get(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Get, pattern, recv, wares))
+    fun put(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Put, pattern, recv, wares))
+    fun post(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Post, pattern, recv, wares))
+    fun delete(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Delete, pattern, recv, wares))
+    fun patch(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Patch, pattern, recv, wares))
+    fun head(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, recv, wares))
+    fun options(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Options, pattern, recv, wares))
 
-    fun handler(): Handler = middleware { req ->
-        routes.firstNotNull { route -> route.run(req) } ?: Response.notFound()
-    }
+    fun handler(): Handler = middleware(dispatcher.handler())
 }
+
 
 fun main(args: Array<String>) {
     fun mw(name: String): Middleware = { handler -> { req ->
