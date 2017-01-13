@@ -675,7 +675,7 @@ Here's an example server with a "/" route that renders a file-upload form that p
 ``` kotlin
 import j2html.TagCreator.*
 import j2html.tags.ContainerTag
-import com.danneu.kog.Router
+import com.danneu.kog.SafeRouter
 import com.danneu.kog.Response
 import com.danneu.kog.Server
 import com.danneu.kog.batteries.multipart
@@ -685,18 +685,18 @@ fun layout(vararg tags: ContainerTag): String = document().render() + html().wit
   body().with(*tags)
 ).render()
 
-val router: Router = Router {
-    get("/") {
+val router: Router = SafeRouter {
+    get("/", fun(): Handler = {
         Response().html(layout(
           form().attr("enctype", "multipart/form-data").withMethod("POST").withAction("/upload").with(
             input().withType("file").withName("myFile"),
             button().withType("submit").withText("Upload File")
           )
         ))
-    }
-    post("/upload", multipart(Whitelist.only(setOf("myFile")))) {
+    }) 
+    post("/upload", multipart(Whitelist.only(setOf("myFile"))), fun(): Handler = {
         Response().text("Uploaded ${req.uploads["myFile"]?.length ?: "--"} bytes")
-    }
+    }) 
 }
 
 fun main(args: Array<String>) {
