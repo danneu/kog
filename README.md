@@ -560,9 +560,10 @@ browser to use its cache.
 downstream response.
 
 ``` kotlin
-val router = Router {
-    use(notModified(etag = true))
-    get("/") { Response().text("Hello, world!") }
+val router = SafeRouter(notModified(etag = true)) {
+    get("/", fun(): Handler = { 
+        Response().text("Hello, world!) 
+    })
 }
 ```
 
