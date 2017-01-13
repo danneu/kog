@@ -7,6 +7,7 @@ import com.danneu.kog.Request
 import com.danneu.kog.Response
 import com.danneu.kog.Server
 import com.danneu.kog.composeMiddleware
+import com.danneu.kog.middleware.identity
 import java.text.NumberFormat
 import java.util.UUID
 import java.util.regex.Matcher
@@ -16,7 +17,6 @@ import kotlin.reflect.KType
 import kotlin.reflect.createType
 import kotlin.reflect.jvm.reflect
 import kotlin.reflect.valueParameters
-import kotlin.text.RegexOption.IGNORE_CASE
 
 
 // Don't call matcher.find() before this
@@ -138,22 +138,83 @@ class SafeRouter(vararg wares: Middleware, block: SafeRouter.() -> Unit) {
         dispatcher = Dispatcher(routes)
     }
 
-    fun get(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Get, pattern, recv))
-    fun put(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Put, pattern, recv))
-    fun post(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Post, pattern, recv))
-    fun delete(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Delete, pattern, recv))
-    fun patch(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Patch, pattern, recv))
-    fun head(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, recv))
-    fun options(pattern: String, recv: Function<Handler>) = routes.add(Route(Method.Options, pattern, recv))
-    fun get(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Get, pattern, recv, wares))
-    fun put(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Put, pattern, recv, wares))
-    fun post(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Post, pattern, recv, wares))
-    fun delete(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Delete, pattern, recv, wares))
-    fun patch(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Patch, pattern, recv, wares))
-    fun head(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Head, pattern, recv, wares))
-    fun options(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) = routes.add(Route(Method.Options, pattern, recv, wares))
+    fun get(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Get, pattern, recv))
+    fun put(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Put, pattern, recv))
+    fun post(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Post, pattern, recv))
+    fun delete(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Delete, pattern, recv))
+    fun patch(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Patch, pattern, recv))
+    fun head(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Head, pattern, recv))
+    fun options(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Options, pattern, recv))
+
+    fun get(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Get, pattern, recv, wares))
+    fun put(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Put, pattern, recv, wares))
+    fun post(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Post, pattern, recv, wares))
+    fun delete(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Delete, pattern, recv, wares))
+    fun patch(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Patch, pattern, recv, wares))
+    fun head(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Head, pattern, recv, wares))
+    fun options(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Options, pattern, recv, wares))
+
+    fun group(prefixPattern: String = "", wares: List<Middleware> = emptyList(), block: RouteGroup.() -> Unit) {
+        val group = RouteGroup(prefixPattern, composeMiddleware(*wares.toTypedArray()))
+        group.block()
+        group.routes.forEach { route -> routes.add(route) }
+    }
 
     fun handler(): Handler = middleware(dispatcher.handler())
+}
+
+// concatPatterns("/", "/a", "//b") => "/a/b"
+fun concatPatterns(vararg patterns: String): String {
+    return patterns
+        .joinToString("")
+        .replace(Regex("/{2,}"), "/")
+}
+
+class RouteGroup(val prefixPattern: String, val middleware: Middleware = identity) {
+    val routes = mutableListOf<Route>()
+
+    fun get(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Get, concatPatterns(prefixPattern, pattern), recv, listOf(middleware)))
+    fun get(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Get, concatPatterns(prefixPattern, pattern), recv, listOf(middleware).plus(wares)))
+    fun put(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Put, concatPatterns(prefixPattern, pattern), recv, listOf(middleware)))
+    fun put(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Put, concatPatterns(prefixPattern, pattern), recv, listOf(middleware).plus(wares)))
+    fun post(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Post, concatPatterns(prefixPattern, pattern), recv, listOf(middleware)))
+    fun post(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Post, concatPatterns(prefixPattern, pattern), recv, listOf(middleware).plus(wares)))
+    fun delete(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Delete, concatPatterns(prefixPattern, pattern), recv, listOf(middleware)))
+    fun delete(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Delete, concatPatterns(prefixPattern, pattern), recv, listOf(middleware).plus(wares)))
+    fun patch(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Patch, concatPatterns(prefixPattern, pattern), recv, listOf(middleware)))
+    fun patch(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Patch, concatPatterns(prefixPattern, pattern), recv, listOf(middleware).plus(wares)))
+    fun head(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Head, concatPatterns(prefixPattern, pattern), recv, listOf(middleware)))
+    fun head(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Head, concatPatterns(prefixPattern, pattern), recv, listOf(middleware).plus(wares)))
+    fun options(pattern: String, recv: Function<Handler>) =
+        routes.add(Route(Method.Options, concatPatterns(prefixPattern, pattern), recv, listOf(middleware)))
+    fun options(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
+        routes.add(Route(Method.Options, concatPatterns(prefixPattern, pattern), recv, listOf(middleware).plus(wares)))
 }
 
 
@@ -166,6 +227,14 @@ fun main(args: Array<String>) {
     }}
 
     val router = SafeRouter(mw("start1"), mw("start2")) {
+        group("/<id>", listOf(mw("a"))) {
+            get("/new", listOf(mw("b")), fun(id: Int): Handler = { Response().text("/new id is $id") })
+        }
+
+        group {
+            get("/new", fun(): Handler = { Response().text("/new") })
+        }
+
         get("/<id>", listOf(mw("a"), mw("b")), fun(id: Int): Handler = {
             Response().text("id is $id")
         })

@@ -81,6 +81,13 @@ val router = SafeRouter {
         Response().text("edit user $id")
     })
     
+    // Wrap routes in a group to dry up middleware application
+    group("/stories/<id>", listOf(middleware)) {
+        get("/comments", listOf(middleware), fun(id: java.util.UUID): Handler = { 
+            Response().text("listing comments for story $id")
+        })
+    }
+    
     delete("/admin/users/<id>", listOf(ensureAdmin()), fun(id: Int): Handler = { req ->
         Response().text("admin panel, delete user $id")
     })
@@ -200,7 +207,7 @@ import com.danneu.kog.json.Decoder as JD
 import com.danneu.kog.Header
 
 // GET http://example.com/users?sort=created,  json body is {"foo": "bar"}
-var handler: Handler = { request
+var handler: Handler = { request ->
   request.href                     // http://example.com/users?sort=created
   request.path                     // "/users"
   request.method                   // Method.get

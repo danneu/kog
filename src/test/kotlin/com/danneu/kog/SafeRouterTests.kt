@@ -179,6 +179,31 @@ class SafeRouterTests {
             assertEquals("skips handler if not uuid", ResponseBody.String("not-uuid"), handler(Request.toy(Get, "/abc")).body)
         }
     }
+
+    @Test
+    fun testGroups() {
+        run {
+            val handler = SafeRouter {
+                group {
+                    get("/<a>", fun(id: Int): Handler = { Response().text("a") })
+                }
+                get("/<b>", fun(id: Int): Handler = { Response().text("b") })
+            }.handler()
+
+            assertEquals("hits group when match", ResponseBody.String("a"), handler(Request.toy(Get, "/42")).body)
+        }
+
+        run {
+            val handler = SafeRouter {
+                group {
+                    get("/<a>", fun(id: UUID): Handler = { Response().text("a") })
+                }
+                get("/<b>", fun(id: Int): Handler = { Response().text("b") })
+            }.handler()
+            assertEquals("skips group when not match", ResponseBody.String("b"), handler(Request.toy(Get, "/42")).body)
+        }
+    }
+
     // Not yet implemented
 
     // @Test
