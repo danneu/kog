@@ -901,8 +901,12 @@ This simple server will have two endpoints:
 import com.danneu.kog.SafeRouter
 import com.danneu.kog.Response
 import com.danneu.kog.Handler
+import com.danneu.kog.util.CopyLimitExceeded
+import com.danneu.kog.util.limitedCopyTo
 import java.io.File
 import java.util.UUID
+
+val uploadLimit = ByteLength.ofMegabytes(10)
 
 val router = SafeRouter {
     // Upload file
@@ -913,8 +917,13 @@ val router = SafeRouter {
         // Ensure "pastes" directory is created
         val destFile = File(File("pastes").apply { mkdir() }, id.toString())
         
-        // Move user's upload into "pastes"
-        req.body.copyTo(destFile.outputStream())
+        // Move user's upload into "pastes", bailing if their upload size is too large.
+        try {
+            req.body.limitedCopyTo(uploadLimit, destFile.outputStream())
+        } catch(e: CopyLimitExceeded) {
+            destFile.delete()
+            return@handler Response.badRequest().text("Cannot upload more than ${uploadLimit.byteLength} bytes")
+        }
         
         // If stream was empty, delete the file and scold user
         if (destFile.length() == 0L) {
@@ -922,7 +931,6 @@ val router = SafeRouter {
             return@handler Response.badRequest().text("Paste file required")
         }
         
-        // Posterity
         println("A client uploaded ${destFile.length()} bytes to ${destFile.absolutePath}")
         
         // Tell user where they can find their uploaded file
