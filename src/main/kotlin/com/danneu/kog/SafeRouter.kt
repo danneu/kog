@@ -66,7 +66,7 @@ class Route(val method: Method, val pattern: String, val recv: Function<Handler>
                     kotlin.String::class.createType() ->
                         """/[^\/]+"""
                     UUID::class.createType() ->
-                        """[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"""
+                        """/[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}"""
                     else ->
                         ""
                 }
@@ -74,24 +74,22 @@ class Route(val method: Method, val pattern: String, val recv: Function<Handler>
                 // static segment
                 "/$segment"
             }
-        }.let { Regex("^($method:${it.joinToString("")})$", IGNORE_CASE) }
+        }.let { regexStrings ->
+            Regex("^($method:${regexStrings.joinToString("")})$")
+        }
     }
 
     fun handle(request: Request): Response {
         val args = request.path.segments().valuesAt(paramIdxs).zip(types).map { (seg, type) ->
             when (type) {
-                kotlin.Int::class.createType() -> {
+                kotlin.Int::class.createType() ->
                     NumberFormat.getInstance().parse(seg).toInt()
-                }
-                kotlin.String::class.createType() -> {
+                kotlin.String::class.createType() ->
                     seg
-                }
-                UUID::class.createType() -> {
+                UUID::class.createType() ->
                     UUID.fromString(seg)
-                }
-                else -> {
+                else ->
                     throw java.lang.IllegalStateException("Impossible")
-                }
             }
         }
 

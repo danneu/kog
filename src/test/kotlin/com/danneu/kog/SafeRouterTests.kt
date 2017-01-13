@@ -9,6 +9,7 @@ import com.danneu.kog.Status.NotFound
 import com.danneu.kog.sandbox.SafeRouter
 import org.junit.Assert.*
 import org.junit.Test
+import java.util.UUID
 
 class SafeRouterTests {
     // TODO: Add these tests back. Overhauled SafeRouter.
@@ -164,6 +165,20 @@ class SafeRouterTests {
         }
     }
 
+    @Test
+    fun testUuid() {
+        run {
+            val handler = SafeRouter {
+                get("/<a>", fun(id: UUID): Handler = { Response().text(id.toString()) })
+                get("/<a>", fun(id: String): Handler = { Response().text("not-uuid") })
+            }.handler()
+
+            val uuid = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+            assertEquals("lowercase uuid hits", ResponseBody.String(uuid), handler(Request.toy(Get, "/$uuid")).body)
+            assertEquals("uppercase uuid hits", ResponseBody.String(uuid), handler(Request.toy(Get, "/${uuid.toUpperCase()}")).body)
+            assertEquals("skips handler if not uuid", ResponseBody.String("not-uuid"), handler(Request.toy(Get, "/abc")).body)
+        }
+    }
     // Not yet implemented
 
     // @Test
