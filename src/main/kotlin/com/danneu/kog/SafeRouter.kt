@@ -6,7 +6,7 @@ import com.danneu.kog.Middleware
 import com.danneu.kog.Request
 import com.danneu.kog.Response
 import com.danneu.kog.Server
-import com.danneu.kog.composeMiddleware
+import com.danneu.kog.middleware.composeMiddleware
 import com.danneu.kog.middleware.identity
 import java.text.NumberFormat
 import java.util.UUID

@@ -266,7 +266,7 @@ fun main(args: Array<String>) {
 Since middleware are just functions, it's trivial to compose them:
 
 ``` kotlin
-import com.danneu.kog.composeMiddleware
+import com.danneu.kog.middleware.composeMiddleware
 
 // `logger` will touch the request first and the response last
 val middleware = composeMiddleware(logger, cookieParser, loadCurrentUser)

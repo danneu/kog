@@ -1,5 +1,6 @@
 package com.danneu.kog
 
+import com.danneu.kog.middleware.composeMiddleware
 import java.util.Stack
 
 
