@@ -12,11 +12,27 @@ import java.io.File
 import java.util.UUID
 
 
-val uploadLimit = ByteLength.ofKilobytes(1)
-
+val uploadLimit = ByteLength.ofMegabytes(5)
 
 val router = SafeRouter {
+
+    // Display API usage
+
+    get("/",  fun(): Handler = {
+        Response().html("""
+            <pre>
+            Pastebin API
+
+            [POST /]: Upload file
+                * Body must be under ${java.text.DecimalFormat("#,###").format(uploadLimit.byteLength)} bytes
+
+            [GET /]: Fetch file
+            </pre>
+        """.trimIndent())
+    })
+
     // Upload file
+
     post("/", fun(): Handler = handler@ { req ->
         // Generate random ID for user's upload
         val id = UUID.randomUUID()
@@ -46,6 +62,7 @@ val router = SafeRouter {
     })
 
     // Fetch file
+
     get("/<id>", fun(id: UUID): Handler = handler@ { req ->
         val file = File("pastes/$id")
         if (!file.exists()) return@handler Response.notFound()
