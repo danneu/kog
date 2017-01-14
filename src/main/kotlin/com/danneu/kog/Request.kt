@@ -5,10 +5,8 @@ import com.danneu.kog.cookies.parse
 import com.danneu.kog.json.Decoder
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.flatMap
-import java.nio.charset.Charset
 import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
-
 
 class Request(
   val serverPort: Int,
@@ -24,7 +22,7 @@ class Request(
   val length: Int?, // Either >= 0 or null
   val charset: String?,
   // TODO: val sslClientCert
-  val body: ServletInputStream,
+  val body: ServletInputStream, // Note: Could just be InputStream if I'm never going to use ServerInputStream methods
   var path: String
 ) : HasHeaders<Request> {
 
@@ -32,7 +30,6 @@ class Request(
         formDecode(queryString).mutableCopy()
     }
 
-    // TODO: Do what things like ratpack do and store the class in the registry so that they get coerced?
     val params: MutableMap<String, Any> = mutableMapOf()
 
     // multipart middleware populates this with name -> file mappings for multipart uploads
@@ -46,8 +43,7 @@ class Request(
 
     // TODO: At framework level, need to avoid reading stream when it is already being/been consumed or come up with a deliberate gameplan.
     fun <T : Any> json(decoder: Decoder<T>): Result<T, Exception> {
-        val bodyString = this.body.readBytes().toString(Charset.forName("UTF-8"))
-        return Decoder.tryParse(bodyString).flatMap { jsonValue -> decoder(jsonValue) }
+        return Decoder.tryParse(utf8).flatMap { jsonValue -> decoder(jsonValue) }
     }
 
     // TODO: Handle case where body stream is already read
