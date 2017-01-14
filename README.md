@@ -468,7 +468,6 @@ import com.danneu.kog.Response
 import com.danneu.kog.Handler
 import com.danneu.kog.Server
 import com.danneu.kog.cookies.Cookie
-import com.danneu.kog.cookies.Ttl
 import java.time.OffsetDateTime
 
 fun Request.parseCounter(): Int = try {
@@ -478,7 +477,7 @@ fun Request.parseCounter(): Int = try {
 }
 
 fun Response.setCounter(count: Int): Response = apply {
-    cookies["counter"] = Cookie(count.toString(), duration = Ttl.Expires(OffsetDateTime.now().plusDays(3)))
+    cookies["counter"] = Cookie(count.toString(), duration = Cookie.Ttl.Expires(OffsetDateTime.now().plusDays(3)))
 }
 
 val handler: Handler = { request ->

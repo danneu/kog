@@ -5,26 +5,9 @@ import com.danneu.kog.util.HttpDate
 import java.time.Duration
 import java.time.OffsetDateTime
 
-
 //
 // Represents a response cookie
 //
-
-
-sealed class Ttl {
-    object Session: Ttl() {
-        override fun serialize(): String? = null
-    }
-    class Expires(val date: OffsetDateTime): Ttl() {
-        override fun serialize(): String = "expires=${HttpDate.toString(date)}"
-    }
-    class MaxAge(val duration: Duration): Ttl() {
-        override fun serialize(): String = "max-age=${duration.seconds}"
-    }
-
-    abstract fun serialize(): String?
-}
-
 
 data class Cookie(
     val value: String,
@@ -43,4 +26,18 @@ data class Cookie(
         if (secure == true) add("Secure")
         if (firstPartyOnly == true) add("First-Party-Only")
     }.joinToString("; ")
+
+    sealed class Ttl {
+        object Session: Ttl() {
+            override fun serialize(): String? = null
+        }
+        class Expires(val date: OffsetDateTime): Ttl() {
+            override fun serialize(): String = "expires=${HttpDate.toString(date)}"
+        }
+        class MaxAge(val duration: Duration): Ttl() {
+            override fun serialize(): String = "max-age=${duration.seconds}"
+        }
+
+        abstract fun serialize(): String?
+    }
 }
