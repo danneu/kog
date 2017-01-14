@@ -19,6 +19,7 @@ import com.danneu.kog.middleware.composeMiddleware
 import org.eclipse.jetty.server.handler.ContextHandler
 import org.eclipse.jetty.server.handler.HandlerCollection
 import org.eclipse.jetty.websocket.server.WebSocketServerFactory
+import java.time.Duration
 import org.eclipse.jetty.websocket.server.WebSocketHandler as JettyWebSocketHandler
 import org.eclipse.jetty.server.Request as JettyServerRequest
 
@@ -46,12 +47,12 @@ class JettyHandler(val handler: Handler, val insertContextHandler: (String, WebS
 }
 
 
-class Server(
+class Server @JvmOverloads constructor(
     val handler: Handler = { Response.notFound() },
     val websockets: Map<String, WebSocketAcceptor> = emptyMap(),
     val minThreads: Int = 8,
-    val maxThreads: Int = 50
-
+    val maxThreads: Int = 50,
+    val idleTimeout: Duration = Duration.ofSeconds(30)
 ) {
     val jettyServer = makeJettyServer()
 
@@ -61,7 +62,7 @@ class Server(
         println(":: <kog> stopped")
     }
 
-    fun listen(port: Int, wait: Boolean = true, onStart: (Server) -> Unit = {}): Server {
+    @JvmOverloads fun listen(port: Int, wait: Boolean = true, onStart: (Server) -> Unit = {}): Server {
         (jettyServer.connectors.first() as ServerConnector).port = port
 
         val handlers = HandlerCollection(true)
@@ -95,7 +96,7 @@ class Server(
 
     fun makeJettyServer(): JettyServer {
         val threadPool = QueuedThreadPool(maxThreads).apply {
-            this.minThreads = minThreads
+            this.minThreads = this@Server.minThreads
         }
         val server = JettyServer(threadPool)
         val httpConfig = HttpConfiguration().apply {
@@ -103,7 +104,7 @@ class Server(
         }
         val httpFactory = HttpConnectionFactory(httpConfig)
         val serverConnector = ServerConnector(server, httpFactory).apply {
-            this.idleTimeout = 200000
+            this.idleTimeout = this@Server.idleTimeout.toMillis()
         }
         server.addConnector(serverConnector)
         return server
