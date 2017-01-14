@@ -23,10 +23,14 @@ import java.util.zip.GZIPOutputStream
 // https://www.fastly.com/blog/best-practices-for-using-the-vary-header
 
 
-fun compress(threshold: ByteLength = ByteLength.ofBytes(1024)): Middleware = { handler ->
+fun compress(
+    threshold: ByteLength = ByteLength.ofBytes(1024),
+    predicate: (String) -> Boolean = { true }
+): Middleware = { handler ->
     fun(request: Request): Response {
         val response = handler(request)
 
+        // Vary should appear in the response for this request even if we short-circuit
         response.setHeader(Header.Vary, "Accept-Encoding")
 
         // SHORT CIRCUITS
@@ -39,6 +43,8 @@ fun compress(threshold: ByteLength = ByteLength.ofBytes(1024)): Middleware = { h
         if (response.getHeader(Header.ContentEncoding) != null) return response
         // Body length is not-null and it doesn't meet threshold
         if (response.body.length?.let { it < threshold.byteLength} ?: false) return response
+        // User does not want to compress responses with this Content-Type
+        if (!predicate(response.getHeader(Header.ContentType) ?: "application/octet-stream")) return response
 
         // COMPRESS
 
@@ -64,11 +70,12 @@ private fun compressBody(body: ResponseBody): InputStream {
 
 fun main(args: Array<String>) {
     val router = SafeRouter {
-        group(compress()) {
+        group(compress(predicate = { it == "application/json" }, threshold = ByteLength.zero)) {
             get("/a", fun(): Handler = { Response().text("hello") })
             get("/b", fun(): Handler = { Response().text("test") })
+            get("/json", fun(): Handler = { Response().jsonArray(1, 2, 3) })
         }
-        group(compress(threshold = ByteLength.zero)) {
+        group(compress()) {
             get("/c", fun(): Handler = { Response().text("test") })
         }
     }

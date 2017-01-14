@@ -809,19 +809,30 @@ val router = Router {
 The `compress` middleware reads and manages the appropriate headers to determine if it should
 send a gzip-encoded response to the client.
 
+Options:
+
+- `compress(threshold: ByteLength)` (Default = 1024 bytes)
+   Only compress the response if it is at least this large.
+- `compress(predicate = (String) -> Boolean)` (Default = `{ _ -> true }`)
+   Only compress the response if its Content-Type header passes `predicate(type)`.
+   
+Some examples:
+
 ``` kotlin
 import com.danneu.kog.batteries.compress
 import com.danneu.kog.ByteLength
 
 val router = SafeRouter() {
-    // These routes will be compressed if the response exceeds 1024 bytes
-    group(compress(threshold = ByteLength.ofBytes(1024))) {
-        get("/a", fun(): Handler = { Response() })
+    // These responses will be compressed if they are JSON of any size
+    group(compress(threshold = ByteLength.zero, predicate = { it == "application/json" })) {
+        get("/a", fun(): Handler = { Response().text("foo") })          // <-- Not compressed (not json)
+        get("/b", fun(): Handler = { Response().html("<h1>bar</h1>") }) // <-- Not compressed (not json)
+        get("/c", fun(): Handler = { Response().jsonArray(1, 2, 3) })   // <-- Compressed
     }
     
-    // These routes will be compressed regardless of response size
-    group(compress(threshold = ByteLength.zero)) {
-        get("/b", fun(): Handler = { Response() })
+    // These responses will be compressed if they are at least 1024 bytes
+    group(compress(threshold = ByteLength.ofBytes(1024))) {
+        get("/d", fun(): Handler = { Response().text("qux") })          // <-- Not compressed (too small)
     }
 }
 ```
