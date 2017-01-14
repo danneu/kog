@@ -11,6 +11,9 @@ import org.funktionale.option.Option
 import java.io.Reader
 
 
+// TODO: Wrap initial parse in result (Is this TODO still relevant?)
+
+
 fun Result.Companion.all(vararg results: Result<*, Exception>): Result<List<*>, Exception> {
     val validation = Validation(*results)
     if (validation.hasFailure) {
@@ -156,6 +159,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
+        // TODO: (Maybe?) Make this return V? once Result removes <V: Any> restriction.
         fun <T: Any> nullable(d1: Decoder<T>): Decoder<Option<T>> = Decoder { value ->
             when {
                 value.isNull -> Result.of { Option.None }
@@ -299,71 +303,3 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         }
     }
 }
-
-
-
-
-
-// TODO: wrap initial parse in result
-fun main(args: Array<String>) {
-    val jsonValue: JsonValue = Json.parse("[42, \"b\"]")
-    //val result = at(listOf("foo", "bar"), string)(Json.parse("""{"foo": {"bar": "baz"}}"""))
-    //val result = index(2, string)(Json.parse("[1,2,3,4]"))
-    //val result = Decoder.pair(Decoder.string, Decoder.int)(Json.parse("""["foo", "2"]"""))
-    //val result = Decoder.getIn(listOf("a", "b"), Decoder.string)(Json.parse("""{"a":{"b":{"c":42}}}"""))
-    //val result = Decoder.getIn(listOf(), Decoder.string)(Json.parse("""{"a":{"b":{"c":42}}}"""))
-    //val result = Decoder.getIn(listOf(), Decoder.object1({ x -> x}, Decoder.get("a", Decoder.int)))(Json.parse("""{"a": 42}"""))
-
-//    data class Creds(val uname: String, val password: String)
-//    val string = """{"user": {"uname": "chuck"}, "password": "secret"}"""
-//    val decoder = Decoder.object2({ a, b -> Creds(a, b) },
-//      Decoder.getIn(listOf("user", "uname"), Decoder.string),
-//      Decoder.get("password", Decoder.string)
-//    )
-//    val result = decoder(Json.parse(string))
-
-    //val result = Decoder.array(Decoder.int)(Json.parse("""[1,2,3]"""))
-
-//    val string = """{"version": 3, "test": "foo"}"""
-//    val info = Decoder.get("version", Decoder.int)
-//        .flatMap { version: Int ->
-//            when (version) {
-//                4 -> Decoder.get("test", Decoder.string)
-//                3 -> Decoder.get("test", Decoder.string.map { it.reversed() })
-//                else -> Decoder.fail("Only version $version is not supported")
-//            }
-//        }
-//    val result = info(Json.parse(string))
-
-
-//    println(Decoder.`null`(false)(Json.parse("42")))
-//    println(Decoder.nullable(Decoder.int)(Json.parse("42")))
-//    println(Decoder.nullable(Decoder.int)(Json.parse("null")))
-
-//    val string = """{"a": "b", "test": "foo"}"""
-//    val result = Decoder.keyValuePairs(Decoder.string)(Json.parse(string))
-
-//    val string = """{"a": "b", "test": "foo"}"""
-//    val result = Decoder.mapOf(Decoder.string)(Json.parse(string))
-
-
-//    data class User(val id: Int) //, val uname: String, val email: String?)
-//    val decoder: Decoder<User> = Decoder.required("id", Decoder.int, Decoder.succeed({ a -> User(a) }))
-////    val decoder: Decoder<User> = Decoder.pipeline(
-////      Decoder.required2("id", Decoder.int)
-////    ) { id -> User(id) }
-//    val string = """{ "id": 42 }"""
-//    println(decoder(Json.parse(string)))
-
-    println(Decoder.map(Decoder.get("a", Decoder.int), { a -> a+1}).decode(Json.parse("""{"a":1,"b":2}""")))
-    println(Decoder.map2(Decoder.get("a", Decoder.int), Decoder.get("b", Decoder.int), { a, b -> a+b}).decode(Json.parse("""{"a":1,"b":2}""")))
-
-//    val pipeline = Pipeline {
-//        required("id", Decoder.string)
-//        required("uname", Decoder.string)
-//        required("email", Decoder.string)
-//    }.build { a, b, c -> Triple(a,b,c) }
-
-    //println(result)
-}
-
