@@ -246,7 +246,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
                 when {
                     it.isArray -> {
                         val array = it.asArray()
-                        if (i <= 0 && i < array.size()) {
+                        if (i >= 0 && i < array.size()) {
                             d1(array.get(i))
                         } else {
                             Result.error(Exception("Expected index $i to be in bounds of array"))
