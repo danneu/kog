@@ -134,8 +134,10 @@ class Dispatcher(val routes: List<Route>) {
     }
 }
 
-class SafeRouter(vararg wares: Middleware, block: SafeRouter.() -> Unit) {
-    val middleware = composeMiddleware(*wares)
+class SafeRouter(val middleware: Middleware, block: SafeRouter.() -> Unit) {
+    @JvmOverloads constructor(wares: List<Middleware> = emptyList(), block: SafeRouter.() -> Unit):
+        this(composeMiddleware(wares), block)
+
     val routes = mutableListOf<Route>()
     val dispatcher: Dispatcher
 
@@ -232,7 +234,7 @@ fun main(args: Array<String>) {
         response
     }}
 
-    val router = SafeRouter(mw("start1"), mw("start2")) {
+    val router = SafeRouter(listOf(mw("start1"), mw("start2"))) {
         get("/<id>", fun(id: Int): Handler = {
             Response().text("/<id>, id = $id")
         })
