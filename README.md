@@ -27,7 +27,9 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
 - [JSON](#json)
   * [JSON Encoding](#json-encoding)
   * [JSON Decoding](#json-decoding)
-- [(Old) Router](#old-router)
+- [Routing](#routing)
+  * [Type-Safe: `com.danneu.kog.SafeRouter`](#type-safe-comdanneukogsaferouter)
+  * [Deprecated: `com.danneu.kog.Router`](#deprecated-comdanneukogrouter)
 - [Cookies](#cookies)
   * [Request Cookies](#request-cookies)
   * [Response Cookies](#response-cookies)
@@ -103,10 +105,6 @@ import com.danneu.kog.Handler
 import com.danneu.kog.Server
 
 val router = SafeRouter {
-    get("/", fun(): Handler = { req ->
-        Response().text("homepage")
-    })
-    
     get("/users", fun(): Handler = { req ->
         Response().text("list users")
     })
@@ -132,16 +130,6 @@ val router = SafeRouter {
     
     get("/<a>/<b>/<c>", fun(a: Int, b: Int, c: Int): Handler = { req ->
         Response().json(JE.jsonObject("sum" to a + b + c))
-    })
-    
-    // A route only runs if its pattern and handler arguments agree, and if the url can be coerced into the arguments.
-    
-    get("/hello/world", fun(a: Int, b: String): Handler = {
-        Response().text("this route will *never* match since its handler expects url params that the route pattern does not specify")
-    })
-    
-    get("/hello/world", fun(): Handler = {
-        Response().text("this route *will* run")
     })
   }
 }
@@ -435,7 +423,91 @@ val handler = { request ->
 }
 ```
 
-## (Old) Router
+## Routing
+
+### Type-Safe: `com.danneu.kog.SafeRouter`
+
+`com.danneu.kog.SafeRouter` is a work-in-progress type-safe rewrite of the original naive `Router`.
+
+It's type-safe because routes only match if the URL params can be parsed into
+the arguments that your function expects.
+
+Available coercions:
+
+- `kotlin.Int`
+- `kotlin.Long`
+- `kotlin.Float`
+- `kotlin.Double`
+- `java.util.UUID`
+
+For example:
+
+```kotlin
+SafeRouter {
+    // GET /uuid/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa -> 200 Ok
+    // GET /uuid/AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA -> 200 Ok
+    // GET /uuid/42                                   -> 404 Not Found
+    // GET /uuid/foo                                  -> 404 Not Found
+    get("/uuid/<x>", fun(uuid: java.util.UUID): Handler = { req ->
+        Response().text("you provided a uuid of version ${uuid.version} with a timestamp of ${uuid.timestamp}")
+    })
+}
+```
+
+Here's a more meandering example:
+
+``` kotlin
+import com.danneu.kog.json.Encoder as JE
+import com.danneu.kog.SafeRouter
+import com.danneu.kog.Response
+import com.danneu.kog.Request
+import com.danneu.kog.Handler
+import com.danneu.kog.Server
+
+val router = SafeRouter(middleware1(), middleware2()) {
+    get("/", fun(): Handler = { req ->
+        Response().text("homepage")
+    })
+    
+    get("/users/<id>", fun(id: Int): Handler = { req ->
+        Response().text("show user $id")
+    })
+    
+    get("/users/<id>/edit", fun(id: Int): Handler = { req ->
+        Response().text("edit user $id")
+    })
+    
+    // Wrap routes in a group to dry up middleware application
+    group("/stories/<id>", listOf(middleware)) {
+        get("/comments", listOf(middleware), fun(id: java.util.UUID): Handler = { 
+            Response().text("listing comments for story $id")
+        })
+    }
+    
+    delete("/admin/users/<id>", listOf(ensureAdmin()), fun(id: Int): Handler = { req ->
+        Response().text("admin panel, delete user $id")
+    })
+    
+    get("/<a>/<b>/<c>", fun(a: Int, b: Int, c: Int): Handler = { req ->
+        Response().json(JE.jsonObject("sum" to a + b + c))
+    })
+    
+    get("/hello/world", fun(a: Int, b: String): Handler = {
+        Response().text("this route can never match the function (Int, Int) -> ...")
+    })
+    
+    get("/hello/world", fun(): Handler = {
+        Response().text("this route *will* match")
+    })
+  }
+}
+
+fun main(args: Array<String>) {
+  Server(handler).listen(3000)
+}
+```
+
+### Deprecated: `com.danneu.kog.Router`
 
 Note: `Router` is currently being replaced with `SafeRouter`,
 but until then they live alongside each other.
