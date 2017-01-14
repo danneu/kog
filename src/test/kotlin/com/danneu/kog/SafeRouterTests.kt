@@ -6,7 +6,6 @@ import com.danneu.kog.Method.Post
 import com.danneu.kog.Method.Put
 import com.danneu.kog.Status.Ok
 import com.danneu.kog.Status.NotFound
-import com.danneu.kog.sandbox.SafeRouter
 import org.junit.Assert.*
 import org.junit.Test
 import java.util.UUID
@@ -134,7 +133,6 @@ class SafeRouterTests {
             val handler = SafeRouter { get("/<a>", fun(a: Int): Handler = { Response().text(a.toString()) }) }.handler()
             assertEquals(ResponseBody.String("42"), handler(Request.toy(Get, "/42")).body)
             assertEquals(ResponseBody.String("0"), handler(Request.toy(Get, "/000")).body)
-            assertEquals("negative ints not supported", NotFound, handler(Request.toy(Get, "/-1")).status)
         }
         run {
             // Int, Int
@@ -146,8 +144,8 @@ class SafeRouterTests {
             assertEquals(ResponseBody.String("3"), handler(Request.toy(Get, "/3/0")).body)
             assertEquals(ResponseBody.String("3"), handler(Request.toy(Get, "/0/3")).body)
             assertEquals(ResponseBody.String("0"), handler(Request.toy(Get, "/0/0")).body)
-            assertEquals(NotFound, handler(Request.toy(Get, "/1/-1")).status)
-            assertEquals(NotFound, handler(Request.toy(Get, "/-1/1")).status)
+            assertEquals(ResponseBody.String("-1"), handler(Request.toy(Get, "/1/-2")).body)
+            assertEquals(ResponseBody.String("-1"), handler(Request.toy(Get, "/-2/1")).body)
             assertEquals(NotFound, handler(Request.toy(Get, "/a/b")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/")).status)
         }
@@ -178,6 +176,41 @@ class SafeRouterTests {
             assertEquals("uppercase uuid hits", ResponseBody.String(uuid), handler(Request.toy(Get, "/${uuid.toUpperCase()}")).body)
             assertEquals("skips handler if not uuid", ResponseBody.String("not-uuid"), handler(Request.toy(Get, "/abc")).body)
         }
+    }
+
+    @Test
+    fun testNumberBounds() {
+        run {
+            val handler = SafeRouter {
+                get("/int/<a>", fun(id: Int): Handler = { Response().text(id.toString()) })
+                get("/long/<a>", fun(id: Long): Handler = { Response().text(id.toString()) })
+                get("/float/<a>", fun(id: Float): Handler = { Response().text(id.toString()) })
+                get("/double/<a>", fun(id: Double): Handler = { Response().text(id.toString()) })
+            }.handler()
+
+            assertEquals("max int matches", ResponseBody.String(Int.MAX_VALUE.toString()),
+                handler(Request.toy(Get, "/int/${Int.MAX_VALUE}")).body)
+            assertEquals("negative int matches", ResponseBody.String("-42"),
+                handler(Request.toy(Get, "/int/-42")).body)
+            assertEquals("beyond max int does not match", NotFound,
+                handler(Request.toy(Get, "/int/${Int.MAX_VALUE + 1L}")).status)
+
+            assertEquals("max long matches", ResponseBody.String(Long.MAX_VALUE.toString()),
+                handler(Request.toy(Get, "/long/${Long.MAX_VALUE}")).body)
+            assertEquals("negative long matches", ResponseBody.String("-42"),
+                handler(Request.toy(Get, "/long/-42")).body)
+            assertEquals("beyond max long does not match", NotFound,
+                handler(Request.toy(Get, "/long/${Long.MAX_VALUE}0")).status)
+
+            // TODO: Test against max float and decimal values
+
+            assertEquals("a positive float matches", ResponseBody.String("3.14"), handler(Request.toy(Get, "/float/3.14")).body)
+            assertEquals("a negative float matches", ResponseBody.String("-3.14"), handler(Request.toy(Get, "/float/-3.14")).body)
+
+            assertEquals("a positive double matches", ResponseBody.String("3.14"), handler(Request.toy(Get, "/double/3.14")).body)
+            assertEquals("a negative double matches", ResponseBody.String("-3.14"), handler(Request.toy(Get, "/double/-3.14")).body)
+        }
+
     }
 
     @Test

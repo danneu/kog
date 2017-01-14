@@ -2,7 +2,6 @@ package com.danneu.kog
 
 import com.danneu.kog.middleware.composeMiddleware
 import com.danneu.kog.middleware.identity
-import java.text.NumberFormat
 import java.util.UUID
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -56,7 +55,13 @@ class Route(val method: Method, val pattern: String, val recv: Function<Handler>
                 val type = types[paramIdx++]
                 when (type) {
                     kotlin.Int::class.createType() ->
-                        """/[0-9]+"""
+                        """/-?[0-9]+"""
+                    kotlin.Long::class.createType() ->
+                        """/-?[0-9]+"""
+                    kotlin.Float::class.createType() ->
+                        """/-?[0-9]*\.?[0-9]*"""
+                    kotlin.Double::class.createType() ->
+                        """/-?[0-9]*\.?[0-9]*"""
                     kotlin.String::class.createType() ->
                         """/[^\/]+"""
                     UUID::class.createType() ->
@@ -77,7 +82,14 @@ class Route(val method: Method, val pattern: String, val recv: Function<Handler>
         val args = request.path.segments().valuesAt(paramIdxs).zip(types).map { (seg, type) ->
             when (type) {
                 kotlin.Int::class.createType() ->
-                    NumberFormat.getInstance().parse(seg).toInt()
+                    //NumberFormat.getInstance().parse(seg).toInt()
+                    seg.toIntOrNull() ?: return Response.notFound()
+                kotlin.Long::class.createType() ->
+                    seg.toLongOrNull() ?: return Response.notFound()
+                kotlin.Float::class.createType() ->
+                    seg.toFloatOrNull() ?: return Response.notFound()
+                kotlin.Double::class.createType() ->
+                    seg.toDoubleOrNull() ?: return Response.notFound()
                 kotlin.String::class.createType() ->
                     seg
                 UUID::class.createType() ->
@@ -221,6 +233,10 @@ fun main(args: Array<String>) {
     }}
 
     val router = SafeRouter(mw("start1"), mw("start2")) {
+        get("/<id>", fun(id: Int): Handler = {
+            Response().text("/<id>, id = $id")
+        })
+
         group("/<id>", listOf(mw("a"))) {
             get("/new", listOf(mw("b")), fun(id: Int): Handler = { Response().text("/new id is $id") })
         }
