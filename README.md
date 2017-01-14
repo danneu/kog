@@ -15,9 +15,9 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
 <!-- toc -->
 
 - [Install](#install)
-- [Hello World](#hello-world)
-  * [Basic](#basic)
-  * [Type-Safe Routing and Middleware](#type-safe-routing-and-middleware)
+- [Quick Start](#quick-start)
+  * [Hello World](#hello-world)
+  * [Type-Safe Routing](#type-safe-routing)
   * [WebSockets](#websockets)
 - [Concepts](#concepts)
   * [Request & Response](#request--response)
@@ -45,6 +45,7 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
 - [Environment Variables](#environment-variables)
 - [Heroku Deploy](#heroku-deploy)
 - [Example: Tiny Pastebin Server](#example-tiny-pastebin-server)
+- [License](#license)
 
 <!-- tocstop -->
 
@@ -64,9 +65,9 @@ dependencies {
 }
 ```
 
-## Hello World
+## Quick Start
 
-### Basic
+### Hello World
 
 ``` kotlin
 import com.danneu.kog.Response
@@ -89,7 +90,7 @@ fun main(args: Array<String>) {
 }
 ```
 
-### Type-Safe Routing and Middleware
+### Type-Safe Routing
 
 `SafeRouter` is a work-in-progress type-safe rewrite of the original naive `Router`.
 
