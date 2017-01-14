@@ -7,7 +7,6 @@ import com.danneu.kog.json.Encoder as JE
 import java.io.File
 import java.io.InputStream
 
-
 typealias WebSocketAcceptor = (Request, WebSocket) -> Unit
 
 
@@ -28,7 +27,7 @@ class Response(
 
     val cookies by lazy { mutableMapOf<String, Cookie>() }
 
-    override var headers: MutableList<HeaderPair> = mutableListOf()
+    override var headers = mutableListOf<HeaderPair>()
 
     fun setStatus(status: Status) = apply { this.status = status }
 

@@ -5,8 +5,9 @@ package com.danneu.kog
  *
  * Improves readability and avoids errors involved with manually converting between orders of magnitude.
  */
-class ByteLength(val byteLength: Long) {
+class ByteLength private constructor(val byteLength: Long) {
     companion object {
+        val zero = ByteLength(0)
         fun ofBytes(n: Long) = ByteLength(n)
         fun ofKilobytes(n: Long) = ByteLength(n * 1000)
         fun ofKilobytes(n: Double) = ByteLength((n * 1000).toLong())

@@ -176,10 +176,18 @@ class SafeRouter(val middleware: Middleware, block: SafeRouter.() -> Unit) {
     fun options(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
         routes.add(Route(Method.Options, pattern, recv, wares))
 
-    fun group(prefixPattern: String = "", wares: List<Middleware> = emptyList(), block: RouteGroup.() -> Unit) {
+    fun group(prefixPattern: String, wares: List<Middleware> = emptyList(), block: RouteGroup.() -> Unit) {
         val group = RouteGroup(prefixPattern, composeMiddleware(wares))
         group.block()
         group.routes.forEach { route -> routes.add(route) }
+    }
+
+    fun group(wares: List<Middleware> = emptyList(), block: RouteGroup.() -> Unit) {
+        group("", wares, block)
+    }
+
+    fun group(vararg wares: Middleware, block: RouteGroup.() -> Unit) {
+        group("", wares.toList(), block)
     }
 
     fun handler(): Handler = middleware(dispatcher.handler())

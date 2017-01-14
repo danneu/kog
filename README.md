@@ -761,6 +761,28 @@ val router = Router {
 }
 ```
 
+## Compression / Gzip (Middleware)
+
+The `compress` middleware reads and manages the appropriate headers to determine if it should
+send a gzip-encoded response to the client.
+
+``` kotlin
+import com.danneu.kog.batteries.compress
+import com.danneu.kog.ByteLength
+
+val router = SafeRouter() {
+    // These routes will be compressed if the response exceeds 1024 bytes
+    group(compress(threshold = ByteLength.ofBytes(1024))) {
+        get("/a", fun(): Handler = { Response() })
+    }
+    
+    // These routes will be compressed regardless of response size
+    group(compress(threshold = ByteLength.zero)) {
+        get("/b", fun(): Handler = { Response() })
+    }
+}
+```
+
 ## Passing in environment variables
 
 Kog's `Env` object provides a central way to access any customizations passed into an application.
