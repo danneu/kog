@@ -30,6 +30,8 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         return decode(value)
     }
 
+    /** Specify the decoder to use based on the result of the previous decoder.
+     */
     fun <B : Any> flatMap(f: (T) -> Decoder<B>): Decoder<B> = Decoder { value ->
         this.decode(value).flatMap { success: T ->
             f(success).decode(value)
@@ -37,6 +39,8 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
     }
 
 
+    /** Apply a function to the decoded value on successful decode.
+     */
     fun <B : Any> map(f: (T) -> B): Decoder<B> = Decoder { value ->
         this.decode(value).map { success: T ->
             f(success)
@@ -264,7 +268,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
 
         // FIXME: Billy's first loop
         fun oneOf(vararg ds: Decoder<*>): Decoder<Any> = Decoder { value ->
-            var result: Result<Any, Exception> = Result.of(Exception("None of the decoders matched"))
+            var result: Result<Any, Exception> = Result.Failure(Exception("None of the decoders matched"))
             var bail = false
             for (decoder in ds.iterator()) {
                 decoder(value).map { decoded ->

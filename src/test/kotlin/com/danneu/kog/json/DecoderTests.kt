@@ -6,6 +6,8 @@ import org.funktionale.option.Option
 import org.junit.Assert.*
 import org.junit.Test
 
+// Test many decoders against one json string
+
 fun <V: Any> String.ok(expected: V, decoder: Decoder<V>) {
     assertEquals(Result.of(expected, { java.lang.Exception() }), decoder(Json.parse(this)))
 }
@@ -21,6 +23,13 @@ fun <V: Any> String.err(decoder: Decoder<V>) {
 fun <V: Any> String.err(message: String, decoder: Decoder<V>) {
     assertTrue(decoder(Json.parse(this)) is Result.Failure)
 }
+
+// Test many json strings against one decoder
+
+fun <V: Any> Decoder<V>.ok(expected: V, json: String) = json.ok(expected, this)
+fun <V: Any> Decoder<V>.ok(message: String, expected: V, json: String) = json.ok(message, expected, this)
+fun <V: Any> Decoder<V>.err(json: String) = json.err(this)
+fun <V: Any> Decoder<V>.err(message: String, json: String) = json.err(message, this)
 
 class DecoderTests {
     @Test
@@ -134,9 +143,23 @@ class DecoderTests {
                 }
             }
 
-        """{"version": 3, "test": "foo"}""".ok("oof", decoder)
-        """{"version": 4, "test": "foo"}""".ok("foo", decoder)
-        """{"version": 5, "test": "foo"}""".err(decoder)
+        decoder.apply {
+            ok("oof", """{"version": 3, "test": "foo"}""")
+            ok("foo", """{"version": 4, "test": "foo"}""")
+            err("""{"version": 5, "test": "foo"}""")
+        }
+    }
+
+    @Test
+    fun testOneOf() {
+        Decoder.oneOf(
+            Decoder.string.map { s -> s + "x" },
+            Decoder.int.map { n -> n + 1 }
+        ).apply {
+            ok("foox", json = "\"foo\"")
+            ok(3, json = "2")
+            err(json = "true")
+        }
     }
 
     @Test
