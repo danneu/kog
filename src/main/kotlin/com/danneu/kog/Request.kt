@@ -37,6 +37,10 @@ class Request(
         mutableMapOf<String, SavedUpload>()
     }
 
+    val negotiate by lazy {
+        Negotiator(this)
+    }
+
     val cookies by lazy {
         parse(getHeader(Header.Cookie)).mutableCopy()
     }

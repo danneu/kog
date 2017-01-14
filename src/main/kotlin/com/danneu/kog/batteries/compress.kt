@@ -10,6 +10,7 @@ import com.danneu.kog.Response
 import com.danneu.kog.ResponseBody
 import com.danneu.kog.SafeRouter
 import com.danneu.kog.Server
+import com.danneu.kog.Status
 import java.io.InputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
@@ -45,6 +46,12 @@ fun compress(
         if (response.body.length?.let { it < threshold.byteLength} ?: false) return response
         // User does not want to compress responses with this Content-Type
         if (!predicate(response.getHeader(Header.ContentType) ?: "application/octet-stream")) return response
+
+        // ACCEPT
+
+        val encoding = request.negotiate.acceptableEncoding(listOf("gzip", "identity"))
+            ?: return Response(Status.NotAcceptable).text("supported encodings: gzip, identity")
+        if (encoding == "identity") return response
 
         // COMPRESS
 
