@@ -138,6 +138,9 @@ class SafeRouter(val middleware: Middleware, block: SafeRouter.() -> Unit) {
     @JvmOverloads constructor(wares: List<Middleware> = emptyList(), block: SafeRouter.() -> Unit):
         this(composeMiddleware(wares), block)
 
+    constructor(vararg wares: Middleware, block: SafeRouter.() -> Unit):
+        this(composeMiddleware(*wares), block)
+
     val routes = mutableListOf<Route>()
     val dispatcher: Dispatcher
 
