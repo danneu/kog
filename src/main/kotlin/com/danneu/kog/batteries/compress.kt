@@ -38,7 +38,7 @@ fun compress(threshold: ByteLength = ByteLength.ofBytes(1024)): Middleware = { h
         // Body already encoded
         if (response.getHeader(Header.ContentEncoding) != null) return response
         // Body length is not-null and it doesn't meet threshold
-        if (response.body.length ?: Long.MAX_VALUE < threshold.byteLength) return response
+        if (response.body.length?.let { it < threshold.byteLength} ?: false) return response
 
         // COMPRESS
 
