@@ -20,7 +20,7 @@ fun Result.Companion.all(vararg results: Result<*, Exception>): Result<List<*>, 
         return error(validation.failures.first())
     } else {
         val vals: List<Any> = results.map { it.get() }
-        return Result.of { vals }
+        return Result.of(vals)
     }
 }
 
@@ -52,17 +52,18 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         // PARSING
 
         fun tryParse(reader: Reader): Result<JsonValue, Exception> {
-            return Result.of { Json.parse(reader) }
+            return Result.of(Json.parse(reader))
         }
+
         fun tryParse(string: String): Result<JsonValue, Exception> {
-            return Result.of { Json.parse(string) }
+            return Result.of(Json.parse(string))
         }
 
         // DECODERS
 
         val int: Decoder<Int> = Decoder {
             when {
-                it.isNumber -> Result.of { it.asInt() }
+                it.isNumber -> Result.of(it.asInt())
                 else -> Result.error(Exception("Expected Int but got ${it.javaClass.simpleName}"))
             }
         }
@@ -74,7 +75,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
                     val results: List<Result<A, Exception>> = coll.map { item: JsonValue -> d1(item) }
                     val validation = Validation(*results.toTypedArray())
                     if (!validation.hasFailure) {
-                        Result.of { results.map { result -> result.get() } }
+                        Result.of(results.map { result -> result.get() })
                     } else {
                         Result.error(validation.failures.first())
                     }
@@ -113,48 +114,42 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        val string: Decoder<String>
-            get() = Decoder {
-                when {
-                    it.isString -> Result.of { it.asString() }
-                    else -> Result.error(Exception("Expected String but got ${it.javaClass.simpleName}"))
-                }
+        val string: Decoder<String> = Decoder {
+            when {
+                it.isString -> Result.of(it.asString())
+                else -> Result.error(Exception("Expected String but got ${it.javaClass.simpleName}"))
             }
+        }
 
 
-
-        val float: Decoder<Float>
-            get() = Decoder {
-                when {
-                    it.isNumber -> Result.of { it.asFloat() }
-                    else -> Result.error(Exception("Expected Float but got ${it.javaClass.simpleName}"))
-                }
+        val float: Decoder<Float> = Decoder {
+            when {
+                it.isNumber -> Result.of(it.asFloat())
+                else -> Result.error(Exception("Expected Float but got ${it.javaClass.simpleName}"))
             }
+        }
 
-        val double: Decoder<Double>
-            get() = Decoder {
-                when {
-                    it.isNumber -> Result.of { it.asDouble() }
-                    else -> Result.error(Exception("Expected Double but got ${it.javaClass.simpleName}"))
-                }
+        val double: Decoder<Double> = Decoder {
+            when {
+                it.isNumber -> Result.of(it.asDouble())
+                else -> Result.error(Exception("Expected Double but got ${it.javaClass.simpleName}"))
             }
+        }
 
-        val long: Decoder<Long>
-            get() = Decoder {
-                when {
-                    it.isNumber -> Result.of { it.asLong() }
-                    else -> Result.error(Exception("Expected Long but got ${it.javaClass.simpleName}"))
-                }
+        val long: Decoder<Long> = Decoder {
+            when {
+                it.isNumber -> Result.of(it.asLong())
+                else -> Result.error(Exception("Expected Long but got ${it.javaClass.simpleName}"))
             }
+        }
 
 
-        val bool: Decoder<Boolean>
-            get() = Decoder {
-                when {
-                    it.isBoolean -> Result.of { it.asBoolean() }
-                    else -> Result.error(Exception("Expected Bool but got ${it.javaClass.simpleName}"))
-                }
+        val bool: Decoder<Boolean> = Decoder {
+            when {
+                it.isBoolean -> Result.of(it.asBoolean())
+                else -> Result.error(Exception("Expected Bool but got ${it.javaClass.simpleName}"))
             }
+        }
 
         fun <T : Any> `null`(defaultValue: T): Decoder<T> = Decoder {
             when {
@@ -166,7 +161,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         // TODO: (Maybe?) Make this return V? once Result removes <V: Any> restriction.
         fun <T: Any> nullable(d1: Decoder<T>): Decoder<Option<T>> = Decoder { value ->
             when {
-                value.isNull -> Result.of { Option.None }
+                value.isNull -> Result.of(Option.None)
                 else -> d1.decode(value).map { Option.Some(it) }
             }
 
@@ -180,7 +175,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
                     val results: Array<Result<A, Exception>> = array.map { item: JsonValue -> d1(item) }.toTypedArray()
                     val validation = Validation(*results)
                     if (!validation.hasFailure) {
-                        Result.of { results.map { result -> result.get() }.toTypedArray() }
+                        Result.of(results.map { result -> result.get() }.toTypedArray())
                     } else {
                         Result.error(validation.failures.first())
                     }
@@ -200,7 +195,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
                     }
                     val validation = Validation(*results.toTypedArray())
                     if (!validation.hasFailure) {
-                        Result.of { results.map { result -> result.get() } }
+                        Result.of(results.map { result -> result.get() })
                     } else {
                         Result.error(validation.failures.first())
                     }
@@ -272,7 +267,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             var bail = false
             for (decoder in ds.iterator()) {
                 decoder(value).map { decoded ->
-                    result = Result.of { decoded }
+                    result = Result.of(decoded)
                     // break - can't break here
                     bail = true
                 }
@@ -299,7 +294,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         }
 
         fun <T : Any> succeed(value: T): Decoder<T> = Decoder {
-            Result.of { value }
+            Result.of(value)
         }
 
         fun <T : Any> fail(message: String): Decoder<T> = Decoder {
