@@ -14,3 +14,7 @@ fun composeMiddleware(vararg wares: Middleware): Middleware {
     return wares.fold(identity, { final, next -> { handler -> final(next(handler)) } })
 }
 
+fun composeMiddleware(wares: List<Middleware>): Middleware {
+    return wares.fold(identity, { final, next -> { handler -> final(next(handler)) } })
+}
+

@@ -30,7 +30,7 @@ fun <A> List<A>.valuesAt(indexes: List<Int>): List<A> {
 }
 
 class Route(val method: Method, val pattern: String, val recv: Function<Handler>, wares: List<Middleware> = emptyList()) {
-    val middleware = composeMiddleware(*wares.toTypedArray())
+    val middleware = composeMiddleware(wares)
     val types = recv.types()
 
     val paramIdxs = pattern.segments().mapIndexed { idx, seg ->
@@ -175,7 +175,7 @@ class SafeRouter(vararg wares: Middleware, block: SafeRouter.() -> Unit) {
         routes.add(Route(Method.Options, pattern, recv, wares))
 
     fun group(prefixPattern: String = "", wares: List<Middleware> = emptyList(), block: RouteGroup.() -> Unit) {
-        val group = RouteGroup(prefixPattern, composeMiddleware(*wares.toTypedArray()))
+        val group = RouteGroup(prefixPattern, composeMiddleware(wares))
         group.block()
         group.routes.forEach { route -> routes.add(route) }
     }
