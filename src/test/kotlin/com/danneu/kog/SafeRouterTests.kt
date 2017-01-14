@@ -194,6 +194,8 @@ class SafeRouterTests {
                 handler(Request.toy(Get, "/int/-42")).body)
             assertEquals("beyond max int does not match", NotFound,
                 handler(Request.toy(Get, "/int/${Int.MAX_VALUE + 1L}")).status)
+            assertEquals("beyond min int does not match", NotFound,
+                handler(Request.toy(Get, "/int/${Int.MIN_VALUE - 1L}")).status)
 
             assertEquals("max long matches", ResponseBody.String(Long.MAX_VALUE.toString()),
                 handler(Request.toy(Get, "/long/${Long.MAX_VALUE}")).body)
@@ -201,8 +203,10 @@ class SafeRouterTests {
                 handler(Request.toy(Get, "/long/-42")).body)
             assertEquals("beyond max long does not match", NotFound,
                 handler(Request.toy(Get, "/long/${Long.MAX_VALUE}0")).status)
+            assertEquals("beyond max long does not match", NotFound,
+                handler(Request.toy(Get, "/long/${Long.MIN_VALUE}0")).status)
 
-            // TODO: Test against max float and decimal values
+            // TODO: Test against min/max float and decimal values
 
             assertEquals("a positive float matches", ResponseBody.String("3.14"), handler(Request.toy(Get, "/float/3.14")).body)
             assertEquals("a negative float matches", ResponseBody.String("-3.14"), handler(Request.toy(Get, "/float/-3.14")).body)
