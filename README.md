@@ -1,9 +1,52 @@
-
 # kog [![Jitpack](https://jitpack.io/v/com.danneu/kog.svg)](https://jitpack.io/#com.danneu/kog) [![Kotlin](https://img.shields.io/badge/kotlin-1.1.1-blue.svg)](https://kotlinlang.org/) ![Heroku](https://img.shields.io/badge/heroku-ready-8b59b6.svg) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog)  
 
 A simple, experimental Kotlin web framework inspired by Clojure's Ring.
 
-Built on top of [Jetty](http://www.eclipse.org/jetty/). 
+Built on top of [Jetty](http://www.eclipse.org/jetty/).
+
+## Goals
+
+1. Simplicity
+2. Middleware
+3. Functional composition
+
+## Table of Contents
+
+<!-- toc -->
+
+- [Install](#install)
+- [Hello World](#hello-world)
+  * [Basic](#basic)
+  * [Type-Safe Routing and Middleware](#type-safe-routing-and-middleware)
+  * [WebSockets](#websockets)
+- [Concepts](#concepts)
+  * [Request & Response](#request--response)
+  * [Handler](#handler)
+  * [Middleware](#middleware)
+    + [**Tip:** Short-Circuiting Lambdas](#tip-short-circuiting-lambdas)
+- [JSON](#json)
+  * [JSON Encoding](#json-encoding)
+  * [JSON Decoding](#json-decoding)
+- [(Old) Router](#old-router)
+- [Cookies](#cookies)
+  * [Request Cookies](#request-cookies)
+  * [Response Cookies](#response-cookies)
+- [Included Middleware](#included-middleware)
+  * [Development Logger](#development-logger)
+  * [Static File Serving](#static-file-serving)
+  * [Conditional-Get Caching](#conditional-get-caching)
+    + [ETag](#etag)
+    + [Last-Modified](#last-modified)
+  * [Multipart File Uploads](#multipart-file-uploads)
+  * [Basic Auth](#basic-auth)
+  * [Compression / Gzip](#compression--gzip)
+- [HTML Templating](#html-templating)
+- [WebSockets](#websockets-1)
+- [Environment Variables](#environment-variables)
+- [Heroku Deploy](#heroku-deploy)
+- [Example: Tiny Pastebin Server](#example-tiny-pastebin-server)
+
+<!-- tocstop -->
 
 ## Install
 
@@ -20,12 +63,6 @@ dependencies {
     compile "com.danneu:kog:master-SNAPSHOT"
 }
 ```
-
-## Goals
-
-1. Simplicity
-2. Middleware
-3. Functional composition
 
 ## Hello World
 
@@ -501,7 +538,11 @@ $ http --session=kog-example --body localhost:9000
 count: 3
 ```
 
-## Development Logger (Middleware)
+## Included Middleware
+
+The `com.danneu.kog.batteries` package includes some useful middleware.
+
+### Development Logger
 
 The logger middleware prints basic info about the request and response 
 to stdout.
@@ -514,7 +555,7 @@ Server(logger(handler)).listen()
 
 ![logger screenshot](https://dl.dropboxusercontent.com/spa/quq37nq1583x0lf/_5c9x02w.png)
 
-## Static File Serving (Middleware)
+### Static File Serving
 
 The serveStatic middleware checks the `request.path` against a directory
 that you want to serve assets from.
@@ -544,7 +585,7 @@ If we have a `./public` folder in our project root with a file
     $ http localhost:3000/../passwords.txt
     HTTP/1.1 400 Bad Request
 
-## Not-Modified / ETag Browser Caching (Middleware)
+### Conditional-Get Caching 
 
 This middleware adds `Last-Modified` or `ETag` headers to each downstream
 response which the browser will echo back on subsequent requests.
@@ -553,7 +594,7 @@ If the response's `Last-Modified`/`ETag` matches the request,
 then this middleware instead responds with `304 Not Modified` which tells the
 browser to use its cache.
 
-### ETag
+#### ETag
 
 `notModified(etag = true)` will generate an ETag header for each
 downstream response.
@@ -586,7 +627,7 @@ $ http localhost:9000 If-None-Match:'"d-bNNVbesNpUvKBgtMOUeYOQ"'
 HTTP/1.1 304 Not Modified
 ```
 
-### Last-Modified
+#### Last-Modified
 
 `notModified(etag = false)` will only add a `Last-Modified` header
 to downstream responses if `response.body is ResponseBody.File` since
@@ -606,7 +647,7 @@ val router = Router {
 }
 ```
 
-## Multipart File Uploads (Middleware)
+### Multipart File Uploads 
 
 To handle file uploads, use the `com.danneu.kog.batteries.multipart` middleware.
 
@@ -661,6 +702,55 @@ import com.danneu.kog.batteries.multipart.Whitelist
 
 multipart(whitelist = Whitelist.all)
 multipart(whitelist = Whitelist.only(setOf("field1", "field2")))
+```
+
+### Basic Auth
+
+Just pass a `(name, password) -> Boolean` predicate to the
+`basicAuth()` middleware. 
+
+Your handler won't get called unless the user satisfies it.
+
+``` kotlin
+import com.danneu.kog.batteries.basicAuth
+
+fun String.sha256(): ByteArray {
+    return java.security.MessageDigest.getInstance("SHA-256").digest(this.toByteArray())
+}
+
+val secretHash = "a man a plan a canal panama".sha256()
+
+fun isAuthenticated(name: String, pass: String): Boolean {
+    return java.util.Arrays.equals(pass.sha256(), secretHash)
+}
+
+val router = Router {
+    get("/", basicAuth(::isAuthenticated)) {
+        Response().text("You are authenticated!")
+    }
+}
+```
+
+### Compression / Gzip 
+
+The `compress` middleware reads and manages the appropriate headers to determine if it should
+send a gzip-encoded response to the client.
+
+``` kotlin
+import com.danneu.kog.batteries.compress
+import com.danneu.kog.ByteLength
+
+val router = SafeRouter() {
+    // These routes will be compressed if the response exceeds 1024 bytes
+    group(compress(threshold = ByteLength.ofBytes(1024))) {
+        get("/a", fun(): Handler = { Response() })
+    }
+    
+    // These routes will be compressed regardless of response size
+    group(compress(threshold = ByteLength.zero)) {
+        get("/b", fun(): Handler = { Response() })
+    }
+}
 ```
 
 ## HTML Templating
@@ -734,56 +824,8 @@ fun main(args: Array<String>) {
 }
 ```
 
-## Basic Auth (Middleware)
 
-Just pass a `(name, password) -> Boolean` predicate to the
-`basicAuth()` middleware. 
-
-Your handler won't get called unless the user satisfies it.
-
-``` kotlin
-import com.danneu.kog.batteries.basicAuth
-
-fun String.sha256(): ByteArray {
-    return java.security.MessageDigest.getInstance("SHA-256").digest(this.toByteArray())
-}
-
-val secretHash = "a man a plan a canal panama".sha256()
-
-fun isAuthenticated(name: String, pass: String): Boolean {
-    return java.util.Arrays.equals(pass.sha256(), secretHash)
-}
-
-val router = Router {
-    get("/", basicAuth(::isAuthenticated)) {
-        Response().text("You are authenticated!")
-    }
-}
-```
-
-## Compression / Gzip (Middleware)
-
-The `compress` middleware reads and manages the appropriate headers to determine if it should
-send a gzip-encoded response to the client.
-
-``` kotlin
-import com.danneu.kog.batteries.compress
-import com.danneu.kog.ByteLength
-
-val router = SafeRouter() {
-    // These routes will be compressed if the response exceeds 1024 bytes
-    group(compress(threshold = ByteLength.ofBytes(1024))) {
-        get("/a", fun(): Handler = { Response() })
-    }
-    
-    // These routes will be compressed regardless of response size
-    group(compress(threshold = ByteLength.zero)) {
-        get("/b", fun(): Handler = { Response() })
-    }
-}
-```
-
-## Passing in environment variables
+## Environment Variables
 
 Kog's `Env` object provides a central way to access any customizations passed into an application.
 
@@ -974,40 +1016,3 @@ fun main(args: Array<String>) {
 ```
 
 
-## TODO
-
-There's so much missing that it feels silly writing a TODO list, but here are some short-term reminders.
-
-- Idea: I've started on an uncomitted decoder inspired by my JSON decoder for doing type-safe unwrapping of things
-  like the request's `query` map. I'm trying to figure out the best way to continue generalizing the idea
-  to short-circuit on bad input and validation failure:
-
-  ``` kotlin
-  // Example: GET /books?author=foo&title=bar
-  get("/books") { req ->
-    val (author, title) = D.tuple2(
-      D.get("author", D.string),
-      D.get("title", D.string)
-    )(req.query)
-    Response().text("author=$author, title=$title")
-  }
-  ```
-      
-- Use the same JSON library for encoding and decoding JSON. I currently use
-  minimal-json for parsing and kotson for encoding.
-- Clean up the build step. New to Java build tools, my build.gradle is
-  a series of random hacks that eventually worked rather than something
-  I understand.
-- I use Kotlin 1.1 unstable just for the new `typealias` feature. Once 1.1
-  becomes stable I think I can get rid of some build step complexity.
-- Organize project packages. I should give them deliberate thought from the
-  public API side since reorganizing packages will always cause a breaking
-  change.
-- Organize the Jetty/Servlet code. I have no experience working with Jetty nor Servlets,
-  so I copied Ring's adapter. It definitely needs some deliberate TLC.
-- Figure how to handle middleware/handlers trying to read the `request.body`
-  InputStream after it has already been consumed upstream. For example,
-  maybe consuming it transitions it into some sort of consumed stream
-  type so that you must handle that case?
-- Multipart: Let handler optionally get a mapping of upload streams instead
-  of temporary files so that it can handle streams directly if it wants.
