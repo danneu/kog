@@ -626,12 +626,12 @@ file uploads have already been piped into temporary files in the file-system
 which will get automatically deleted.
 
 ``` kotlin
-import com.danneu.kog.Router
+import com.danneu.kog.SafeRouter
 import com.danneu.kog.batteries.multipart
 import com.danneu.kog.batteries.multipart.Whitelist
 
-val router: Router = Router {
-    get("/") {
+val router = SafeRouter {
+    get("/", fun(): Handler = {
         Response().html("""
             <!doctype html>
             <form method="POST" action="/upload" enctype="multipart/form-data">
@@ -640,11 +640,11 @@ val router: Router = Router {
                 <button type="submit">Upload</button>
             </form>
         """)
-    }
-    post("/upload", multipart(Whitelist.only(setOf("file1")))) { req ->
+    })
+    post("/upload", multipart(Whitelist.only(setOf("file1"))), fun(): Handler = { req ->
         val upload = req.uploads["file1"]
         Response().text("You uploaded ${upload?.length ?: "--"} bytes")
-    }
+    })
 }
 
 fun main(args: Array<String>) {
@@ -806,6 +806,8 @@ If the parse fails, `null` is returned.
 ## Heroku Deploy
 
 This example application will be called "com.danneu.kogtest".
+
+I'm not sure what the minimal boilerplate is, but the following is what worked for me.
 
 In `./system.properties`:
 
