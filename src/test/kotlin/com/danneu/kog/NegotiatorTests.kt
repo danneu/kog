@@ -1,8 +1,157 @@
 package com.danneu.kog
 
 import com.danneu.kog.negotiation.Encoding
+import com.danneu.kog.negotiation.MediaType
 import org.junit.Assert.*
 import org.junit.Test
+
+
+class MediaTypeTests {
+    @Test
+    fun testDuplication() {
+        assertEquals(
+            "dupes are removed",
+            listOf(MediaType("a", "b", 0.5)),
+            Negotiator(Request.toy().setHeader(Header.Accept, "a/b;q=0.5, a/b;q=0.5, a/b;q=0.5")).mediaTypes
+        )
+    }
+
+    @Test
+    fun testPrioritize() {
+        assertEquals(
+            "more specific ranges should come before less specific ranges",
+            listOf(
+                MediaType("foo", "bar"),
+                MediaType("foo", "*"),
+                MediaType("*", "*"),
+                MediaType("foo", "*", 0.5),
+                MediaType("foo", "bar", 0.2),
+                MediaType("*", "*", 0.1)
+            ),
+            listOf(
+                MediaType("foo", "*"),
+                MediaType("*", "*", 0.1),
+                MediaType("foo", "*", 0.5),
+                MediaType("foo", "bar"),
+                MediaType("*", "*"),
+                MediaType("foo", "bar", 0.2)
+            ).let { MediaType.prioritize(it) }
+        )
+
+        assertEquals(
+            "sorted by qvalue descending",
+            listOf(
+                MediaType("audio", "basic"),
+                MediaType("audio", "*", 0.2)
+            ),
+            MediaType.prioritize(
+                listOf(
+                    MediaType("audio", "*", 0.2),
+                    MediaType("audio", "basic")
+                )
+            )
+        )
+
+        assertEquals(
+            listOf(
+                MediaType("text", "html"),
+                MediaType("text", "x-c"),
+                MediaType("text", "x-dvi", 0.8),
+                MediaType("text", "plain", 0.5)
+            ),
+            listOf(
+                MediaType("text", "plain", 0.5),
+                MediaType("text", "html"),
+                MediaType("text", "x-dvi", 0.8),
+                MediaType("text", "x-c")
+            ).let { MediaType.prioritize(it) }
+        )
+
+        assertEquals(
+            listOf(
+                MediaType("text", "html"),
+                MediaType("text", "html", 0.7),
+                MediaType("*", "*", 0.5),
+                MediaType("text", "html", 0.4),
+                MediaType("text", "*", 0.3)
+            ),
+            listOf(
+                MediaType("text", "*", 0.3),
+                MediaType("text", "html", 0.7),
+                MediaType("text", "html"),
+                MediaType("text", "html", 0.4),
+                MediaType("*", "*", 0.5)
+            ).let { MediaType.prioritize(it) }
+        )
+
+    }
+
+    @Test
+    fun testParsing1() {
+        assertEquals(
+            listOf(
+                MediaType("audio", "*", 0.2),
+                MediaType("audio", "basic")
+            ),
+            MediaType.parseHeader("audio/*; q=0.2, audio/basic")
+        )
+    }
+
+    @Test
+    fun testParsing2() {
+        assertEquals(
+            listOf(
+                MediaType("text", "plain", 0.5),
+                MediaType("text", "html"),
+                MediaType("text", "x-dvi", 0.8),
+                MediaType("text", "x-c")
+            ),
+            MediaType.parseHeader("text/plain; q=0.5, text/html, text/x-dvi; q=0.8, text/x-c")
+        )
+    }
+
+    @Test
+    fun testParsing3() {
+        assertEquals(
+            listOf(
+                MediaType("text", "*", 0.3),
+                MediaType("text", "html", 0.7),
+                MediaType("text", "html"),
+                MediaType("text", "html", 0.4),
+                MediaType("*", "*", 0.5)
+            ),
+            MediaType.parseHeader("text/*;q=0.3, text/html;q=0.7, text/html;level=1, text/html;level=2;q=0.4, */*;q=0.5")
+        )
+    }
+
+    @Test
+    fun testAcceptable1() {
+        assertEquals(
+            "text" to "html",
+            Request.toy().setHeader(Header.Accept, "*/*").negotiate.acceptableMediaType("text" to "html")
+        )
+    }
+
+    @Test
+    fun testAcceptable2() {
+        assertEquals(
+            "if header is absent, then it's assumed that client accepts all media types",
+            "foo" to "bar",
+            Request.toy().removeHeader(Header.Accept).negotiate.acceptableMediaType("foo" to "bar")
+        )
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 
 class NegotiatorTests {
     @Test

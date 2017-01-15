@@ -5,19 +5,6 @@ import kotlin.comparisons.compareBy
 
 // TODO: https://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html
 
-// ""
-// "q=0.2"
-// "q=0.2;a=3.3"
-// "q=0"
-private object Q {
-    val regex = Regex("""q=([0-9]+(?:\.[0-9]+)?)""")
-
-    fun parse(string: String): Double? {
-        val match = regex.find(string) ?: return null
-        return match.groupValues[1].toDouble()
-    }
-}
-
 class Encoding(val name: String, val q: Double = 1.0) {
     // Whether the client's specified encoding matches the available encoding name
     fun acceptable(available: String): Boolean {
@@ -42,7 +29,7 @@ class Encoding(val name: String, val q: Double = 1.0) {
     }
 
     companion object {
-        val simpleEncodingRegex = Regex("""^\s*([^\s;]+)\s*(?:;(.*))?$""")
+        val regex = Regex("""^\s*([^\s;]+)\s*(?:;(.*))?$""")
 
         // TODO: Test malformed header
         fun parse(header: String): List<Encoding> {
@@ -50,9 +37,9 @@ class Encoding(val name: String, val q: Double = 1.0) {
                 .split(",")
                 .map(String::trim)
                 .map { segment ->
-                    val vals = simpleEncodingRegex.find(segment)?.groupValues?.drop(1)!!
+                    val vals = regex.find(segment)?.groupValues?.drop(1)!!
                     val name = vals[0]
-                    val q = Q.parse(vals[1]) ?: 1.0
+                    val q = QValue.parse(vals[1]) ?: 1.0
                     Encoding(name, q)
                 }
         }
@@ -64,12 +51,4 @@ class Encoding(val name: String, val q: Double = 1.0) {
             ))
         }
     }
-}
-
-
-fun List<Encoding>.prioritize(): List<Encoding> {
-    return this.sortedWith(compareBy(
-        { -it.q },
-        { if (it.name == "identity") 1 else -1 }
-    ))
 }
