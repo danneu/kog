@@ -1,24 +1,21 @@
 package com.danneu.kog.batteries
 
 import com.danneu.kog.ByteLength
-import com.danneu.kog.Handler
 import com.danneu.kog.Header
 import com.danneu.kog.Method
 import com.danneu.kog.Middleware
 import com.danneu.kog.Request
 import com.danneu.kog.Response
 import com.danneu.kog.ResponseBody
-import com.danneu.kog.SafeRouter
-import com.danneu.kog.Server
 import com.danneu.kog.Status
+import com.danneu.kog.mime.compressibles
 import java.io.InputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.util.zip.GZIPOutputStream
+import kotlin.text.RegexOption.IGNORE_CASE
 
 
-// TODO: This is just stubbed out
-// TODO: Impl real negotiation parsing / matching
 // TODO: Consider a Vary tool for appending it instead of assoc'ing it
 
 // https://www.fastly.com/blog/best-practices-for-using-the-vary-header
@@ -26,7 +23,7 @@ import java.util.zip.GZIPOutputStream
 
 fun compress(
     threshold: ByteLength = ByteLength.ofBytes(1024),
-    predicate: (String) -> Boolean = { true }
+    predicate: (String?) -> Boolean = ::isCompressible
 ): Middleware = { handler ->
     fun(request: Request): Response {
         val response = handler(request)
@@ -44,8 +41,8 @@ fun compress(
         if (response.getHeader(Header.ContentEncoding) != null) return response
         // Body length is not-null and it doesn't meet threshold
         if (response.body.length?.let { it < threshold.byteLength} ?: false) return response
-        // User does not want to compress responses with this Content-Type
-        if (!predicate(response.getHeader(Header.ContentType) ?: "application/octet-stream")) return response
+        // Ensure it's a Content-Type we want to compress
+        if (!predicate(response.getHeader(Header.ContentType))) return response
 
         // ACCEPT
 
@@ -63,6 +60,22 @@ fun compress(
     }
 }
 
+private val compressibleTypeRegex = Regex("""^text/|\+json$|\+text$|\+xml$""", IGNORE_CASE)
+private val extractTypeRegex = Regex("""^\s*([^;\s]*)(?:;|\s|$)""")
+
+fun isCompressible(header: String?): Boolean {
+    if (header == null) return false
+
+    // strip params
+    val mime = extractTypeRegex.find(header)?.groupValues?.get(1)?.toLowerCase() ?: return false
+
+    // check against mime-db
+    if (compressibles.contains(mime)) return true
+
+    // fallback to regex
+    return compressibleTypeRegex.containsMatchIn(mime)
+}
+
 
 // TODO: Don't wait on the compression.
 private fun compressBody(body: ResponseBody): InputStream {
@@ -74,19 +87,4 @@ private fun compressBody(body: ResponseBody): InputStream {
     return pipeIn
 }
 
-
-fun main(args: Array<String>) {
-    val router = SafeRouter {
-        group(compress(predicate = { it == "application/json" }, threshold = ByteLength.zero)) {
-            get("/a", fun(): Handler = { Response().text("hello") })
-            get("/b", fun(): Handler = { Response().text("test") })
-            get("/json", fun(): Handler = { Response().jsonArray(1, 2, 3) })
-        }
-        group(compress()) {
-            get("/c", fun(): Handler = { Response().text("test") })
-        }
-    }
-
-    Server(router.handler()).listen(3000)
-}
 

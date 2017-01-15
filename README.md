@@ -811,9 +811,11 @@ send a gzip-encoded response to the client.
 
 Options:
 
-- `compress(threshold: ByteLength)` (Default = 1024 bytes)
+- `compress(threshold: ByteLength)` 
+   (Default = 1024 bytes)
    Only compress the response if it is at least this large.
-- `compress(predicate = (String) -> Boolean)` (Default = `{ _ -> true }`)
+- `compress(predicate = (String?) -> Boolean)` 
+   (Default = Looks up mime in <https://github.com/jshttp/mime-db> file)
    Only compress the response if its Content-Type header passes `predicate(type)`.
    
 Some examples:
