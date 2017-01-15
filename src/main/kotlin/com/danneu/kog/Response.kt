@@ -3,6 +3,7 @@ package com.danneu.kog
 
 import com.danneu.kog.cookies.Cookie
 import com.danneu.kog.json.JsonValue
+import com.danneu.kog.mime.database
 import com.danneu.kog.json.Encoder as JE
 import java.io.File
 import java.io.InputStream
@@ -72,7 +73,7 @@ class Response(
         setBody(ResponseBody.File(file))
         // Hmm, already doing it at finalize time. TODO: Rethink streamable interface. need length?
         setHeader(Header.ContentLength, file.length().toString())
-        setHeader(Header.ContentType, contentType ?: Mime.fromExtension(file.extension))
+        setHeader(Header.ContentType, contentType ?: database.fromExtension(file.extension) ?: "application/octet-stream")
     }
 
     // FINALIZE

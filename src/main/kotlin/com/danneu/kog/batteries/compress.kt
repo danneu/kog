@@ -8,7 +8,7 @@ import com.danneu.kog.Request
 import com.danneu.kog.Response
 import com.danneu.kog.ResponseBody
 import com.danneu.kog.Status
-import com.danneu.kog.mime.compressibles
+import com.danneu.kog.mime.database
 import java.io.InputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
@@ -70,12 +70,11 @@ fun isCompressible(header: String?): Boolean {
     val mime = extractTypeRegex.find(header)?.groupValues?.get(1)?.toLowerCase() ?: return false
 
     // check against mime-db
-    if (compressibles.contains(mime)) return true
+    if (database.compressible(mime)) return true
 
     // fallback to regex
     return compressibleTypeRegex.containsMatchIn(mime)
 }
-
 
 // TODO: Don't wait on the compression.
 private fun compressBody(body: ResponseBody): InputStream {

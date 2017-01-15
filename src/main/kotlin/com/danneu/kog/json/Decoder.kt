@@ -262,8 +262,8 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
 
 
         // FIXME: Billy's first loop
-        fun oneOf(vararg ds: Decoder<*>): Decoder<Any> = Decoder { value ->
-            var result: Result<Any, Exception> = Result.Failure(Exception("None of the decoders matched"))
+        fun <A: Any> oneOf(vararg ds: Decoder<A>): Decoder<A> = Decoder { value ->
+            var result: Result<A, Exception> = Result.Failure(Exception("None of the decoders matched"))
             var bail = false
             for (decoder in ds.iterator()) {
                 decoder(value).map { decoded ->
@@ -277,7 +277,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         }
 
         // TODO: Generalize `object` function and allow chaining.
-        fun <A : Any, Z : Any> object1(f: (A) -> Z, d1: Decoder<A>): Decoder<*> {
+        fun <A : Any, Z : Any> object1(f: (A) -> Z, d1: Decoder<A>): Decoder<Z> {
             return Decoder { value ->
                 Result.all(d1(value)).map { vals ->
                     f(vals[0] as A)
@@ -285,10 +285,18 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <A : Any, B : Any, Z : Any> object2(f: (A, B) -> Z, d1: Decoder<A>, d2: Decoder<B>): Decoder<*> {
+        fun <A : Any, B : Any, Z : Any> object2(f: (A, B) -> Z, d1: Decoder<A>, d2: Decoder<B>): Decoder<Z> {
             return Decoder { value ->
                 Result.all(d1(value), d2(value)).map { vals ->
                     f(vals[0] as A, vals[1] as B)
+                }
+            }
+        }
+
+        fun <A : Any, B : Any, C : Any, Z : Any> object3(f: (A, B, C) -> Z, d1: Decoder<A>, d2: Decoder<B>, d3: Decoder<C>): Decoder<Z> {
+            return Decoder { value ->
+                Result.all(d1(value), d2(value), d3(value)).map { vals ->
+                    f(vals[0] as A, vals[1] as B, vals[2] as C)
                 }
             }
         }
