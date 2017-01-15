@@ -11,9 +11,6 @@ import org.funktionale.option.Option
 import java.io.Reader
 
 
-// TODO: Wrap initial parse in result (Is this TODO still relevant?)
-
-
 fun Result.Companion.all(vararg results: Result<*, Exception>): Result<List<*>, Exception> {
     val validation = Validation(*results)
     if (validation.hasFailure) {

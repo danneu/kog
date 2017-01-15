@@ -30,6 +30,7 @@ class MimeDatabase(val underlying: Map<String, MimeRecord>) {
 
 val database: MimeDatabase = run {
     val file = File("./node_modules/mime-db/db.json")
+    println("Reading db.json from ${file.absolutePath}")
 
     if (!file.exists()) {
         System.err.println("Could not find db.json at expected path ${file.absolutePath}")

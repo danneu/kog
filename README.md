@@ -61,7 +61,7 @@ repositories {
 }
 
 dependencies {
-    compile "com.danneu:kog:x.y.z" // <-- Probably very out of date
+    compile "com.danneu:kog:x.y.z"
     // Or always get latest
     compile "com.danneu:kog:master-SNAPSHOT"
 }
