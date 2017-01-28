@@ -31,12 +31,24 @@ private fun readSystemEnv(): Map<String, String> {
     return System.getenv()
 }
 
+/**
+ * Represents an immutable group of environment variables.
+ *
+ * NOTE: I factored the singleton object into a singleton instance EnvContainer so that I could implement a .fork()
+ *       override for testing. Not yet sure if I want a different API.
+ */
+class EnvContainer(val env: Map<String, String> = emptyMap()) {
+    /**
+     * Create a new container from an existing one and merge in additional key/vals.
+     * Any null values in the override will delete those keys from the map.
+     *
+     * Created this to help with testing.
+     */
+    fun fork(overrides: Map<String, String?>): EnvContainer {
+        return EnvContainer(env.plus(overrides).filterValues { it != null } as Map<String, String>)
+    }
 
-object Env {
-    val env = mutableMapOf<String, String>()
-        .apply { putAll(readEnvFile()) }
-        .apply { putAll(readSystemProps()) }
-        .apply { putAll(readSystemEnv()) } // Highest precedence, overwrites all other sources
+    // READERS
 
     fun string(key: String): String? {
         return env[key]
@@ -60,9 +72,16 @@ object Env {
         null
     }
 
-    /**
-     * An env var is true iff it's the string "true".
-     */
-    fun bool(key: String): Boolean = env[key] == "true"
+    fun bool(key: String): Boolean = env[key] == "true" || env[key] == "1"
 }
 
+/**
+ * Singleton env container that reads from .env, system properties, and the system environment variables.
+ *
+ * Usually you just want to use this.
+ */
+val Env = emptyMap<String, String>()
+    .plus(readEnvFile())
+    .plus(readSystemProps())
+    .plus(readSystemEnv()) // Highest precedence, overwrites all other sources
+    .let(::EnvContainer)

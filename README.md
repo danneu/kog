@@ -841,6 +841,8 @@ val router = SafeRouter() {
 
 ## HTML Templating
 
+Templating libraries generally generate an HTML string. Just pass it to `Response().html(html)`.
+
 The j2html library works well with the minimal theme.
 
     compile "com.j2html:j2html:0.7"
@@ -948,9 +950,17 @@ fun main(args: Array<String>) {
 - `Env.string(key)`
 - `Env.int(key)`
 - `Env.float(key)`
-- `Env.bool(key)`: True iff the value is `"true"`, e.g. `VALUE=true java -jar app.java`
+- `Env.bool(key)`: True if the value is `"true"` or `"1"`, e.g. `VALUE=true java -jar app.java`
 
 If the parse fails, `null` is returned.
+
+You can get a new, overridden env container with `.fork()`:
+
+```kotlin
+Env.int("PORT")                               //=> 3000
+Env.fork(mapOf("PORT" to "8888")).int("PORT") //=> 8888
+Env.int("PORT")                               //=> 3000
+```
 
 ## Heroku Deploy
 
