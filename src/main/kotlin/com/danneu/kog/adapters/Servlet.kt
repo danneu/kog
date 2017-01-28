@@ -30,8 +30,7 @@ class Servlet(val handler: Handler) : HttpServlet() {
             }
 
             // Some headers have special setters
-            val type = response.getHeader(Header.ContentType)
-            if (type != null) {
+            response.getHeader(Header.ContentType)?.let { type ->
                 servletResponse.contentType = type
             }
 
