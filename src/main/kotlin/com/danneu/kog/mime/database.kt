@@ -10,17 +10,15 @@ import java.io.Reader
 
 /** Wraps the mime-db data to expose convenient lookup functions.
  */
-class MimeDatabase(val underlying: Map<String, MimeRecord>) {
+class MimeDatabase(underlying: Map<String, MimeRecord>) {
     // mapping of extensions ("gif") to mime types
     private val extLookup = underlying.flatMap { (mime, record) ->
-        record.extensions.map { ext ->
-            ext to mime
-        }
-    }.toMap()
+        record.extensions.map { ext -> ext to mime } }.toMap()
 
-    fun compressible(key: String): Boolean {
-        return underlying[key]?.compressible ?: return false
-    }
+    private val compressibleLookup: Set<String> =
+        underlying.filterValues(MimeRecord::compressible).keys.toSet()
+
+    fun compressible(key: String) = compressibleLookup.contains(key)
 
     fun fromExtension(ext: String): String? = extLookup[ext]
 
