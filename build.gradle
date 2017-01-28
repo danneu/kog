@@ -60,6 +60,23 @@ dependencies {
     compile "commons-fileupload:commons-fileupload:$commons_fileupload_version"
 }
 
+// TODO: My build config needs a lot of work. Look into nesting a build.gradle in src like other kotlin projects.
+// Seems that using the root build.gradle makes it want to add everything in the repo root to the classpath?
+shadowJar {
+    exclude "node_modules"
+}
+
+// Reminder to move the mime-db file into src/main/resources so that it gets bundled.
+// TODO: Figure out how to configure it so that just node_modules/mime-db/db.json
+//       is included as a resource, or any other way to configure it so that I
+//       don't have to remember to copy it to src/main/resources every time it changes.
+task copyTask(type: Copy) {
+    from 'node_modules/mime-db/'
+    include 'db.json'
+    into 'src/main/resources/mime-db'
+    doLast { println("mime-db copied") }
+}
+
 //publish {
 //    artifactId = 'kog'
 //    desc = 'TODO'

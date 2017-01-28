@@ -5,7 +5,6 @@ import com.danneu.kog.mime.MimeDatabase.MimeRecord
 import com.github.kittinunf.result.Result
 import com.github.kittinunf.result.flatMap
 import org.funktionale.option.getOrElse
-import java.io.File
 import java.io.Reader
 
 /** Wraps the mime-db data to expose convenient lookup functions.
@@ -15,6 +14,7 @@ class MimeDatabase(underlying: Map<String, MimeRecord>) {
     private val extLookup = underlying.flatMap { (mime, record) ->
         record.extensions.map { ext -> ext to mime } }.toMap()
 
+    // set of all extensions that can be compressed
     private val compressibleLookup: Set<String> =
         underlying.filterValues(MimeRecord::compressible).keys.toSet()
 
@@ -27,14 +27,14 @@ class MimeDatabase(underlying: Map<String, MimeRecord>) {
 
 
 val database: MimeDatabase = run {
-    val file = File("./node_modules/mime-db/db.json")
-    println("Reading db.json from ${file.absolutePath}")
+    val stream = Thread.currentThread().contextClassLoader.getResourceAsStream("mime-db/db.json")
 
-    if (!file.exists()) {
-        System.err.println("Could not find db.json at expected path ${file.absolutePath}")
+    if (stream == null) {
+        System.err.println("Error initializing MimeDatabase: Could not find resource mime-db/db.json")
+        System.exit(1)
     }
 
-    parseDatabase(file.reader())
+    parseDatabase(stream.bufferedReader())
         .fold({ it }, { emptyMap<String, MimeRecord>() })
         .let(::MimeDatabase)
 }
