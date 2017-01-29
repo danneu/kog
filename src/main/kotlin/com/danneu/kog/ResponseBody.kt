@@ -19,7 +19,7 @@ interface ETaggable {
         /**
          * The ETag for 0-length empty body.
          */
-        fun empty() = "\"0-1B2M2Y8AsgTpgAmY7PhCfg\""
+        val empty = "\"0-1B2M2Y8AsgTpgAmY7PhCfg\""
     }
 }
 
@@ -39,17 +39,17 @@ sealed class ResponseBody : ETaggable {
     abstract val length: Long?
 
     object None : ResponseBody() {
-        override val length: Long = 0
+        override val length = 0L
         override fun pipe(output: OutputStream) = output.apply { close() }
         override fun inputStream() = "".byteInputStream()
-        override val etag = ETaggable.empty()
+        override val etag = ETaggable.empty
     }
     class String(val body: kotlin.String) : ResponseBody() {
-        override val length: Long = body.length.toLong()
+        override val length = body.length.toLong()
         override fun pipe(output: OutputStream) = body.byteInputStream().copyTo(output).let { output }
         override fun inputStream() = body.byteInputStream()
-        override fun toString(): kotlin.String = body
-        override val etag = ByteArray(body.toByteArray()).etag
+        override fun toString() = body
+        override val etag by lazy { ByteArray(body.toByteArray()).etag }
         override fun hashCode() = body.hashCode()
         override fun equals(other: Any?) = when (other) {
             is ResponseBody.String -> body == other.body
@@ -57,23 +57,24 @@ sealed class ResponseBody : ETaggable {
         }
     }
     class ByteArray(val body: kotlin.ByteArray) : ResponseBody() {
-        override val length: Long = body.size.toLong()
+        override val length = body.size.toLong()
         override fun pipe(output: OutputStream) = body.inputStream().copyTo(output).let { output }
         override fun inputStream() = body.inputStream()
-        override val etag: kotlin.String = run {
-            if (body.isEmpty()) return@run ETaggable.empty()
+        override val etag by lazy {
+            if (body.isEmpty()) return@lazy ETaggable.empty
             val hash64 = Base64.getEncoder().withoutPadding().encode(body.md5()).utf8()
             "\"${body.size.toHexString()}-$hash64\""
         }
     }
     class File(val body: java.io.File) : ResponseBody() {
-        override val length: Long = body.length()
+        override val length = body.length()
         override fun pipe(output: OutputStream) = body.inputStream().copyTo(output).let { output }
         override fun inputStream() = body.inputStream()
-        override val etag = "\"${body.length().toHexString()}-${body.lastModified().toHexString()}\""
+        // Note: Files have weak tags
+        override val etag by lazy { "W/\"${body.length().toHexString()}-${body.lastModified().toHexString()}\"" }
     }
     class InputStream(val body: java.io.InputStream) : ResponseBody() {
-        override val length: Long? = null
+        override val length = null
         override fun pipe(output: OutputStream) = body.copyTo(output).let { output }
         override fun inputStream() = body
         override val etag = null

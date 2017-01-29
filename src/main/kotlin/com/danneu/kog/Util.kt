@@ -72,3 +72,6 @@ fun ByteArray.md5(): ByteArray {
     return MessageDigest.getInstance("MD5").digest(this)
 }
 
+fun ByteArray.sha1(): ByteArray {
+    return MessageDigest.getInstance("SHA1").digest(this)
+}
