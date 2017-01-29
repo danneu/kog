@@ -8,6 +8,7 @@ import com.danneu.kog.SafeRouter
 import com.danneu.kog.Server
 import com.danneu.kog.util.CopyLimitExceeded
 import com.danneu.kog.util.limitedCopyTo
+import com.danneu.kog.json.Encoder as JE
 import java.io.File
 import java.util.UUID
 
@@ -58,7 +59,7 @@ val router = SafeRouter {
         println("A client uploaded ${destFile.length()} bytes to ${destFile.absolutePath}")
 
         // Tell user where they can find their uploaded file
-        Response().jsonObject("url" to "http://localhost:${req.serverPort}/$id")
+        Response().json(JE.obj("url" to JE.str("http://localhost:${req.serverPort}/$id")))
     })
 
     // Fetch file

@@ -54,14 +54,6 @@ class Response(
         body = ResponseBody.String(value.toString())
     }
 
-    fun jsonObject(vararg pairs: Pair<String, *>) = json(JE.jsonObject(*pairs))
-    fun jsonObject(pairs: Iterable<Pair<String, *>>) = json(JE.jsonObject(pairs))
-    fun jsonObject(pairs: Sequence<Pair<String, *>>) = json(JE.jsonObject(pairs))
-
-    fun jsonArray(vararg values: Any) = json(JE.jsonArray(*values))
-    fun jsonArray(values: Iterable<*>) = json(JE.jsonArray(values))
-    fun jsonArray(values: Sequence<*>) = json(JE.jsonArray(values))
-
     fun stream(input: InputStream, contentType: String = "application/octet-stream") = apply {
         setHeader(Header.ContentType, contentType)
         body = ResponseBody.InputStream(input)

@@ -8,7 +8,6 @@ buildscript {
         jetty_version = "9.4.0.v20161208"
         result_version = "1.0.5"
         minimal_json_version = "0.9.4"
-        kotson_version = "2.3.0"
         commons_fileupload_version = "1.3.2"
         junit_version = "4.12"
     }
@@ -41,7 +40,6 @@ dependencies {
     compile "org.eclipse.jetty.websocket:websocket-server:$jetty_version"
     compile "com.github.kittinunf.result:result:$result_version"
     compile "com.eclipsesource.minimal-json:minimal-json:$minimal_json_version"
-    compile "com.github.salomonbrys.kotson:kotson:$kotson_version"
     compile "commons-fileupload:commons-fileupload:$commons_fileupload_version"
 }
 

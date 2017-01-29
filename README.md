@@ -129,7 +129,7 @@ val router = SafeRouter {
     })
     
     get("/<a>/<b>/<c>", fun(a: Int, b: Int, c: Int): Handler = { req ->
-        Response().json(JE.jsonObject("sum" to a + b + c))
+        Response().json(JE.obj("sum" to JE.num(a + b + c)))
     })
   }
 }
@@ -212,14 +212,14 @@ import com.danneu.kog.Status
 import com.danneu.kog.json.Encoder as JE
 import java.util.File
 
-Response()                                     // skeleton 200 response
-Response(Status.NotFound)                      // 404 response
-Response.notFound()       <-- Sugar            // 404 response
-Response().text("Hello")                       // text/plain
-Response().html("<h1>Hello</h1>")              // text/html
-Response().json(JE.jsonObject("number" to 42)) // application/json {"number": 42}
-Response().json(JE.jsonArray(1, 2, 3))         // application/json [1, 2, 3]
-Response().file(File("video.mp4"))             // video/mp4 (determines response headers from File metadata)
+Response()                                      // skeleton 200 response
+Response(Status.NotFound)                       // 404 response
+Response.notFound()       <-- Sugar             // 404 response
+Response().text("Hello")                        // text/plain
+Response().html("<h1>Hello</h1>")               // text/html
+Response().json(JE.obj("number" to JE.num(42))) // application/json {"number": 42}
+Response().json(JE.array(JE.num(1), JE.num(2), JE.num(3))) // application/json [1, 2, 3]
+Response().file(File("video.mp4"))                 // video/mp4 (determines response headers from File metadata)
 Response().stream(File("video.mp4"), "video/mp4")  // video/mp4
 Response().setHeader(Header.ContentType, "application/json")
 Response().appendHeader(Header.Custom("X-Fruit"), "orange")
@@ -317,22 +317,22 @@ val middleware: Middleware = { handler -> handler@ { req ->
 
 ## JSON
 
+kog wraps the small, fast, and simple [ralfstx/minimal-json][minimal-json] library
+with combinators for working with JSON.
+
+[minimal-json]: https://github.com/ralfstx/minimal-json#performance
+
 ### JSON Encoding
 
-kog's built-in JSON encoder has two methods: `.jsonObject` and `.jsonArray`.
+kog's built-in JSON encoder has these methods: `.obj()`, `.array()`, `.num()`, `.str()`, `.null()`, `.bool()`.
 
-They both return a `kog.json.encode.JsonValue` object that you pass
-to `Response#json`.
+They all return `kog.json.encode.JsonValue` objects that you pass to `Response#json`.
 
 ``` kotlin
 import com.danneu.kog.json.Encoder as JE
 
 val handler: Handler = { req ->
-  Response().json(JE.jsonObject("hello" to "world"))
-  
-  // Or, use the Response's convenience short-cut:
-  
-  Response().jsonObject("hello" to "world")
+  Response().json(JE.obj("hello" to JE.str("world")))
 }
 ```
 
@@ -340,12 +340,9 @@ val handler: Handler = { req ->
 import com.danneu.kog.json.Encoder as JE
 
 val handler: Handler = { req ->
-  Response().json(JE.jsonArray("a", "b", "c"))
-  
-  // Or, the short-cuts:
-  
-  Response().jsonArray(listOf("a", "b", "c"))
-  Response().jsonArray("a", "b", "c")
+  Response().json(JE.array(JE.str("a"), JE.str("b"), JE.str("c")))
+  // Or
+  Response().json(JE.array(listOf(JE.str("a"), JE.str("b"), JE.str("c"))))
 }
 ```
 
@@ -353,16 +350,20 @@ val handler: Handler = { req ->
 import com.danneu.kog.json.Encoder as JE
 
 val handler: Handler = { req ->
-  Response().json(JE.jsonObject(
-    "ok" to true,
-    "user" to JE.jsonObject(
-      "id" to user.id,
-      "username" to user.uname,
-      "luckyNumbers" to JE.jsonArray(3, 9, 27)
+  Response().json(JE.obj(
+    "ok" to JE.bool(true),
+    "user" to JE.obj(
+      "id" to JE.num(user.id),
+      "username" to JE.str(user.uname),
+      "luckyNumbers" to JE.array(JE.num(3), JE.num(9), JE.num(27))
     )
   ))
 }
 ```
+
+It might seem redundant/tedious to call `JE.str("foo")` and `JE.num(42)`, but it's type-safe so that
+you can only pass things into the encoder that's json-serializable. I'm not sure if kotlin supports
+anything simpler at the moment.
 
 ### JSON Decoding
 
@@ -382,7 +383,7 @@ import com.danneu.kog.json.Encoder as JE
 val handler = { request ->
   request.json(JD.array(JD.int)).fold({ nums ->
     // success
-    Response().json(JE.jsonObject("sum" to nums.sum()))
+    Response().json(JE.obj("sum" to nums.sum()))
   }, { parseException -> 
     // failure
     Response.badRequest()
@@ -400,7 +401,7 @@ import com.danneu.kog.json.Encoder as JE
 // example request payload: [1, 2, 3]
 val handler = { req ->
   val sum = req.json(JD.array(JD.int)).getOrElse(emptyList()).sum()
-  Response().json(JE.jsonObject("sum" to sum))
+  Response().json(JE.obj("sum" to JE.num(sum)))
 }
 ```
 
@@ -419,7 +420,7 @@ val handler = { request ->
   )
   val (uname, password) = request.json(decoder)
   // ... authenticate user ...
-  Response().json(JE.jsonObject("success" to JE.jsonObject("uname" to uname)))
+  Response().json(JE.obj("success" to JE.obj("uname" to JE.str(uname))))
 }
 ```
 
@@ -489,7 +490,7 @@ val router = SafeRouter(middleware1(), middleware2()) {
     })
     
     get("/<a>/<b>/<c>", fun(a: Int, b: Int, c: Int): Handler = { req ->
-        Response().json(JE.jsonObject("sum" to a + b + c))
+        Response().json(JE.obj("sum" to JE.num(a + b + c)))
     })
     
     get("/hello/world", fun(a: Int, b: String): Handler = {
