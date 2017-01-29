@@ -1,35 +1,33 @@
 
 package com.danneu.kog.json
 
+import com.danneu.kog.result.Result
+import com.danneu.kog.result.Validation
+import com.danneu.kog.result.flatMap
+import com.danneu.kog.result.map
 import com.eclipsesource.json.JsonValue
 import com.eclipsesource.json.Json
-import com.github.kittinunf.result.Result
-import com.github.kittinunf.result.Validation
-import com.github.kittinunf.result.flatMap
-import com.github.kittinunf.result.map
-import org.funktionale.option.Option
 import java.io.Reader
 
 
 fun Result.Companion.all(vararg results: Result<*, Exception>): Result<List<*>, Exception> {
     val validation = Validation(*results)
-    if (validation.hasFailure) {
-        return error(validation.failures.first())
+    return if (validation.hasFailure) {
+        error(validation.failures.first())
     } else {
-        val vals: List<Any> = results.map { it.get() }
-        return Result.of(vals)
+        Result.of(results.map(Result<*, Exception>::get))
     }
 }
 
 
-class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
+class Decoder <out T> (val decode: (JsonValue) -> Result<T, Exception>) {
     operator fun invoke(value: JsonValue): Result<T, Exception> {
         return decode(value)
     }
 
     /** Specify the decoder to use based on the result of the previous decoder.
      */
-    fun <B : Any> flatMap(f: (T) -> Decoder<B>): Decoder<B> = Decoder { value ->
+    fun <B> flatMap(f: (T) -> Decoder<B>): Decoder<B> = Decoder { value ->
         this.decode(value).flatMap { success: T ->
             f(success).decode(value)
         }
@@ -38,7 +36,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
 
     /** Apply a function to the decoded value on successful decode.
      */
-    fun <B : Any> map(f: (T) -> B): Decoder<B> = Decoder { value ->
+    fun <B> map(f: (T) -> B): Decoder<B> = Decoder { value ->
         this.decode(value).map { success: T ->
             f(success)
         }
@@ -65,7 +63,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <A : Any> listOf(d1: Decoder<A>): Decoder<List<A>> = Decoder {
+        fun <A> listOf(d1: Decoder<A>): Decoder<List<A>> = Decoder {
             when {
                 it.isArray -> {
                     val coll = it.asArray().toList()
@@ -81,7 +79,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <A : Any> get(key: String, d1: Decoder<A>): Decoder<A> = Decoder {
+        fun <A> get(key: String, d1: Decoder<A>): Decoder<A> = Decoder {
             when {
                 it.isObject -> {
                     val obj = it.asObject()
@@ -96,14 +94,14 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <A : Any, B : Any> map(d1: Decoder<A>, f: (A) -> B): Decoder<B> = Decoder { value ->
+        fun <A, B> map(d1: Decoder<A>, f: (A) -> B): Decoder<B> = Decoder { value ->
             d1.decode(value).map { success: A ->
                 f(success)
             }
         }
 
         // Decoder.map2(int, int, { a, b -> a + b })
-        fun <A : Any, B : Any, C : Any> map2(d1: Decoder<A>, d2: Decoder<B>, f: (A, B) -> C): Decoder<C> = Decoder { value ->
+        fun <A, B, C> map2(d1: Decoder<A>, d2: Decoder<B>, f: (A, B) -> C): Decoder<C> = Decoder { value ->
             d1.decode(value).flatMap { a ->
                 d2.decode(value).map { b ->
                     f(a, b)
@@ -148,24 +146,23 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <T : Any> `null`(defaultValue: T): Decoder<T> = Decoder {
+        fun <T> `null`(defaultValue: T): Decoder<T> = Decoder {
             when {
                 it.isNull -> Result.of(defaultValue)
                 else -> Result.error(Exception("Expected null but got ${it.javaClass.simpleName}"))
             }
         }
 
-        // TODO: (Maybe?) Make this return V? once Result removes <V: Any> restriction.
-        fun <T: Any> nullable(d1: Decoder<T>): Decoder<Option<T>> = Decoder { value ->
+        fun <T> nullable(d1: Decoder<T>): Decoder<T?> = Decoder { value ->
             when {
-                value.isNull -> Result.of(Option.None)
-                else -> d1.decode(value).map { Option.Some(it) }
+                value.isNull -> Result.of { null }
+                else -> d1.decode(value) //.map { Option.Some(it) }
             }
 
         }
 
 
-        inline fun <reified A : Any> arrayOf(d1: Decoder<A>): Decoder<Array<A>> = Decoder {
+        inline fun <reified A> arrayOf(d1: Decoder<A>): Decoder<Array<A>> = Decoder {
             when {
                 it.isArray -> {
                     val array = it.asArray()
@@ -182,7 +179,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         }
 
         // TODO: pairsOf(left, right)?
-        fun <A : Any> keyValuePairs(d1: Decoder<A>): Decoder<List<Pair<String, A>>> = Decoder {
+        fun <A> keyValuePairs(d1: Decoder<A>): Decoder<List<Pair<String, A>>> = Decoder {
             when {
                 it.isObject -> {
                     val obj = it.asObject()
@@ -201,9 +198,9 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <A : Any> mapOf(d1: Decoder<A>): Decoder<Map<String, A>> = keyValuePairs(d1).map { it.toMap() }
+        fun <A> mapOf(d1: Decoder<A>): Decoder<Map<String, A>> = keyValuePairs(d1).map { it.toMap() }
 
-        fun <A : Any, B : Any> pairOf(left: Decoder<A>, right: Decoder<B>): Decoder<Pair<A, B>> = Decoder {
+        fun <A, B> pairOf(left: Decoder<A>, right: Decoder<B>): Decoder<Pair<A, B>> = Decoder {
             when {
                 it.isArray -> {
                     val array = it.asArray()
@@ -220,7 +217,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <A : Any, B : Any, C : Any> triple(d1: Decoder<A>, d2: Decoder<B>, d3: Decoder<C>): Decoder<Triple<A, B, C>> = Decoder {
+        fun <A, B, C> triple(d1: Decoder<A>, d2: Decoder<B>, d3: Decoder<C>): Decoder<Triple<A, B, C>> = Decoder {
             when {
                 it.isArray -> {
                     val array = it.asArray()
@@ -238,12 +235,12 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         }
 
 
-        fun <A : Any> getIn(keys: List<String>, d1: Decoder<A>): Decoder<A> {
+        fun <A> getIn(keys: List<String>, d1: Decoder<A>): Decoder<A> {
             return keys.foldRight(d1, { k, a -> get(k ,a) })
         }
 
 
-        fun <A : Any> index(i: Int, d1: Decoder<A>): Decoder<A> {
+        fun <A> index(i: Int, d1: Decoder<A>): Decoder<A> {
             return Decoder {
                 when {
                     it.isArray -> {
@@ -261,7 +258,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
 
 
         // FIXME: Billy's first loop
-        fun <A: Any> oneOf(vararg ds: Decoder<A>): Decoder<A> = Decoder { value ->
+        fun <A> oneOf(vararg ds: Decoder<A>): Decoder<A> = Decoder { value ->
             var result: Result<A, Exception> = Result.Failure(Exception("None of the decoders matched"))
             var bail = false
             for (decoder in ds.iterator()) {
@@ -276,7 +273,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         }
 
         // TODO: Generalize `object` function and allow chaining.
-        fun <A : Any, Z : Any> object1(f: (A) -> Z, d1: Decoder<A>): Decoder<Z> {
+        fun <A, Z> object1(f: (A) -> Z, d1: Decoder<A>): Decoder<Z> {
             return Decoder { value ->
                 Result.all(d1(value)).map { vals ->
                     @Suppress("UNCHECKED_CAST")
@@ -285,7 +282,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <A : Any, B : Any, Z : Any> object2(f: (A, B) -> Z, d1: Decoder<A>, d2: Decoder<B>): Decoder<Z> {
+        fun <A, B, Z> object2(f: (A, B) -> Z, d1: Decoder<A>, d2: Decoder<B>): Decoder<Z> {
             return Decoder { value ->
                 Result.all(d1(value), d2(value)).map { vals ->
                     @Suppress("UNCHECKED_CAST")
@@ -294,7 +291,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <A : Any, B : Any, C : Any, Z : Any> object3(f: (A, B, C) -> Z, d1: Decoder<A>, d2: Decoder<B>, d3: Decoder<C>): Decoder<Z> {
+        fun <A, B, C, Z> object3(f: (A, B, C) -> Z, d1: Decoder<A>, d2: Decoder<B>, d3: Decoder<C>): Decoder<Z> {
             return Decoder { value ->
                 Result.all(d1(value), d2(value), d3(value)).map { vals ->
                     @Suppress("UNCHECKED_CAST")
@@ -303,11 +300,11 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-        fun <T : Any> succeed(value: T): Decoder<T> = Decoder {
+        fun <T> succeed(value: T): Decoder<T> = Decoder {
             Result.of(value)
         }
 
-        fun <T : Any> fail(message: String): Decoder<T> = Decoder {
+        fun <T> fail(message: String): Decoder<T> = Decoder {
             Result.error(Exception(message))
         }
     }

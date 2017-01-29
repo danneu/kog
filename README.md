@@ -383,7 +383,7 @@ import com.danneu.kog.json.Encoder as JE
 val handler = { request ->
   request.json(JD.array(JD.int)).fold({ nums ->
     // success
-    Response().json(JE.obj("sum" to nums.sum()))
+    Response().json(JE.obj("sum" to JE.num(nums.sum())))
   }, { parseException -> 
     // failure
     Response.badRequest()

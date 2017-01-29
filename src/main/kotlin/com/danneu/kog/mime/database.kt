@@ -2,9 +2,8 @@ package com.danneu.kog.mime
 
 import com.danneu.kog.json.Decoder
 import com.danneu.kog.mime.MimeDatabase.MimeRecord
-import com.github.kittinunf.result.Result
-import com.github.kittinunf.result.flatMap
-import org.funktionale.option.getOrElse
+import com.danneu.kog.result.Result
+import com.danneu.kog.result.flatMap
 import java.io.Reader
 
 /** Wraps the mime-db data to expose convenient lookup functions.
@@ -41,16 +40,12 @@ val database: MimeDatabase = run {
 
 private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, Exception> {
     val extensions: Decoder<List<String>> = Decoder.oneOf(
-        Decoder.get("extensions", Decoder.nullable(Decoder.listOf(Decoder.string)).map { option ->
-            option.getOrElse { emptyList() }
-        }),
+        Decoder.get("extensions", Decoder.nullable(Decoder.listOf(Decoder.string)).map { it ?: emptyList() }),
         Decoder.succeed(listOf<String>())
     )
 
     val compressible: Decoder<Boolean> = Decoder.oneOf(
-        Decoder.get("compressible", Decoder.nullable(Decoder.bool).map { option ->
-            option.getOrElse { false }
-        }),
+        Decoder.get("compressible", Decoder.nullable(Decoder.bool).map { it ?: false }),
         Decoder.succeed(false)
     )
 

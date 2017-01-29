@@ -3,8 +3,8 @@ package com.danneu.kog
 import com.danneu.kog.batteries.multipart.SavedUpload
 import com.danneu.kog.cookies.parse
 import com.danneu.kog.json.Decoder
-import com.github.kittinunf.result.Result
-import com.github.kittinunf.result.flatMap
+import com.danneu.kog.result.Result
+import com.danneu.kog.result.flatMap
 import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
 
@@ -46,7 +46,7 @@ class Request(
     }
 
     // TODO: At framework level, need to avoid reading stream when it is already being/been consumed or come up with a deliberate gameplan.
-    fun <T : Any> json(decoder: Decoder<T>): Result<T, Exception> {
+    fun <T> json(decoder: Decoder<T>): Result<T, Exception> {
         return Decoder.tryParse(utf8).flatMap { jsonValue -> decoder(jsonValue) }
     }
 

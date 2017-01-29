@@ -1,35 +1,34 @@
 package com.danneu.kog.json
 
+import com.danneu.kog.result.Result
 import com.eclipsesource.json.Json
-import com.github.kittinunf.result.Result
-import org.funktionale.option.Option
 import org.junit.Assert.*
 import org.junit.Test
 
 // Test many decoders against one json string
 
-private fun <V: Any> String.ok(expected: V, decoder: Decoder<V>) {
-    assertEquals(Result.of(expected, { java.lang.Exception() }), decoder(Json.parse(this)))
+private fun <V> String.ok(expected: V, decoder: Decoder<V>) {
+    assertEquals(Result.of(expected), decoder(Json.parse(this)))
 }
 
-private fun <V: Any> String.ok(message: String, expected: V, decoder: Decoder<V>) {
-    assertEquals(message, Result.of(expected, { java.lang.Exception() }), decoder(Json.parse(this)))
+private fun <V> String.ok(message: String, expected: V, decoder: Decoder<V>) {
+    assertEquals(message, Result.of(expected), decoder(Json.parse(this)))
 }
 
-private fun <V: Any> String.err(decoder: Decoder<V>) {
+private fun <V> String.err(decoder: Decoder<V>) {
     assertTrue(decoder(Json.parse(this)) is Result.Failure)
 }
 
-private fun <V: Any> String.err(message: String, decoder: Decoder<V>) {
-    assertTrue(decoder(Json.parse(this)) is Result.Failure)
+private fun <V> String.err(message: String, decoder: Decoder<V>) {
+    assertTrue(message, decoder(Json.parse(this)) is Result.Failure)
 }
 
 // Test many json strings against one decoder
 
-private fun <V: Any> Decoder<V>.ok(expected: V, json: String) = json.ok(expected, this)
-private fun <V: Any> Decoder<V>.ok(message: String, expected: V, json: String) = json.ok(message, expected, this)
-private fun <V: Any> Decoder<V>.err(json: String) = json.err(this)
-private fun <V: Any> Decoder<V>.err(message: String, json: String) = json.err(message, this)
+private fun <V> Decoder<V>.ok(expected: V, json: String) = json.ok(expected, this)
+private fun <V> Decoder<V>.ok(message: String, expected: V, json: String) = json.ok(message, expected, this)
+private fun <V> Decoder<V>.err(json: String) = json.err(this)
+private fun <V> Decoder<V>.err(message: String, json: String) = json.err(message, this)
 
 class DecoderTests {
     @Test
@@ -170,8 +169,8 @@ class DecoderTests {
 
     @Test
     fun testNullable() {
-        "42".ok(Option.Some(42), Decoder.nullable(Decoder.int))
-        "null".ok(Option.None, Decoder.nullable(Decoder.int))
+        "42".ok(42, Decoder.nullable(Decoder.int))
+        "null".ok(null, Decoder.nullable(Decoder.int))
     }
 
     // LISTS & ARRAYS
