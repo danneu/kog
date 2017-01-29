@@ -6,6 +6,7 @@ typealias HeaderPair = Pair<Header, String>
 
 // FIXME: Not sure how to create an interface with default implementations that always returning the implementing self.
 // For now I use these unchecked `this as T` returns.
+@Suppress("UNCHECKED_CAST")
 interface HasHeaders <out T> {
     val headers: MutableList<HeaderPair>
 

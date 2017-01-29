@@ -11,10 +11,10 @@ import org.eclipse.jetty.server.Request as JettyServerRequest
 
 
 class WebSocket(val session: Session) {
-    var onClose: (statusCode: Int, reason: String?) -> Unit = { a, b -> /* noop */ }
+    var onClose: (statusCode: Int, reason: String?) -> Unit = { _, _ -> /* noop */ }
     var onError: (cause: Throwable) -> Unit = { /* noop */ }
     var onText: (message: String) -> Unit = { /* noop */ }
-    var onBinary: (payload: ByteArray, offset: Int, len: Int) -> Unit = { a, b, c -> /* noop */ }
+    var onBinary: (payload: ByteArray, offset: Int, len: Int) -> Unit = { _, _, _ -> /* noop */ }
 
     companion object
 }

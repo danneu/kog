@@ -238,46 +238,46 @@ class RouteGroup(val prefixPattern: String, val middleware: Middleware = identit
 }
 
 
-fun main(args: Array<String>) {
-    fun mw(name: String): Middleware = { handler -> { req ->
-        println("--> mw $name")
-        val response = handler(req)
-        println("<-- mw $name")
-        response
-    }}
-
-    val router = SafeRouter(listOf(mw("start1"), mw("start2"))) {
-        get("/<id>", fun(id: Int): Handler = {
-            Response().text("/<id>, id = $id")
-        })
-
-        group("/<id>", listOf(mw("a"))) {
-            get("/new", listOf(mw("b")), fun(id: Int): Handler = { Response().text("/new id is $id") })
-        }
-
-        group {
-            get("/new", fun(): Handler = { Response().text("/new") })
-        }
-
-        get("/<id>", listOf(mw("a"), mw("b")), fun(id: Int): Handler = {
-            Response().text("id is $id")
-        })
-        get("/stories/<id>", fun(id: Int): Handler = {
-            Response().text("show story $id")
-        })
-        get("/stories/<id>/new", fun(id: Int): Handler = {
-            Response().text("new story $id")
-        })
-        get("/stories/<id>/comments/<id>", fun(storyId: Int, commentId: Int): Handler = {
-            Response().text("comment $commentId on story $storyId")
-        })
-        get("/foo/bar", fun(storyId: Int, commentId: Int): Handler = {
-            Response().text("this should 404 since our handler expects more arguments than the route can match")
-        })
-        get("/foo/bar", fun(): Handler = {
-            Response().text("this will match")
-        })
-    }
-
-    Server(router.handler()).listen(3002)
-}
+//fun main(args: Array<String>) {
+//    fun mw(name: String): Middleware = { handler -> { req ->
+//        println("--> mw $name")
+//        val response = handler(req)
+//        println("<-- mw $name")
+//        response
+//    }}
+//
+//    val router = SafeRouter(listOf(mw("start1"), mw("start2"))) {
+//        get("/<id>", fun(id: Int): Handler = {
+//            Response().text("/<id>, id = $id")
+//        })
+//
+//        group("/<id>", listOf(mw("a"))) {
+//            get("/new", listOf(mw("b")), fun(id: Int): Handler = { Response().text("/new id is $id") })
+//        }
+//
+//        group {
+//            get("/new", fun(): Handler = { Response().text("/new") })
+//        }
+//
+//        get("/<id>", listOf(mw("a"), mw("b")), fun(id: Int): Handler = {
+//            Response().text("id is $id")
+//        })
+//        get("/stories/<id>", fun(id: Int): Handler = {
+//            Response().text("show story $id")
+//        })
+//        get("/stories/<id>/new", fun(id: Int): Handler = {
+//            Response().text("new story $id")
+//        })
+//        get("/stories/<id>/comments/<id>", fun(storyId: Int, commentId: Int): Handler = {
+//            Response().text("comment $commentId on story $storyId")
+//        })
+//        get("/foo/bar", fun(storyId: Int, commentId: Int): Handler = {
+//            Response().text("this should 404 since our handler expects more arguments than the route can match")
+//        })
+//        get("/foo/bar", fun(): Handler = {
+//            Response().text("this will match")
+//        })
+//    }
+//
+//    Server(router.handler()).listen(3002)
+//}

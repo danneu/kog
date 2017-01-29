@@ -161,7 +161,7 @@ class RouterTests {
         val router = Router {
             get("/", tokens.mw("A"), tokens.mw("B")) { Response() }
         }
-        val response = router(Request.toy())
+        router(Request.toy())
         assertEquals("all array middleware run", listOf("A", "B"), tokens.list())
     }
 

@@ -44,6 +44,7 @@ class EnvContainer(val env: Map<String, String> = emptyMap()) {
      * Created this to help with testing.
      */
     fun fork(overrides: Map<String, String?>): EnvContainer {
+        @Suppress("UNCHECKED_CAST")
         return EnvContainer(env.plus(overrides).filterValues { it != null } as Map<String, String>)
     }
 

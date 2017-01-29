@@ -42,13 +42,13 @@ class SafeRouterTests {
             assertEquals(Ok, router.handler()(Request.toy(Get, "/foo")).status)
         }
         run {
-            val router = SafeRouter { get("/<foo>", fun(foo: String): Handler = { Response() }) }
+            val router = SafeRouter { get("/<foo>", fun(_: String): Handler = { Response() }) }
             assertEquals(Ok, router.handler()(Request.toy(Get, "/foo")).status)
             assertEquals(Ok, router.handler()(Request.toy(Get, "/bar")).status)
             assertEquals(Ok, router.handler()(Request.toy(Get, "/42")).status)
         }
         run {
-            val router = SafeRouter { get("/<foo>/<bar>", fun(foo: String, bar: Int): Handler = { Response() }) }
+            val router = SafeRouter { get("/<foo>/<bar>", fun(_: String, _: Int): Handler = { Response() }) }
             assertEquals(Ok,       router.handler()(Request.toy(Get, "/a/42")).status)
             assertEquals(NotFound, router.handler()(Request.toy(Get, "/42/a")).status)
             assertEquals(Ok,       router.handler()(Request.toy(Get, "/42/42")).status)
@@ -89,13 +89,13 @@ class SafeRouterTests {
             assertEquals(NotFound, handler(Request.toy(Get, "/bar")).status)
         }
         run {
-            val handler = SafeRouter { get("/<id>", fun(id: String): Handler = { Response() }) }.handler()
+            val handler = SafeRouter { get("/<id>", fun(_: String): Handler = { Response() }) }.handler()
             assertEquals(NotFound, handler(Request.toy(Post, "/foo")).status)
             assertEquals(NotFound, handler(Request.toy(Delete, "/foo")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/foo/bar")).status)
         }
         run {
-            val handler = SafeRouter { get("/<a>/<b>", fun(a: String, b: String): Handler = { Response() }) }.handler()
+            val handler = SafeRouter { get("/<a>/<b>", fun(_: String, _: String): Handler = { Response() }) }.handler()
             assertEquals(NotFound, handler(Request.toy(Get, "/a/b/c")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/a")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/a/")).status)
@@ -114,7 +114,7 @@ class SafeRouterTests {
             assertEquals(NotFound, handler(Request.toy(Delete, "/a/b")).status)
         }
         run {
-            val handler = SafeRouter { get("/<a>/<b>", fun(a: String, b: String): Handler = { Response() }) }.handler()
+            val handler = SafeRouter { get("/<a>/<b>", fun(_: String, _: String): Handler = { Response() }) }.handler()
             assertEquals(Ok, handler(Request.toy(Get, "/a/b")).status)
             assertEquals(NotFound, handler(Request.toy(Get, "/a/b/")).status)
         }
@@ -168,7 +168,7 @@ class SafeRouterTests {
         run {
             val handler = SafeRouter {
                 get("/<a>", fun(id: UUID): Handler = { Response().text(id.toString()) })
-                get("/<a>", fun(id: String): Handler = { Response().text("not-uuid") })
+                get("/<a>", fun(_: String): Handler = { Response().text("not-uuid") })
             }.handler()
 
             val uuid = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
@@ -222,9 +222,9 @@ class SafeRouterTests {
         run {
             val handler = SafeRouter {
                 group {
-                    get("/<a>", fun(id: Int): Handler = { Response().text("a") })
+                    get("/<a>", fun(_: Int): Handler = { Response().text("a") })
                 }
-                get("/<b>", fun(id: Int): Handler = { Response().text("b") })
+                get("/<b>", fun(_: Int): Handler = { Response().text("b") })
             }.handler()
 
             assertEquals("hits group when match", ResponseBody.String("a"), handler(Request.toy(Get, "/42")).body)
@@ -233,9 +233,9 @@ class SafeRouterTests {
         run {
             val handler = SafeRouter {
                 group {
-                    get("/<a>", fun(id: UUID): Handler = { Response().text("a") })
+                    get("/<a>", fun(_: UUID): Handler = { Response().text("a") })
                 }
-                get("/<b>", fun(id: Int): Handler = { Response().text("b") })
+                get("/<b>", fun(_: Int): Handler = { Response().text("b") })
             }.handler()
             assertEquals("skips group when not match", ResponseBody.String("b"), handler(Request.toy(Get, "/42")).body)
         }
