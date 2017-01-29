@@ -55,7 +55,7 @@ fun compress(
         return response.apply {
             setHeader(Header.ContentEncoding, "gzip")
             removeHeader(Header.ContentLength)
-            setBody(ResponseBody.InputStream(compressBody(response.body)))
+            body = ResponseBody.InputStream(compressBody(response.body))
         }
     }
 }

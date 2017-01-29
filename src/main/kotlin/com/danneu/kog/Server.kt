@@ -145,7 +145,7 @@ internal fun Server.Companion.wrapFinalize(): Middleware = { handler -> { req ->
 internal fun Server.Companion.wrapHead(): Middleware {
     fun headResponse(request: Request, response: Response): Response {
         return when (request.method) {
-            Method.Head -> response.setBody(ResponseBody.None)
+            Method.Head -> response.apply { body = ResponseBody.None }
             else -> response
         }
     }

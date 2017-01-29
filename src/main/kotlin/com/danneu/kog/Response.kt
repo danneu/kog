@@ -34,26 +34,24 @@ class Response(
 
     // BODIES
 
-    fun setBody(body: ResponseBody) = apply { this.body = body }
-
     fun html(html: String) = apply {
         setHeader(Header.ContentType, "text/html")
-        setBody(ResponseBody.String(html))
+        body = ResponseBody.String(html)
     }
 
     fun text(text: String) = apply {
         setHeader(Header.ContentType, "text/plain")
-        setBody(ResponseBody.String(text))
+        body = ResponseBody.String(text)
     }
 
     fun none() = apply {
         removeHeader(Header.ContentType)
-        setBody(ResponseBody.None)
+        body = ResponseBody.None
     }
 
     fun json(value: JsonValue) = apply {
         setHeader(Header.ContentType, "application/json")
-        setBody(ResponseBody.String(value.toString()))
+        body = ResponseBody.String(value.toString())
     }
 
     fun jsonObject(vararg pairs: Pair<String, *>) = json(JE.jsonObject(*pairs))
@@ -66,14 +64,19 @@ class Response(
 
     fun stream(input: InputStream, contentType: String = "application/octet-stream") = apply {
         setHeader(Header.ContentType, contentType)
-        setBody(ResponseBody.InputStream(input))
+        body = ResponseBody.InputStream(input)
     }
 
     fun file(file: File, contentType: String? = null) = apply {
-        setBody(ResponseBody.File(file))
+        body = ResponseBody.File(file)
         // Hmm, already doing it at finalize time. TODO: Rethink streamable interface. need length?
         setHeader(Header.ContentLength, file.length().toString())
         setHeader(Header.ContentType, contentType ?: database.fromExtension(file.extension) ?: "application/octet-stream")
+    }
+
+    fun writer(contentType: String, writeTo: (java.io.Writer) -> Unit): Response = apply {
+        setHeader(Header.ContentType, contentType)
+        body = ResponseBody.Writer(writeTo)
     }
 
     // FINALIZE

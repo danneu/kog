@@ -3,7 +3,8 @@ package com.danneu.kog
 import com.danneu.kog.negotiation.Encoding
 import com.danneu.kog.negotiation.MediaType
 
-
+// The negotiator takes a request and determines the client's best-fitting preference from a list of available options
+// by querying the request's Accept and Accept-* headers.
 
 class Negotiator(val request: Request) {
 
@@ -29,7 +30,7 @@ class Negotiator(val request: Request) {
     /** List of preferred mediaTypes sent by the client
      */
     val mediaTypes: List<MediaType> = run {
-        val header = request.getHeader(Header.Accept) ?: return@run emptyList<MediaType>()
+        val header = request.getHeader(Header.Accept) ?: return@run emptyList()
         MediaType.parseHeader(header).distinct().let { MediaType.prioritize(it) }
     }
 

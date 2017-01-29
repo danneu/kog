@@ -28,7 +28,7 @@ fun notModified(etag: Boolean): Middleware = { handler -> handler@ { request ->
 
     // add etag header
     if (etag) {
-        response.setHeader(Header.Etag, response.body.etag())
+        response.setHeader(Header.Etag, response.body.etag)
     }
 
     // add last-modified header if body has that info
