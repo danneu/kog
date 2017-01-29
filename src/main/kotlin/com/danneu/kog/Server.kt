@@ -56,13 +56,19 @@ class Server @JvmOverloads constructor(
 ) {
     val jettyServer = makeJettyServer()
 
-    fun stop() {
+    fun stop(timeout: Duration = Duration.ofSeconds(3)) {
+        println(":: <kog> stopping (timeout = ${timeout.toMillis()}ms)...")
+        jettyServer.stopTimeout = timeout.toMillis()
         jettyServer.stop()
         jettyServer.handler = null
         println(":: <kog> stopped")
     }
 
     @JvmOverloads fun listen(port: Int, wait: Boolean = true, onStart: (Server) -> Unit = {}): Server {
+        if (port == 0) {
+            println(":: <kog> requesting random port since port == 0")
+        }
+
         (jettyServer.connectors.first() as ServerConnector).port = port
 
         val handlers = HandlerCollection(true)
@@ -82,7 +88,8 @@ class Server @JvmOverloads constructor(
 
         try {
             jettyServer.start()
-            println(":: <kog> listening on http://localhost:$port")
+            val actualPort = (jettyServer.connectors[0] as ServerConnector).localPort
+            println(":: <kog> listening on http://localhost:$actualPort")
             onStart(this)
             if (wait) {
                 jettyServer.join()
