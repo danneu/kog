@@ -209,6 +209,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
                     val array = it.asArray()
                     if (array.size() == 2) {
                         Result.all(left(array[0]), right(array[1])).map { vals ->
+                            @Suppress("UNCHECKED_CAST")
                             (vals[0] as A) to (vals[1] as B)
                         }
                     } else {
@@ -225,6 +226,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
                     val array = it.asArray()
                     if (array.size() == 3) {
                         Result.all(d1(array[0]), d2(array[1]), d3(array[2])).map { vals ->
+                            @Suppress("UNCHECKED_CAST")
                             Triple(vals[0] as A, vals[1] as B, vals[2] as C)
                         }
                     } else {
@@ -277,6 +279,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         fun <A : Any, Z : Any> object1(f: (A) -> Z, d1: Decoder<A>): Decoder<Z> {
             return Decoder { value ->
                 Result.all(d1(value)).map { vals ->
+                    @Suppress("UNCHECKED_CAST")
                     f(vals[0] as A)
                 }
             }
@@ -285,6 +288,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         fun <A : Any, B : Any, Z : Any> object2(f: (A, B) -> Z, d1: Decoder<A>, d2: Decoder<B>): Decoder<Z> {
             return Decoder { value ->
                 Result.all(d1(value), d2(value)).map { vals ->
+                    @Suppress("UNCHECKED_CAST")
                     f(vals[0] as A, vals[1] as B)
                 }
             }
@@ -293,6 +297,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
         fun <A : Any, B : Any, C : Any, Z : Any> object3(f: (A, B, C) -> Z, d1: Decoder<A>, d2: Decoder<B>, d3: Decoder<C>): Decoder<Z> {
             return Decoder { value ->
                 Result.all(d1(value), d2(value), d3(value)).map { vals ->
+                    @Suppress("UNCHECKED_CAST")
                     f(vals[0] as A, vals[1] as B, vals[2] as C)
                 }
             }

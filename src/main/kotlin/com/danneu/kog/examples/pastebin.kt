@@ -63,7 +63,7 @@ val router = SafeRouter {
 
     // Fetch file
 
-    get("/<id>", fun(id: UUID): Handler = handler@ { req ->
+    get("/<id>", fun(id: UUID): Handler = handler@ { _ ->
         val file = File("pastes/$id")
         if (!file.exists()) return@handler Response.notFound()
         Response().file(file)

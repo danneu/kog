@@ -60,7 +60,7 @@ fun WebSocket.Companion.handler(accept: WebSocketAcceptor): WebSocketHandler {
     return object : WebSocketHandler() {
         override fun configure(factory: WebSocketServletFactory) {
             // TODO: Allow idletimeout config. factory.policy.idleTimeout = idleTimeout
-            factory.creator = WebSocketCreator { req, res -> WebSocket.adapter(request!!, accept) }
+            factory.creator = WebSocketCreator { _, _ -> WebSocket.adapter(request!!, accept) }
         }
         override fun handle(target: String, baseReq: JettyServerRequest, req: HttpServletRequest, res: HttpServletResponse) {
             val factory = this.webSocketFactory
