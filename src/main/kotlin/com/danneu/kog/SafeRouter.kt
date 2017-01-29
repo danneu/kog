@@ -7,9 +7,9 @@ import java.util.regex.Matcher
 import java.util.regex.Pattern
 import kotlin.reflect.KParameter
 import kotlin.reflect.KType
-import kotlin.reflect.createType
+import kotlin.reflect.full.createType
+import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.reflect
-import kotlin.reflect.valueParameters
 
 
 // Don't call matcher.find() before this
@@ -38,7 +38,7 @@ class Route(val method: Method, val pattern: String, val recv: Function<Handler>
     }.filterNotNull()
 
     override fun toString(): String {
-        return "Route($method '$pattern' ${types.map{it}} ${paramIdxs})"
+        return "Route($method '$pattern' ${types.map{it}} $paramIdxs)"
     }
 
     fun toRegex(): Regex? {
@@ -52,8 +52,8 @@ class Route(val method: Method, val pattern: String, val recv: Function<Handler>
 
         return pattern.segments().mapIndexed { idx, segment ->
             if (idx in paramIdxs) {
-                val type = types[paramIdx++]
-                when (type) {
+                val ktype = types[paramIdx++]
+                when (ktype) {
                     kotlin.Int::class.createType() ->
                         """/-?[0-9]+"""
                     kotlin.Long::class.createType() ->
@@ -79,8 +79,8 @@ class Route(val method: Method, val pattern: String, val recv: Function<Handler>
     }
 
     fun handle(request: Request): Response {
-        val args = request.path.segments().valuesAt(paramIdxs).zip(types).map { (seg, type) ->
-            when (type) {
+        val args = request.path.segments().valuesAt(paramIdxs).zip(types).map { (seg: String, ktype: KType) ->
+            when (ktype) {
                 kotlin.Int::class.createType() ->
                     //NumberFormat.getInstance().parse(seg).toInt()
                     seg.toIntOrNull() ?: return Response.notFound()
@@ -102,6 +102,7 @@ class Route(val method: Method, val pattern: String, val recv: Function<Handler>
         val classes = args.map { it::class.javaPrimitiveType ?: it.javaClass }
         val method: java.lang.reflect.Method = recv.javaClass.getMethod("invoke", *classes.toTypedArray())
         method.isAccessible = true
+        @Suppress("UNCHECKED_CAST")
         val handler = method.invoke(recv, *args.toTypedArray()) as Handler
         return middleware(handler)(request)
     }

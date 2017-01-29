@@ -14,7 +14,6 @@ private fun readEnvFile(): Map<String, String> {
     val file = File(".env")
     if (!file.exists()) return emptyMap()
     return file.readLines().mapNotNull { line ->
-        println("line = $line")
         val parts = line.split("=", limit = 2)
         if (parts.size != 2) return@mapNotNull null
         parts[0] to parts[1]

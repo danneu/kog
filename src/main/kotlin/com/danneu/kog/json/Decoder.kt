@@ -72,7 +72,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
                     val results: List<Result<A, Exception>> = coll.map { item: JsonValue -> d1(item) }
                     val validation = Validation(*results.toTypedArray())
                     if (!validation.hasFailure) {
-                        Result.of(results.map { result -> result.get() })
+                        Result.of(results.map(Result<A, Exception>::get))
                     } else {
                         Result.error(validation.failures.first())
                     }
@@ -172,7 +172,7 @@ class Decoder <out T : Any> (val decode: (JsonValue) -> Result<T, Exception>) {
                     val results: Array<Result<A, Exception>> = array.map { item: JsonValue -> d1(item) }.toTypedArray()
                     val validation = Validation(*results)
                     if (!validation.hasFailure) {
-                        Result.of(results.map { result -> result.get() }.toTypedArray())
+                        Result.of(results.map(Result<A, Exception>::get).toTypedArray())
                     } else {
                         Result.error(validation.failures.first())
                     }

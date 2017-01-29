@@ -43,6 +43,7 @@ sealed class Header(val key: String) {
             is Custom -> key == other.key
             else -> false
         }
+        override fun hashCode() = key.toLowerCase().hashCode()
     }
 
     // AUTHENTICATION
