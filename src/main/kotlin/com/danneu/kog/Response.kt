@@ -93,7 +93,7 @@ class Response(
         }
 
         when (body.length) {
-            null -> setHeader(Header.TransferEncoding, "Chunked")
+            null -> setHeader(Header.TransferEncoding, "chunked")
             else -> setHeader(Header.ContentLength, body.length.toString())
         }
 
