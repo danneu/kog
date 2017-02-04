@@ -18,7 +18,6 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
 - [Quick Start](#quick-start)
   * [Hello World](#hello-world)
   * [Type-Safe Routing](#type-safe-routing)
-  * [WebSockets](#websockets)
 - [Concepts](#concepts)
   * [Request & Response](#request--response)
   * [Handler](#handler)
@@ -28,8 +27,6 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
   * [JSON Encoding](#json-encoding)
   * [JSON Decoding](#json-decoding)
 - [Routing](#routing)
-  * [Type-Safe: `com.danneu.kog.SafeRouter`](#type-safe-comdanneukogsaferouter)
-  * [Deprecated: `com.danneu.kog.Router`](#deprecated-comdanneukogrouter)
 - [Cookies](#cookies)
   * [Request Cookies](#request-cookies)
   * [Response Cookies](#response-cookies)
@@ -43,7 +40,7 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
   * [Basic Auth](#basic-auth)
   * [Compression / Gzip](#compression--gzip)
 - [HTML Templating](#html-templating)
-- [WebSockets](#websockets-1)
+- [WebSockets](#websockets)
 - [Environment Variables](#environment-variables)
 - [Heroku Deploy](#heroku-deploy)
 - [Example: Tiny Pastebin Server](#example-tiny-pastebin-server)
@@ -94,17 +91,15 @@ fun main(args: Array<String>) {
 
 ### Type-Safe Routing
 
-`SafeRouter` is a work-in-progress type-safe rewrite of the original naive `Router`.
-
 ``` kotlin
 import com.danneu.kog.json.Encoder as JE
-import com.danneu.kog.SafeRouter
+import com.danneu.kog.Router
 import com.danneu.kog.Response
 import com.danneu.kog.Request
 import com.danneu.kog.Handler
 import com.danneu.kog.Server
 
-val router = SafeRouter {
+val router = Router {
     get("/users", fun(): Handler = { req ->
         Response().text("list users")
     })
@@ -140,71 +135,6 @@ fun main(args: Array<String>) {
   Server(handler).listen(3000)
 }
 ```
-
-### WebSockets
-
-Check out the [websockets](#websockets-1) section for more info including a `SafeRouter` example.
-
-This example uses the deprecated `Router` to start a websocket server that echoes back
-to clients whatever they send the server.
-
-``` kotlin
-import com.danneu.kog.Handler
-import com.danneu.kog.Server
-import com.danneu.kog.Response
-import com.danneu.kog.WebSocket
-import com.danneu.kog.Router
-
-val echoHandler = { request: Request, socket: WebSocket ->
-    val id = java.util.UUID.randomUUID()
-    println("[$id] a client connected")
-
-    socket.onError = { cause: Throwable ->
-        println("[$id] onError ${cause.message}")
-    }
-
-    socket.onText = { message: String ->
-        println("[$id] onText $message")
-        socket.session.remote.sendString(message)
-    }
-
-  socket.onClose = { statusCode: Int, reason: String? ->
-      println("[$id] onClose $statusCode ${reason ?: "<no reason>"}")
-  }
-}
-
-fun main(args: Array<String>) {
-    var router = Router {
-        get("/") { Response().text("Hello world") }
-        websocket("/ws", echoHandler)
-    }
-    Server(router.handler()).listen(3000)
-}
-```
-
-Browser:
-
-``` javascript
-var socket = new WebSocket("ws://localhost:3000/ws")
-
-socket.onopen = function (event) {
-    console.log('open:', event)
-    socket.send('hello world')
-}
-
-socket.onclose = function (event) {
-    console.log('close:', event)
-}
-
-socket.onerror = function (event) {
-    console.log('error:', event)
-}
-
-socket.onmessage = function (payload) {
-    console.log('server said:', payload.data)
-}
-```
-
 
 ## Concepts
 
@@ -437,11 +367,7 @@ val handler = { request ->
 
 ## Routing
 
-### Type-Safe: `com.danneu.kog.SafeRouter`
-
-`com.danneu.kog.SafeRouter` is a work-in-progress type-safe rewrite of the original naive `Router`.
-
-It's type-safe because routes only match if the URL params can be parsed into
+kog's router is type-safe because routes only match if the URL params can be parsed into
 the arguments that your function expects.
 
 Available coercions:
@@ -455,7 +381,7 @@ Available coercions:
 For example:
 
 ```kotlin
-SafeRouter {
+Router {
     // GET /uuid/aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa -> 200 Ok
     // GET /uuid/AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA -> 200 Ok
     // GET /uuid/42                                   -> 404 Not Found
@@ -470,13 +396,13 @@ Here's a more meandering example:
 
 ``` kotlin
 import com.danneu.kog.json.Encoder as JE
-import com.danneu.kog.SafeRouter
+import com.danneu.kog.Router
 import com.danneu.kog.Response
 import com.danneu.kog.Request
 import com.danneu.kog.Handler
 import com.danneu.kog.Server
 
-val router = SafeRouter(middleware1(), middleware2()) {
+val router = Router(middleware1(), middleware2()) {
     get("/", fun(): Handler = { req ->
         Response().text("homepage")
     })
@@ -517,57 +443,6 @@ val router = SafeRouter(middleware1(), middleware2()) {
 fun main(args: Array<String>) {
   Server(handler).listen(3000)
 }
-```
-
-### Deprecated: `com.danneu.kog.Router`
-
-Note: `Router` is currently being replaced with `SafeRouter`,
-but until then they live alongside each other.
-
-Out of the box, kog comes with a simple but naive `Router`.
-
-Kog's routers aren't special. They are just DSLs that spit out a handler function. 
-They are optional and replaceable.
-
-``` kotlin
-import com.danneu.kog.Request
-import com.danneu.kog.Response
-import com.danneu.kog.Server
-import com.danneu.kog.Router
-
-val router = Router {
-  use({ handler -> { req -> 
-    // this middleware runs on every request served by this router
-    println("middleware") 
-    handler(req) 
-  }})
-  get("/") { Response().text("homepage") }
-  group("/users") {
-    get("/") { Response().text("list users") }
-    get("/:id") { Response().text("show user") }
-  }
-  group("/admin", ensureAdmin()) { // ensureAdmin() only runs if routes in this group are hit
-    // use(ensureAdmin())          // <-- .use() immediately inside a group has the same effect
-    get("/") { Response().text("admin panel") }
-  }
-  // routes take optional route-level middleware varargs
-  get("/foo", mw1, mw2, mw3) { Response() }
-}
-
-fun main(args: Array<String>) {
-  Server(router.handler()).listen(3000)
-}
-```
-
-Router methods accept optional middleware varargs:
-
-``` kotlin
-use(mw1())
-use(mw1(), mw2(), mw3())
-get("/") { Response() }
-get("/", mw1(), mw2()) { Response() }
-group("/foo") { ... }
-group("/foo", mw1(), mw2()) { ... }
 ```
 
 ## Cookies
@@ -685,7 +560,7 @@ browser to use its cache.
 downstream response.
 
 ``` kotlin
-val router = SafeRouter(notModified(etag = true)) {
+val router = Router(notModified(etag = true)) {
     get("/", fun(): Handler = { 
         Response().text("Hello, world!) 
     })
@@ -751,11 +626,11 @@ file uploads have already been piped into temporary files in the file-system
 which will get automatically deleted.
 
 ``` kotlin
-import com.danneu.kog.SafeRouter
+import com.danneu.kog.Router
 import com.danneu.kog.batteries.multipart
 import com.danneu.kog.batteries.multipart.Whitelist
 
-val router = SafeRouter {
+val router = Router {
     get("/", fun(): Handler = {
         Response().html("""
             <!doctype html>
@@ -836,7 +711,7 @@ Some examples:
 import com.danneu.kog.batteries.compress
 import com.danneu.kog.ByteLength
 
-val router = SafeRouter() {
+val router = Router() {
     // These responses will be compressed if they are JSON of any size
     group(compress(threshold = ByteLength.zero, predicate = { it == "application/json" })) {
         get("/a", fun(): Handler = { Response().text("foo") })          // <-- Not compressed (not json)
@@ -864,7 +739,7 @@ Here's an example server with a "/" route that renders a file-upload form that p
 ``` kotlin
 import j2html.TagCreator.*
 import j2html.tags.ContainerTag
-import com.danneu.kog.SafeRouter
+import com.danneu.kog.Router
 import com.danneu.kog.Response
 import com.danneu.kog.Server
 import com.danneu.kog.batteries.multipart
@@ -874,7 +749,7 @@ fun layout(vararg tags: ContainerTag): String = document().render() + html().wit
   body().with(*tags)
 ).render()
 
-val router: Router = SafeRouter {
+val router: Router = Router {
     get("/", fun(): Handler = {
         Response().html(layout(
           form().attr("enctype", "multipart/form-data").withMethod("POST").withAction("/upload").with(
@@ -895,7 +770,7 @@ fun main(args: Array<String>) {
 
 ## WebSockets
 
-Check out [examples/websockets.kt][examples-websockets] for a websocket example that demonstrates SafeRouter,
+Check out [examples/websockets.kt][examples-websockets] for a websocket example that demonstrates 
 a websocket handler that echos back every message, and a websocket handler bound to a dynamic `/ws/<number>` route.
 
 Take note of a few limitations explained in the comments that I'm working on fixing.
@@ -1045,7 +920,7 @@ This simple server will have two endpoints:
   - Server responds with file or 404.
 
 ``` kotlin
-import com.danneu.kog.SafeRouter
+import com.danneu.kog.Router
 import com.danneu.kog.Response
 import com.danneu.kog.Handler
 import com.danneu.kog.util.CopyLimitExceeded
@@ -1055,7 +930,7 @@ import java.util.UUID
 
 val uploadLimit = ByteLength.ofMegabytes(10)
 
-val router = SafeRouter {
+val router = Router {
     // Upload file
     post("/", fun(): Handler = handler@ { req ->
         // Generate random ID for user's upload

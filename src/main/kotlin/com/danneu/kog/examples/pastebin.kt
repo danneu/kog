@@ -4,7 +4,7 @@ package com.danneu.kog.examples
 import com.danneu.kog.ByteLength
 import com.danneu.kog.Handler
 import com.danneu.kog.Response
-import com.danneu.kog.SafeRouter
+import com.danneu.kog.Router
 import com.danneu.kog.Server
 import com.danneu.kog.util.CopyLimitExceeded
 import com.danneu.kog.util.limitedCopyTo
@@ -15,7 +15,7 @@ import java.util.UUID
 
 val uploadLimit = ByteLength.ofMegabytes(5)
 
-val router = SafeRouter {
+val router = Router {
 
     // Display API usage
 

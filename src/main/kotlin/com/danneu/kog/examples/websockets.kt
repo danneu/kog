@@ -3,14 +3,14 @@ package com.danneu.kog.examples
 import com.danneu.kog.Handler
 import com.danneu.kog.Request
 import com.danneu.kog.Response
-import com.danneu.kog.SafeRouter
+import com.danneu.kog.Router
 import com.danneu.kog.Server
 import com.danneu.kog.WebSocket
 import com.danneu.kog.batteries.logger
 import com.danneu.kog.websocket
 
 fun main(args: Array<String>) {
-    val router = SafeRouter {
+    val router = Router {
         get("/", fun(): Handler = {
             Response().html("""
                 <p>open the browser's javascript console</p>
