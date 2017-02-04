@@ -235,6 +235,20 @@ class RouteGroup(val prefixPattern: String, val middleware: Middleware = identit
         routes.add(Route(Method.Options, concatPatterns(prefixPattern, pattern), recv, listOf(middleware)))
     fun options(pattern: String, wares: List<Middleware> = emptyList(), recv: Function<Handler>) =
         routes.add(Route(Method.Options, concatPatterns(prefixPattern, pattern), recv, listOf(middleware).plus(wares)))
+
+    fun group(subPrefixPattern: String, wares: List<Middleware> = emptyList(), block: RouteGroup.() -> Unit) {
+        val group = RouteGroup(concatPatterns(prefixPattern, subPrefixPattern), composeMiddleware(wares))
+        group.block()
+        group.routes.forEach { route -> routes.add(route) }
+    }
+
+    fun group(wares: List<Middleware> = emptyList(), block: RouteGroup.() -> Unit) {
+        this.group("", wares, block)
+    }
+
+    fun group(vararg wares: Middleware, block: RouteGroup.() -> Unit) {
+        this.group("", wares.toList(), block)
+    }
 }
 
 

@@ -239,6 +239,108 @@ class SafeRouterTests {
             }.handler()
             assertEquals("skips group when not match", ResponseBody.String("b"), handler(Request.toy(Get, "/42")).body)
         }
+
+        run {
+            val handler = SafeRouter {
+                group("/nested") {
+                    get("", fun(): Handler = { Response().text("a") })
+                    get("/", fun(): Handler = { Response().text("b") })
+                }
+            }.handler()
+
+            assertEquals("empty path means no trailing slash", ResponseBody.String("a"), handler(Request.toy(path = "/nested")).body)
+            assertEquals("supports trailing slash", ResponseBody.String("b"), handler(Request.toy(path = "/nested/")).body)
+        }
+    }
+
+
+    @Test
+    fun testDeepGroup() {
+        val router = SafeRouter {
+            group("/a") {
+                group("/b") {
+                    group("/c") {
+                        get("/d", fun(): Handler = { Response() })
+                    }
+                }
+            }
+        }
+
+        run {
+            val response = router.handler()(Request.toy(path = "/a/b/c/d"))
+            assertEquals("request can hit deep nesting", Status.Ok, response.status)
+        }
+    }
+
+
+    // MIDDLEWARE
+
+
+    @Test
+    fun testGroupOnlyMiddleware() {
+        val tokens = Tokenware()
+
+        val ware1: Middleware = { handler -> { request ->
+            tokens.add("A")
+            handler(request)
+        }}
+
+        val ware2: Middleware = { handler -> { request ->
+            tokens.add("B")
+            handler(request)
+        }}
+
+        val handler = SafeRouter {
+            group("/nested", listOf(ware1)) {
+                get("", fun(): Handler = { Response().text("nest root") })
+            }
+            get("/outside", listOf(ware2), fun(): Handler = { Response().text("ok") })
+        }.handler()
+
+        run {
+            handler(Request.toy(path = "/nested"))
+            assertEquals("middleware fires in group", listOf("A"), tokens.list())
+        }
+
+        run {
+            handler(Request.toy(path = "/outside"))
+            assertEquals("outer route hits middleware outside of group", listOf("A", "B"), tokens.list())
+        }
+
+        run {
+            handler(Request.toy(path = "/not-found"))
+            assertEquals("404 hits nothing", listOf("A", "B"), tokens.list())
+        }
+    }
+
+
+    @Test
+    fun testBeforeware() {
+        val beforeware: Middleware = { handler -> { req ->
+            req.path = "/alt"
+            handler(req)
+        }}
+        val handler = SafeRouter(beforeware) {
+            get("/", fun(): Handler = { Response().text("ok") })
+            get("/alt", fun(): Handler = { Response().text("alt") })
+        }.handler()
+
+        val response = handler(Request.toy())
+        assertEquals("middleware re-routes request to /alt", "alt", (response.body as ResponseBody.String).body)
+    }
+
+    @Test
+    fun testAfterware() {
+        val afterware: Middleware = { handler -> { request ->
+            val response = handler(request)
+            response.setHeader(Header.Custom("test"), "x")
+        }}
+        val handler = SafeRouter(afterware) {
+            get("/", fun(): Handler = { Response().text("ok") })
+        }.handler()
+
+        val response = handler(Request.toy())
+        assertEquals("middleware sets header", "x", response.getHeader(Header.Custom("test")))
     }
 
     // Not yet implemented
@@ -256,5 +358,3 @@ class SafeRouterTests {
     //     }
     // }
 }
-
-
