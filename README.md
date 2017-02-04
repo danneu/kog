@@ -186,14 +186,24 @@ Browser:
 ``` javascript
 var socket = new WebSocket("ws://localhost:3000/ws")
 
-socket.onopen = function () {
-  socket.emit('hello world')
+socket.onopen = function (event) {
+    console.log('open:', event)
+    socket.send('hello world')
+}
+
+socket.onclose = function (event) {
+    console.log('close:', event)
+}
+
+socket.onerror = function (event) {
+    console.log('error:', event)
 }
 
 socket.onmessage = function (payload) {
-  console.log('server said:', payload.data)
+    console.log('server said:', payload.data)
 }
 ```
+
 
 ## Concepts
 

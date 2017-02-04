@@ -5,6 +5,7 @@ import com.danneu.kog.cookies.parse
 import com.danneu.kog.json.Decoder
 import com.danneu.kog.result.Result
 import com.danneu.kog.result.flatMap
+import org.eclipse.jetty.websocket.api.util.QuoteUtil
 import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
 
@@ -55,7 +56,23 @@ class Request(
         body.readBytes().toString(Charsets.UTF_8)
     }
 
-    fun setMethod(method: Method) = apply { this.method = method }
+    // Based on org.eclipse.jetty.websocket.server.WebSocketServerFactory#isUpgradeRequest()
+    fun isUpgrade(): Boolean {
+        // Tests sorted by least common to most common in effort to fail asap
+        // Check for Upgrade: websocket
+        (this.getHeader(Header.Upgrade) ?: return false).apply {
+            if (this.toLowerCase() != "websocket") return false
+        }
+        // Check for Connection: [... ,] upgrade [, ...]
+        (this.getHeader(Header.Connection) ?: return false).apply {
+            QuoteUtil.splitAt(this, ",").asSequence().find { it.trim().toLowerCase() == "upgrade" } ?: return false
+        }
+        // Check method
+        if (this.method != Method.Get) return false
+        // Check protocol
+        if (this.protocol != "HTTP/1.1") return false
+        return true
+    }
 
     override fun toString(): String {
         return listOf(
@@ -79,7 +96,13 @@ class Request(
 }
 
 
-fun Request.Companion.toy(method: Method = Method.Get, path: String = "/", queryString: String = "foo=bar"): Request {
+fun Request.Companion.toy(
+    method: Method = Method.Get,
+    path: String = "/",
+    queryString: String = "foo=bar",
+    headers: MutableList<HeaderPair> = mutableListOf(),
+    protocol: String = "HTTP/1.1"
+): Request {
     return Request(
       serverPort = 3000,
       serverName = "name",
@@ -88,8 +111,8 @@ fun Request.Companion.toy(method: Method = Method.Get, path: String = "/", query
       queryString = queryString,
       scheme = "http",
       method = method,
-      protocol = "http",
-      headers = mutableListOf(),
+      protocol = protocol,
+      headers = headers,
       type = null,
       length = 0,
       charset = null,

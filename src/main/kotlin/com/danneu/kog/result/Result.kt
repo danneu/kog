@@ -1,5 +1,10 @@
 package com.danneu.kog.result
 
+// A Result<A, B> represents a value that is either Success<A> or Failure<B>.
+//
+// Fork of https://github.com/kittinunf/Result which allows nullable Result.Success values.
+//
+// More info: https://github.com/kittinunf/Result/issues/18
 
 inline fun <reified X> Result<*, *>.getAs() = when (this) {
     is Result.Success -> value as? X

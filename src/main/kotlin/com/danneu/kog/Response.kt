@@ -14,7 +14,7 @@ typealias WebSocketAcceptor = (Request, WebSocket) -> Unit
 /**
  * HACK: If a response has the status 101 Switching Protocols, Kog registers the websocket handler with Jetty.
  */
-internal fun Response.Companion.websocket(key: String, accept: WebSocketAcceptor): Response {
+fun Response.Companion.websocket(key: String, accept: WebSocketAcceptor): Response {
     return Response.switchingProtocols().apply {
         this.webSocket = key to accept
     }

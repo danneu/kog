@@ -31,7 +31,7 @@ class JettyHandler(val handler: Handler, val insertContextHandler: (String, WebS
     override fun handle(target: String, baseRequest: JettyServerRequest, servletRequest: HttpServletRequest, servletResponse: HttpServletResponse) {
         val request = Servlet.intoKogRequest(servletRequest)
         val response = handler(request)
-        if (response.status == Status.SwitchingProtocols && response.webSocket != null && WebSocketServerFactory(servletRequest.servletContext).isUpgradeRequest(servletRequest, servletResponse)) {
+        if (response.status == Status.SwitchingProtocols && response.webSocket != null && request.isUpgrade()) {
             val (key, accept) = response.webSocket!!
             if (!installedSocketHandlers.contains(key)) {
                 installedSocketHandlers.add(key)

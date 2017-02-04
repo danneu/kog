@@ -6,14 +6,14 @@ import org.eclipse.jetty.websocket.servlet.WebSocketCreator
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-import org.eclipse.jetty.websocket.server.WebSocketHandler
+import org.eclipse.jetty.websocket.server.WebSocketHandler as JettyWebSocketHandler
 import org.eclipse.jetty.server.Request as JettyServerRequest
 
 
 class WebSocket(val session: Session) {
     var onClose: (statusCode: Int, reason: String?) -> Unit = { _, _ -> /* noop */ }
-    var onError: (cause: Throwable) -> Unit = { /* noop */ }
-    var onText: (message: String) -> Unit = { /* noop */ }
+    var onError: (cause: Throwable) -> Unit = { _ -> /* noop */ }
+    var onText: (message: String) -> Unit = { _ -> /* noop */ }
     var onBinary: (payload: ByteArray, offset: Int, len: Int) -> Unit = { _, _, _ -> /* noop */ }
 
     companion object
@@ -55,9 +55,9 @@ fun WebSocket.Companion.adapter(request: Request, accept: WebSocketAcceptor): We
 }
 
 
-fun WebSocket.Companion.handler(accept: WebSocketAcceptor): WebSocketHandler {
+fun WebSocket.Companion.handler(accept: WebSocketAcceptor): JettyWebSocketHandler {
     var request: Request? = null
-    return object : WebSocketHandler() {
+    return object : JettyWebSocketHandler() {
         override fun configure(factory: WebSocketServletFactory) {
             // TODO: Allow idletimeout config. factory.policy.idleTimeout = idleTimeout
             factory.creator = WebSocketCreator { _, _ -> WebSocket.adapter(request!!, accept) }
