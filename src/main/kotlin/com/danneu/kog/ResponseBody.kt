@@ -19,10 +19,11 @@ interface ETaggable {
         /**
          * The ETag for 0-length empty body.
          */
-        val empty = "\"0-1B2M2Y8AsgTpgAmY7PhCfg\""
+        val empty = "\"0-1B2M2Y8AsgTpgAmY7PhCfg\"" // i.e. md5("")
     }
 }
 
+// Reminder: Avoid leaving resources open. Try to use auto-close facilities.
 
 sealed class ResponseBody : ETaggable {
     /** Bodies can be streamed
@@ -30,6 +31,8 @@ sealed class ResponseBody : ETaggable {
     abstract fun inputStream(): java.io.InputStream
 
     /** Bodies can be piped into ServletOutputStream and other streams
+     *
+     * Should flush itself.
      */
     abstract fun pipe(output: OutputStream): OutputStream
 

@@ -996,7 +996,7 @@ apply plugin: 'kotlin'
 apply plugin: 'com.github.johnrengelman.shadow'
 apply plugin: 'application'
 
-mainClassName = 'com.danneu.kogtest.Main' // <--------------- CHANGE ME
+mainClassName = 'com.danneu.kogtest.MainKt' // <--------------- CHANGE ME
 
 repositories {
     jcenter()
@@ -1022,16 +1022,13 @@ import com.danneu.kog.Handler
 import com.danneu.kog.Response
 import com.danneu.kog.Server
 
-class Main {
-    companion object {
-        @JvmStatic fun main(args: Array<String>) {
-            val handler: Handler = { Response().text("Hello, world!") }
-            // Heroku gives us a system env var "PORT" that we must bind to
-            Server(handler).listen(Env.int("PORT") ?: 3000)
-        }
-    }
+fun main(args: Array<String>) {
+    val handler: Handler = { Response().text("Hello, world!") }
+    Server(handler).listen(Env.int("PORT") ?: 3000)
 }
 ```
+
+**Reminder:** Bind to the PORT env variable that Heroku will set.
 
 In `./Procfile`:
 

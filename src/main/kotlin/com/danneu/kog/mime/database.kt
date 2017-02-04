@@ -11,7 +11,8 @@ import java.io.Reader
 class MimeDatabase(underlying: Map<String, MimeRecord>) {
     // mapping of extensions ("gif") to mime types
     private val extLookup = underlying.flatMap { (mime, record) ->
-        record.extensions.map { ext -> ext to mime } }.toMap()
+        record.extensions.map { ext -> ext to mime }
+    }.toMap()
 
     // set of all extensions that can be compressed
     private val compressibleLookup: Set<String> =
@@ -41,7 +42,7 @@ val database: MimeDatabase = run {
 private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, Exception> {
     val extensions: Decoder<List<String>> = Decoder.oneOf(
         Decoder.get("extensions", Decoder.nullable(Decoder.listOf(Decoder.string)).map { it ?: emptyList() }),
-        Decoder.succeed(listOf<String>())
+        Decoder.succeed(emptyList())
     )
 
     val compressible: Decoder<Boolean> = Decoder.oneOf(
