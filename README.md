@@ -143,9 +143,9 @@ fun main(args: Array<String>) {
 
 ### WebSockets
 
-Note: Currently only supported by `Router`, not `SafeRouter`.
+Check out the [websockets](#websockets-1) section for more info including a `SafeRouter` example.
 
-This example starts a websocket server that echoes back
+This example uses the deprecated `Router` to start a websocket server that echoes back
 to clients whatever they send the server.
 
 ``` kotlin
@@ -153,31 +153,32 @@ import com.danneu.kog.Handler
 import com.danneu.kog.Server
 import com.danneu.kog.Response
 import com.danneu.kog.WebSocket
+import com.danneu.kog.Router
 
 val echoHandler = { request: Request, socket: WebSocket ->
-  val id = java.util.UUID.randomUUID()
-  println("[$id] a client connected")
+    val id = java.util.UUID.randomUUID()
+    println("[$id] a client connected")
 
-  socket.onError = { cause: Throwable ->
-    println("[$id] onError ${cause.message}")
-  }
+    socket.onError = { cause: Throwable ->
+        println("[$id] onError ${cause.message}")
+    }
 
-  socket.onText = { message: String ->
-    println("[$id] onText $message")
-    socket.session.remote.sendString(message)
-  }
+    socket.onText = { message: String ->
+        println("[$id] onText $message")
+        socket.session.remote.sendString(message)
+    }
 
   socket.onClose = { statusCode: Int, reason: String? ->
-    println("[$id] onClose $statusCode ${reason ?: "<no reason>"}")
+      println("[$id] onClose $statusCode ${reason ?: "<no reason>"}")
   }
 }
 
 fun main(args: Array<String>) {
-  var router = Router {
-    get("/") { Response().text("Hello world") }
-    websocket("/ws", echoHandler)
-  }
-  Server(router.handler()).listen(3000)
+    var router = Router {
+        get("/") { Response().text("Hello world") }
+        websocket("/ws", echoHandler)
+    }
+    Server(router.handler()).listen(3000)
 }
 ```
 
@@ -894,35 +895,12 @@ fun main(args: Array<String>) {
 
 ## WebSockets
 
-Here's an example websocket server that upgrades the websocket request if the client has a `session_id` cookie
-of value `"xxx"`:
+Check out [examples/websockets.kt][examples-websockets] for a websocket example that demonstrates SafeRouter,
+a websocket handler that echos back every message, and a websocket handler bound to a dynamic `/ws/<number>` route.
 
-``` kotlin
-import com.danneu.kog.Handler
-import com.danneu.kog.Server
-import com.danneu.kog.Response
-import com.danneu.kog.WebSocket
+Take note of a few limitations explained in the comments that I'm working on fixing.
 
-val authenticateUser: Middleware = { handler -> handler@ { req ->
-    req.cookies["session_id"] != "xxx" && return@handler Response.forbidden()
-    handler(req)
-}}
-
-val router = Router {
-    websocket("/", authenticateUser) { request: Request, socket: WebSocket ->
-        val id = java.util.UUID.randomUUID()
-        println("[$id] a client connected")
-        socket.onError = { cause: Throwable -> println("[$id] onError ${cause.message}") }
-        socket.onClose = { statusCode: Int, reason: String? -> println("[$id] onClose $statusCode ${reason ?: "<no reason>"}") }
-        socket.onText = { message: String -> println("[$id] onText $message") }
-    }
-}
-
-fun main(args: Array<String>) {
-    Server(router.handler()).listen(3000)
-}
-```
-
+[examples-websockets]: https://github.com/danneu/kog/blob/master/src/main/kotlin/com/danneu/kog/examples/websockets.kt
 
 ## Environment Variables
 

@@ -51,13 +51,21 @@ fun main(args: Array<String>) {
             // Current limitation: The first argument to Response.websocket() must be a static url path.
             // It does *not* accept route patterns like "/ws/<num>". (#willfix)
             Response.websocket("/ws/echo", fun(request: Request, websocket: WebSocket) {
+                // Upon each websocket connection at this endpoint, generate a random id for it
+                val id = java.util.UUID.randomUUID()
+                println("[$id] a client connected")
+
                 websocket.onText = { message: String ->
-                    println("client sent us: $message")
+                    println("[$id] client sent us: $message")
                     websocket.session.remote.sendString(message)
                 }
 
+                websocket.onError = { cause: Throwable ->
+                    println("[$id] onError: ${cause.message}")
+                }
+
                 websocket.onClose = { statusCode: Int, reason: String? ->
-                    println("closed")
+                    println("[$id] onClose: $statusCode ${reason ?: "<no reason>"}")
                 }
             })
         })
@@ -79,7 +87,7 @@ fun main(args: Array<String>) {
 
     val middleware = logger()
     val handler = middleware(router.handler())
-    
+
     Server(middleware(handler)).listen(3000)
 }
 
