@@ -10,8 +10,13 @@ import java.nio.file.Path
 import java.time.Duration
 
 
-fun serveStatic(publicRootString: String, maxAge: Duration = Duration.ZERO): Middleware = { handler ->
-    val publicRoot = File(publicRootString).toPath().normalize().toAbsolutePath()
+fun serveStatic(publicFolderName: String, maxAge: Duration = Duration.ZERO): Middleware = handler@ { handler ->
+    val publicRoot = Thread.currentThread().contextClassLoader.getResource(publicFolderName)?.let {
+        File(it.toURI())
+    } ?: run {
+        System.err.println("WARN [serveStatic] Could not find public resource folder: \"$publicFolderName\". serveStatic skipped...")
+        return@handler { req -> handler(req) }
+    }
 
     fun(request: Request): Response {
         // Only serve assets to HEAD or GET
@@ -19,16 +24,15 @@ fun serveStatic(publicRootString: String, maxAge: Duration = Duration.ZERO): Mid
             return handler(request)
         }
 
-        val assetPath = publicRoot.resolve(File(request.path.drop(1)).toPath())
+        val asset = publicRoot.resolve(File(request.path.drop(1)))
 
+        // TODO: Test this since I made blind changes to it.
         // Ensure request path is downstream from public root
         // Note: This is actually handled by Jetty which throws a 400 on a malicious path and kog doesn't even
         //       get the request. But I left this logic in anyways.
-        if (!publicRoot.isParentOf(assetPath)) {
+        if (!publicRoot.toPath().isParentOf(asset.toPath())) {
             return Response.badRequest()
         }
-
-        val asset = assetPath.toFile()
 
         // We can only serve files (which is also the existence check)
         if (!asset.isFile) {

@@ -577,20 +577,20 @@ Server(logger(handler)).listen()
 
 ### Static File Serving
 
-The serveStatic middleware checks the `request.path` against a directory
+The serveStatic middleware checks the `request.path` against a given subdirectory in your `resources` directory
 that you want to serve assets from.
 
 ``` kotlin
 import com.danneu.kog.batteries.serveStatic
 
-val middleware = serveStatic("./public")
+val middleware = serveStatic("public")
 val handler = { Response().text(":)") }
 
 Server(middleware(handler)).listen()
 ```
 
-If we have a `./public` folder in our project root with a file 
-`./public/message.txt`, then the responses will look like this:
+If we have a `src/main/kotlin/.../resources/public` folder in our project root with a file 
+`message.txt`, then the responses will look like this:
 
     $ http localhost:3000/foo
     HTTP/1.1 404 Not Found
