@@ -46,7 +46,7 @@ data class MediaType(val type: String, val subtype: String, val q: Double = 1.0)
         /** Parses comma-delimited string of types
          */
         fun parseHeader(header: String): List<MediaType> {
-            return header.split(",").map(String::trim).mapNotNull { parse(it) }
+            return header.split(",").map(String::trim).mapNotNull(this::parse)
         }
 
         /** Sorts media-types based on client priority

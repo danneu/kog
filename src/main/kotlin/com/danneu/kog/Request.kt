@@ -3,6 +3,7 @@ package com.danneu.kog
 import com.danneu.kog.batteries.multipart.SavedUpload
 import com.danneu.kog.cookies.parse
 import com.danneu.kog.json.Decoder
+import com.danneu.kog.negotiation.Negotiator
 import com.danneu.kog.result.Result
 import com.danneu.kog.result.flatMap
 import org.eclipse.jetty.websocket.api.util.QuoteUtil
