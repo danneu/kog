@@ -57,7 +57,11 @@ class Request(
         body.readBytes().toString(Charsets.UTF_8)
     }
 
-    // Based on org.eclipse.jetty.websocket.server.WebSocketServerFactory#isUpgradeRequest()
+    /**
+     * Is request a websocket upgrade request?
+     *
+     * Based on org.eclipse.jetty.websocket.server.WebSocketServerFactory#isUpgradeRequest()
+     */
     fun isUpgrade(): Boolean {
         // Tests sorted by least common to most common in effort to fail asap
         // Check for Upgrade: websocket

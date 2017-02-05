@@ -78,6 +78,17 @@ class EncoderTests {
             JE.obj(listOf("a" to JE.num(1), "b" to JE.array()).asSequence()).toString()
         )
     }
+
+    @Test
+    fun testMapToObject() {
+        assertEquals("obj can be built from kotlin.Map",
+            """{"a":1,"b":[{}]}""",
+            JE.obj(mapOf(
+                "a" to JE.num(1),
+                "b" to JE.array(JE.obj())
+            )).toString()
+        )
+    }
 }
 
 

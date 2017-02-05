@@ -1010,7 +1010,7 @@ val router = Router {
         println("A client uploaded ${destFile.length()} bytes to ${destFile.absolutePath}")
         
         // Tell user where they can find their uploaded file
-        Response().jsonObject("url" to "http://localhost:${req.serverPort}/$id")
+        Response().json(JE.obj("url" to JE.str("http://localhost:${req.serverPort}/$id")))
     })
     
     // Fetch file

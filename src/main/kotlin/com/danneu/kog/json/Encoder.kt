@@ -5,12 +5,13 @@ import com.eclipsesource.json.JsonObject as MJsonObject
 import com.eclipsesource.json.JsonArray as MJsonArray
 import com.eclipsesource.json.JsonValue as MJsonValue
 
+// NOTE: I don't think there's gonne be a way to replace `JE.array(JE.int(1), JE.int(2))` with `JE.array(1, 2)`
+// https://discuss.kotlinlang.org/t/extension-types-for-kotlin/1390
+
 /**
  * Represents a json-serializable value.
  *
- * Use com.danneu.kog.Encoder instead of this directly for a more convenient API.
- *
- * TODO: Eventually I'd like to replace `JE.array(JE.int(1), JE.int(2))` with `JE.array(1, 2)`
+ * Use com.danneu.kog.Encoder for a more convenient API.
  */
 sealed class JsonValue {
     // COMMON
@@ -62,8 +63,9 @@ object Encoder {
     fun obj(values: Iterable<Pair<String, JsonValue>>) = MJson.`object`().apply {
         values.forEach { (k, v) -> this.add(k, v.internal) }
     }.let { obj -> JsonValue.Object(obj) }
-    fun obj(vararg values: Pair<String, JsonValue>) = obj(values.asList())
     fun obj(values: Sequence<Pair<String, JsonValue>>) = obj(values.asIterable())
+    fun obj(vararg values: Pair<String, JsonValue>) = obj(values.asIterable())
+    fun obj(map: Map<String, JsonValue>) = obj(map.entries.map { it.toPair() })
 
     fun array(values: Iterable<JsonValue>) = (MJson.`array`() as MJsonArray).apply {
         values.forEach { v -> this.add(v.internal) }
