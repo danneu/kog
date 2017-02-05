@@ -46,6 +46,8 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
   * [Compression / Gzip](#compression--gzip)
 - [HTML Templating](#html-templating)
 - [WebSockets](#websockets)
+- [Caching](#caching)
+  * [In-Memory Cache](#in-memory-cache)
 - [Environment Variables](#environment-variables)
 - [Heroku Deploy](#heroku-deploy)
 - [Example: Tiny Pastebin Server](#example-tiny-pastebin-server)
@@ -834,6 +836,16 @@ a websocket handler that echos back every message, and a websocket handler bound
 Take note of a few limitations explained in the comments that I'm working on fixing.
 
 [examples-websockets]: https://github.com/danneu/kog/blob/master/src/main/kotlin/com/danneu/kog/examples/websockets.kt
+
+## Caching
+
+### In-Memory Cache
+
+I've been impressed with Ben Manes' [ben-manes/caffeine][caffeine] library.
+
+Easy to pick up and use in any project.
+
+[caffeine]: https://github.com/ben-manes/caffeine
 
 ## Environment Variables
 
