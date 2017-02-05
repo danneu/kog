@@ -29,7 +29,7 @@ fun <A> List<A>.valuesAt(indexes: List<Int>): List<A> {
     return this.filterIndexed { idx, _ -> idx in indexes }
 }
 
-class Route(val method: Method, val pattern: String, val recv: Function<Handler>, wares: List<Middleware> = emptyList()) {
+class Route(val method: Method, var pattern: String, val recv: Function<Handler>, wares: List<Middleware> = emptyList()) {
     val middleware = composeMiddleware(wares)
     val types = recv.types()
 
@@ -150,6 +150,16 @@ class Router(val middleware: Middleware, block: Router.() -> Unit) {
         dispatcher = Dispatcher(routes)
     }
 
+    fun mount(prefix: String, other: Router) {
+        routes.addAll(other.routes.map { route ->
+            route.apply { route.pattern = concatPatterns(prefix, route.pattern) }
+        })
+    }
+
+    fun mount(other: Router) {
+        mount("/", other)
+    }
+
     fun get(pattern: String, recv: Function<Handler>) =
         routes.add(Route(Method.Get, pattern, recv))
     fun put(pattern: String, recv: Function<Handler>) =
@@ -248,6 +258,16 @@ class RouteGroup(val prefixPattern: String, val middleware: Middleware = identit
 
     fun group(vararg wares: Middleware, block: RouteGroup.() -> Unit) {
         this.group("", wares.toList(), block)
+    }
+
+    fun mount(subPrefix: String, other: Router) {
+        routes.addAll(other.routes.map { route ->
+            route.apply { route.pattern = concatPatterns(prefixPattern, subPrefix, route.pattern) }
+        })
+    }
+
+    fun mount(other: Router) {
+        mount("", other)
     }
 }
 

@@ -292,6 +292,85 @@ class RouterTests {
         }
     }
 
+    @Test
+    fun testMountingWithoutPrefix() {
+        val router = Router {
+            get("/a", fun(): Handler = { Response().text("a") })
+            mount(Router {
+                get("/b", fun(): Handler = { Response().text("b") })
+                group("/c") {
+                    get("", fun(): Handler = { Response().text("c") })
+                }
+            })
+        }
+
+        run {
+            val response = router.handler()(Request.toy(path = "/a"))
+            assertEquals("hits parent router routes", ResponseBody.String("a"), response.body)
+        }
+
+        run {
+            val response = router.handler()(Request.toy(path = "/b"))
+            assertEquals("hits mounted router routes", ResponseBody.String("b"), response.body)
+        }
+
+        run {
+            val response = router.handler()(Request.toy(path = "/c"))
+            assertEquals("hits mounted router groups", ResponseBody.String("c"), response.body)
+        }
+    }
+
+    @Test
+    fun testMountingWithPrefix() {
+        val router = Router {
+            mount("/prefix", Router {
+                get("/b", fun(): Handler = { Response().text("b") })
+                group("/c") {
+                    get("", fun(): Handler = { Response().text("c") })
+                }
+            })
+        }
+
+        run {
+            val response = router.handler()(Request.toy(path = "/b"))
+            assertEquals("unprefixed mounted routes do not match", Status.NotFound, response.status)
+        }
+
+        run {
+            val response = router.handler()(Request.toy(path = "/prefix/b"))
+            assertEquals("hits mounted router routes", ResponseBody.String("b"), response.body)
+        }
+
+        run {
+            val response = router.handler()(Request.toy(path = "/prefix/c"))
+            assertEquals("hits mounted router groups", ResponseBody.String("c"), response.body)
+        }
+    }
+
+    @Test
+    fun testMountingInGroup() {
+        val router = Router {
+            group("/group") {
+                mount(Router {
+                    get("/a", fun(): Handler = { Response().text("a") })
+                })
+                mount("/prefix", Router {
+                    get("/b", fun(): Handler = { Response().text("b") })
+                })
+            }
+        }
+
+        run {
+            val response = router.handler()(Request.toy(path = "/group/a"))
+            assertEquals("hits grouped unprefixed route", ResponseBody.String("a"), response.body)
+        }
+
+        run {
+            val response = router.handler()(Request.toy(path = "/group/prefix/b"))
+            assertEquals("hits grouped prefixed route", ResponseBody.String("b"), response.body)
+        }
+    }
+
 
     // MIDDLEWARE
 
