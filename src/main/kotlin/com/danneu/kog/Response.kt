@@ -4,12 +4,16 @@ package com.danneu.kog
 import com.danneu.kog.cookies.Cookie
 import com.danneu.kog.json.JsonValue
 import com.danneu.kog.mime.database
+import org.eclipse.jetty.websocket.api.Session
 import com.danneu.kog.json.Encoder as JE
 import java.io.File
 import java.io.InputStream
 
-typealias WebSocketAcceptor = (Request, WebSocket) -> Unit
-
+/**
+ * The acceptor is a function that takes the request and websocket session and returns a handler.
+ * The session (websocket connection) is connected and ready by the time the acceptor is run.
+ */
+typealias WebSocketAcceptor = (Request, Session) -> WebSocketHandler
 
 /**
  * HACK: If a response has the status 101 Switching Protocols, Kog registers the websocket handler with Jetty.

@@ -5,9 +5,10 @@ import com.danneu.kog.Request
 import com.danneu.kog.Response
 import com.danneu.kog.Router
 import com.danneu.kog.Server
-import com.danneu.kog.WebSocket
+import com.danneu.kog.WebSocketHandler
 import com.danneu.kog.batteries.logger
 import com.danneu.kog.websocket
+import org.eclipse.jetty.websocket.api.Session
 
 fun main(args: Array<String>) {
     val router = Router {
@@ -50,22 +51,27 @@ fun main(args: Array<String>) {
         get("/ws/echo", fun(): Handler = {
             // Current limitation: The first argument to Response.websocket() must be a static url path.
             // It does *not* accept route patterns like "/ws/<num>". (#willfix)
-            Response.websocket("/ws/echo", fun(request: Request, websocket: WebSocket) {
+            Response.websocket("/ws/echo", fun(request: Request, session: Session): WebSocketHandler {
                 // Upon each websocket connection at this endpoint, generate a random id for it
                 val id = java.util.UUID.randomUUID()
-                println("[$id] a client connected")
 
-                websocket.onText = { message: String ->
-                    println("[$id] client sent us: $message")
-                    websocket.session.remote.sendString(message)
-                }
+                return object : WebSocketHandler {
+                    override fun onOpen() {
+                        println("[$id] a client connected")
+                    }
 
-                websocket.onError = { cause: Throwable ->
-                    println("[$id] onError: ${cause.message}")
-                }
+                    override fun onText(message: String) {
+                        println("[$id] client sent us: $message")
+                        session.remote.sendString(message)
+                    }
 
-                websocket.onClose = { statusCode: Int, reason: String? ->
-                    println("[$id] onClose: $statusCode ${reason ?: "<no reason>"}")
+                    override fun onError(cause: Throwable) {
+                        println("[$id] onError: ${cause.message}")
+                    }
+
+                    override fun onClose(statusCode: Int, reason: String?) {
+                        println("[$id] onClose: $statusCode ${reason ?: "<no reason>"}")
+                    }
                 }
             })
         })
@@ -79,8 +85,10 @@ fun main(args: Array<String>) {
         // Due to this limitation, dynamic path websocket handlers by default will currently cause unbounded growth of
         // the internal jetty mapping of path to websocket handler until I find a better way to work with jetty.
         get("/ws/<>", fun(n: Int): Handler = {
-            Response.websocket("/ws/$n", fun(request: Request, websocket: WebSocket) {
-                websocket.session.remote.sendString("you connected to /ws/$n")
+            Response.websocket("/ws/$n", fun(request: Request, session: Session) = object : WebSocketHandler {
+                override fun onOpen() {
+                    session.remote.sendString("you connected to /ws/$n")
+                }
             })
         })
     }

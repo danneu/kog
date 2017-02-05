@@ -18,7 +18,6 @@ import com.danneu.kog.adapters.Servlet
 import com.danneu.kog.middleware.composeMiddleware
 import org.eclipse.jetty.server.handler.ContextHandler
 import org.eclipse.jetty.server.handler.HandlerCollection
-import org.eclipse.jetty.websocket.server.WebSocketServerFactory
 import java.time.Duration
 import org.eclipse.jetty.websocket.server.WebSocketHandler as JettyWebSocketHandler
 import org.eclipse.jetty.server.Request as JettyServerRequest
@@ -75,7 +74,7 @@ class Server @JvmOverloads constructor(
 
         val insertContextHandler: (key: String, accept: WebSocketAcceptor) -> Unit = { key, accept ->
             val context = ContextHandler(key)
-            context.handler = WebSocket.handler(accept)
+            context.handler = WebSocketHandler.handler(accept)
             context.allowNullPathInfo = true  // don't redirect /foo to /foo/
             context.server = jettyServer
             context.start()
