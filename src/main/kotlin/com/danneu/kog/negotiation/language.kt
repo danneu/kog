@@ -12,39 +12,57 @@ package com.danneu.kog.negotiation
 // TODO: Maybe should keep it open-ended like any language being able to use any locale.
 // TODO: Maybe should just simplify it into Pair("en", null), Pair("en", "US") style stuff.
 
-
 interface Locale {
     val code: String
 
     object Codes {
+        val Argentina = "ar"
         val Australia = "au"
+        val Austria = "at"
         val Belgium = "be"
         val Belize = "bz"
+        val Bolivia = "bo"
+        val Brazil = "br"
         val Canada = "ca"
         val Caribbean = "cb"
-        val UnitedKingdom = "gb"
-        val Ireland = "ie"
-        val France = "fr"
-        val Jamaica = "jm"
-        val NewZealand = "nz"
-        val Philippines = "ph"
-        val TrinidadAndTobago = "tt"
-        val UnitedStates = "us"
-        val SouthAfrica = "za"
-        val Switzerland = "ch"
-        val Zimbabwe = "zw"
-        val Luxembourg = "lu"
-        val Monaco = "mc"
-        val Austria = "at"
-        val Liechtenstein = "li"
-        val Germany = "de"
-        val Italy = "it"
-        val Brazil = "br"
-        val Portugal = "pt"
+        val Chile = "cl"
+        val Colombia = "co"
+        val CostaRica = "cr"
+        val DominicanRepublic = "do"
+        val Ecuador = "ec"
+        val ElSalvador = "sv"
         val Finland = "fi"
-        val Norway = "no"
-        val Sweden = "se"
+        val France = "fr"
+        val Germany = "de"
+        val Guatemala = "gt"
+        val Honduras = "hn"
+        val Ireland = "ie"
+        val Italy = "it"
+        val Jamaica = "jm"
+        val Liechtenstein = "li"
+        val Luxembourg = "lu"
+        val Mexico = "mx"
+        val Monaco = "mc"
         val Netherlands = "nl"
+        val NewZealand = "nz"
+        val Nicaragua = "ni"
+        val Norway = "no"
+        val Panama = "pa"
+        val Paraguay = "py"
+        val Peru = "pe"
+        val Philippines = "ph"
+        val Portugal = "pt"
+        val PuertoRico = "pr"
+        val SouthAfrica = "za"
+        val Spain = "es"
+        val Sweden = "se"
+        val Switzerland = "ch"
+        val TrinidadAndTobago = "tt"
+        val UnitedKingdom = "gb"
+        val UnitedStates = "us"
+        val Uruguay = "uy"
+        val Venezuela = "ve"
+        val Zimbabwe = "zw"
     }
 
     enum class English(override val code: String) : Locale {
@@ -175,6 +193,53 @@ interface Locale {
             }
         }
     }
+
+    enum class Spanish(override val code: String) : Locale {
+        Argentina(Codes.Argentina),
+        Bolivia(Codes.Bolivia),
+        Chile(Codes.Chile),
+        Colombia(Codes.Colombia),
+        CostaRica(Codes.CostaRica),
+        DominicanRepublic(Codes.DominicanRepublic),
+        Ecuador(Codes.Ecuador),
+        ElSalvador(Codes.ElSalvador),
+        Guatemala(Codes.Guatemala),
+        Honduras(Codes.Honduras),
+        Mexico(Codes.Mexico),
+        Nicaragua(Codes.Nicaragua),
+        Panama(Codes.Panama),
+        Paraguay(Codes.Paraguay),
+        Peru(Codes.Peru),
+        PuertoRico(Codes.PuertoRico),
+        Spain(Codes.Spain),
+        Uruguay(Codes.Uruguay),
+        Venezuela(Codes.Venezuela);
+
+        companion object {
+            fun fromCode(code: String?): Spanish? = when (code?.toLowerCase()) {
+                Codes.Argentina -> Argentina
+                Codes.Bolivia -> Bolivia
+                Codes.Chile -> Chile
+                Codes.Colombia -> Colombia
+                Codes.CostaRica -> CostaRica
+                Codes.DominicanRepublic -> DominicanRepublic
+                Codes.Ecuador -> Ecuador
+                Codes.ElSalvador -> ElSalvador
+                Codes.Guatemala -> Guatemala
+                Codes.Honduras -> Honduras
+                Codes.Mexico -> Mexico
+                Codes.Nicaragua -> Nicaragua
+                Codes.Panama -> Panama
+                Codes.Paraguay -> Paraguay
+                Codes.Peru -> Peru
+                Codes.PuertoRico -> PuertoRico
+                Codes.Spain -> Spain
+                Codes.Uruguay -> Uruguay
+                Codes.Venezuela -> Venezuela
+                else -> null
+            }
+        }
+    }
 }
 
 sealed class Lang(val prefixCode: String, prettyName: String, val locale: Locale? = null) {
@@ -183,21 +248,22 @@ sealed class Lang(val prefixCode: String, prettyName: String, val locale: Locale
 
     // Special
     object Wildcard: Lang("*", "*")
-    // Languages
-    class Afrikaans: Lang("af", "Afrikaans")
-    class Dutch(locale: Locale.Dutch? = null): Lang("nl", "Dutch", locale)
-    class English(locale: Locale.English? = null): Lang("en", "English", locale)
-    class Esperanto: Lang("eo", "Esperanto")
-    class Finnish: Lang("fi", "Finnish")
-    class French(locale: Locale.French? = null): Lang("fr", "French", locale)
-    class German(locale: Locale.German? = null): Lang("de", "German", locale)
-    class Italian(locale: Locale.Italian? = null): Lang("it", "Italian", locale)
-    class Klingon: Lang("tlh", "Klingon")
-    class Norwegian: Lang("no", "Norwegian")
-    class Portuguese(locale: Locale.Portuguese? = null): Lang("pt", "Portuguese", locale)
-    class Romanian: Lang("ro", "Romanian")
-    class Sami(locale: Locale.Sami? = null): Lang("se", "Sami", locale)
-    class Spanish: Lang("es", "Spanish")
+    // Languages (without locales)
+    class Afrikaans: Lang(Codes.Afrikaans, "Afrikaans")
+    class Esperanto: Lang(Codes.Esperanto, "Esperanto")
+    class Finnish: Lang(Codes.Finnish, "Finnish")
+    class Klingon: Lang(Codes.Klingon, "Klingon")
+    class Norwegian: Lang(Codes.Norwegian, "Norwegian")
+    class Romanian: Lang(Codes.Romanian, "Romanian")
+    // Languages (with locales
+    class Dutch(locale: Locale.Dutch? = null) : Lang(Codes.Dutch, "Dutch", locale)
+    class English(locale: Locale.English? = null) : Lang(Codes.English, "English", locale)
+    class French(locale: Locale.French? = null) : Lang(Codes.French, "French", locale)
+    class German(locale: Locale.German? = null) : Lang(Codes.German, "German", locale)
+    class Italian(locale: Locale.Italian? = null) : Lang(Codes.Italian, "Italian", locale)
+    class Portuguese(locale: Locale.Portuguese? = null) : Lang(Codes.Portuguese, "Portuguese", locale)
+    class Sami(locale: Locale.Sami? = null) : Lang(Codes.Sami, "Sami", locale)
+    class Spanish(locale: Locale.Spanish? = null) : Lang(Codes.Spanish, "Spanish", locale)
 
     override fun equals(other: Any?): Boolean {
         return when (other) {
@@ -208,6 +274,26 @@ sealed class Lang(val prefixCode: String, prettyName: String, val locale: Locale
 
     override fun toString() = code
 
+    object Codes {
+        // Special
+        val Wildcard = "*"
+        // Languages
+        val Afrikaans = "af"
+        val Dutch = "nl"
+        val English = "en"
+        val Esperanto = "eo"
+        val Finnish = "fi"
+        val French = "fr"
+        val German = "de"
+        val Italian = "it"
+        val Klingon = "tlh"
+        val Norwegian = "no"
+        val Portuguese = "pt"
+        val Romanian = "ro"
+        val Sami = "se"
+        val Spanish = "es"
+    }
+
     companion object {
         fun fromCode(code: String): Lang? {
             code.split("-").let { parts ->
@@ -217,30 +303,30 @@ sealed class Lang(val prefixCode: String, prettyName: String, val locale: Locale
 
         fun fromPrefix(prefix: String, localeCode: String? = null): Lang? {
             return when (prefix.toLowerCase()) {
-                "*" -> Wildcard
-                "af" -> Afrikaans()
-                "nl" -> Dutch(Locale.Dutch.fromCode(localeCode))
-                "en" -> English(Locale.English.fromCode(localeCode))
-                "eo" -> Esperanto()
-                "fi" -> Finnish()
-                "fr" -> French(Locale.French.fromCode(localeCode))
-                "de" -> German(Locale.German.fromCode(localeCode))
-                "it" -> Italian(Locale.Italian.fromCode(localeCode))
-                "tlh" -> Klingon()
-                "no" -> Norwegian()
-                "pt" -> Portuguese(Locale.Portuguese.fromCode(localeCode))
-                "ro" -> Romanian()
-                "se" -> Sami(Locale.Sami.fromCode(localeCode))
-                "es" -> Spanish()
+                Codes.Wildcard -> Wildcard
+                Codes.Afrikaans -> Afrikaans()
+                Codes.Dutch -> Dutch(Locale.Dutch.fromCode(localeCode))
+                Codes.English -> English(Locale.English.fromCode(localeCode))
+                Codes.Esperanto -> Esperanto()
+                Codes.Finnish -> Finnish()
+                Codes.French -> French(Locale.French.fromCode(localeCode))
+                Codes.German -> German(Locale.German.fromCode(localeCode))
+                Codes.Italian -> Italian(Locale.Italian.fromCode(localeCode))
+                Codes.Klingon -> Klingon()
+                Codes.Norwegian -> Norwegian()
+                Codes.Portuguese -> Portuguese(Locale.Portuguese.fromCode(localeCode))
+                Codes.Romanian -> Romanian()
+                Codes.Sami -> Sami(Locale.Sami.fromCode(localeCode))
+                Codes.Spanish -> Spanish(Locale.Spanish.fromCode(localeCode))
                 else -> null
             }
         }
     }
 }
 
-// This class is just a pair of language and it's q-value.
+// This class is just a pair of language and its q-value.
 //
-// IDEA: Maybe AcceptLanguage should be Pair<Lang, QValue>
+// TODO: Maybe AcceptLanguage should be Pair<Lang, QValue>. Lang vs AcceptLanguage is confusing as top-level classes.
 class AcceptLanguage(val lang: Lang, val q: Double = 1.0) {
     override fun toString() = "${lang.code};q=$q"
 
