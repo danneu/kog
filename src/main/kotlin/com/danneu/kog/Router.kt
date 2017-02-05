@@ -11,6 +11,8 @@ import kotlin.reflect.full.createType
 import kotlin.reflect.full.valueParameters
 import kotlin.reflect.jvm.reflect
 
+@DslMarker
+annotation class RouterDslMarker
 
 // Don't call matcher.find() before this
 // Note: starts at 1. group 0 is the whole expr.
@@ -135,6 +137,7 @@ class Dispatcher(val routes: List<Route>) {
     }
 }
 
+@RouterDslMarker
 class Router(val middleware: Middleware, block: Router.() -> Unit) {
     @JvmOverloads constructor(wares: List<Middleware> = emptyList(), block: Router.() -> Unit):
         this(composeMiddleware(wares), block)
@@ -214,6 +217,7 @@ fun concatPatterns(vararg patterns: String): String {
         .replace(Regex("/{2,}"), "/")
 }
 
+@RouterDslMarker
 class RouteGroup(val prefixPattern: String, val middleware: Middleware = identity) {
     val routes = mutableListOf<Route>()
 
