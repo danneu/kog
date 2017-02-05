@@ -27,6 +27,7 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
   * [JSON Encoding](#json-encoding)
   * [JSON Decoding](#json-decoding)
 - [Routing](#routing)
+  * [Router mounting](#router-mounting)
 - [Cookies](#cookies)
   * [Request Cookies](#request-cookies)
   * [Response Cookies](#response-cookies)
@@ -135,59 +136,6 @@ fun main(args: Array<String>) {
   Server(handler).listen(3000)
 }
 ```
-
-#### Router mounting
-
-`Router#mount(subrouter)` will merge a child router into the current router.
-
-Useful for breaking your application into individual routers that you then mount into a top-level router.
-
-```kotlin
-val subrouter = Router {
-    get("/foo", fun(): Handler = { Response() })
-}
-
-val router = Router {
-    mount(subrouter)
-}
-```
-
-```text
-curl http://localhost:3000/foo      # 200 Ok
-```
-
-Or mount routers at a prefix:
-
-```kotlin
-val subrouter = Router {
-    get("/foo", fun(): Handler = { Response() })
-}
-
-val router = Router {
-    mount("/subrouter", subrouter)
-}
-```
-
-```text
-curl http://localhost:3000/foo              # 404 Not Found
-curl http://localhost:3000/subrouter/foo    # 200 Ok
-```
-
-Or mount routers in a group:
-
-```kotlin
-val subrouter = Router {
-    get("/foo", fun(): Handler = { Response() })
-}
-
-val router = Router {
-    group("/group") {
-        mount("/subrouter", subrouter)
-    }
-}
-```
-
-**Note:** The mount prefix must be static. It does not support dynamic patterns like "/users/<id>".
 
 ## Concepts
 
@@ -497,6 +445,59 @@ fun main(args: Array<String>) {
   Server(handler).listen(3000)
 }
 ```
+
+### Router mounting
+
+`Router#mount(subrouter)` will merge a child router into the current router.
+
+Useful for breaking your application into individual routers that you then mount into a top-level router.
+
+```kotlin
+val subrouter = Router {
+    get("/foo", fun(): Handler = { Response() })
+}
+
+val router = Router {
+    mount(subrouter)
+}
+```
+
+```text
+curl http://localhost:3000/foo      # 200 Ok
+```
+
+Or mount routers at a prefix:
+
+```kotlin
+val subrouter = Router {
+    get("/foo", fun(): Handler = { Response() })
+}
+
+val router = Router {
+    mount("/subrouter", subrouter)
+}
+```
+
+```text
+curl http://localhost:3000/foo              # 404 Not Found
+curl http://localhost:3000/subrouter/foo    # 200 Ok
+```
+
+Or mount routers in a group:
+
+```kotlin
+val subrouter = Router {
+    get("/foo", fun(): Handler = { Response() })
+}
+
+val router = Router {
+    group("/group") {
+        mount("/subrouter", subrouter)
+    }
+}
+```
+
+**Note:** The mount prefix must be static. It does not support dynamic patterns like "/users/<id>".
 
 ## Cookies
 
