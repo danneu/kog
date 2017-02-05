@@ -13,11 +13,9 @@ package com.danneu.kog.negotiation
 // TODO: Maybe should just simplify it into Pair("en", null), Pair("en", "US") style stuff.
 
 
-interface Suffix {
+interface Locale {
     val code: String
-}
 
-object Locale {
     object Codes {
         val Australia = "au"
         val Belgium = "be"
@@ -49,7 +47,7 @@ object Locale {
         val Netherlands = "nl"
     }
 
-    enum class English(override val code: String) : Suffix {
+    enum class English(override val code: String) : Locale {
         Australia(Codes.Australia),
         Belize(Codes.Belize),
         Canada(Codes.Canada),
@@ -84,7 +82,7 @@ object Locale {
         }
     }
 
-    enum class French(override val code: String) : Suffix {
+    enum class French(override val code: String) : Locale {
         Belgium(Codes.Belgium),
         Canada(Codes.Canada),
         France(Codes.France),
@@ -105,7 +103,7 @@ object Locale {
         }
     }
 
-    enum class Dutch(override val code: String) : Suffix {
+    enum class Dutch(override val code: String) : Locale {
         Belgium(Codes.Belgium),
         Netherlands(Codes.Netherlands);
 
@@ -118,7 +116,7 @@ object Locale {
         }
     }
 
-    enum class Portuguese(override val code: String) : Suffix {
+    enum class Portuguese(override val code: String) : Locale {
         Brazil(Codes.Brazil),
         Portugal(Codes.Portugal);
 
@@ -131,7 +129,7 @@ object Locale {
         }
     }
 
-    enum class Sami(override val code: String) : Suffix {
+    enum class Sami(override val code: String) : Locale {
         Finland(Codes.Finland),
         Norway(Codes.Norway),
         Sweden(Codes.Sweden);
@@ -146,7 +144,7 @@ object Locale {
         }
     }
 
-    enum class German(override val code: String) : Suffix {
+    enum class German(override val code: String) : Locale {
         Austria(Codes.Austria),
         Switzerland(Codes.Switzerland),
         Germany(Codes.Germany),
@@ -165,7 +163,7 @@ object Locale {
         }
     }
 
-    enum class Italian(override val code: String) : Suffix {
+    enum class Italian(override val code: String) : Locale {
         Switzerland(Codes.Switzerland),
         Italy(Codes.Italy);
 
@@ -179,7 +177,7 @@ object Locale {
     }
 }
 
-sealed class Lang(val prefixCode: String, prettyName: String, val locale: Suffix? = null) {
+sealed class Lang(val prefixCode: String, prettyName: String, val locale: Locale? = null) {
     val code = prefixCode + if (locale != null) "-${locale.code.toUpperCase()}" else ""
     val prettyName = prettyName + if (locale != null) " (${locale.code.toUpperCase()})" else ""
 

@@ -4,7 +4,7 @@ import com.danneu.kog.ByteLength
 import java.io.InputStream
 import java.io.OutputStream
 
-class CopyLimitExceeded: Throwable()
+class CopyLimitExceeded : Exception()
 
 /** Copies InputStream to OutputStream, but bails with CopyLimitExceeded if input stream is longer than `limit` bytes.
  *
