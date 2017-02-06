@@ -583,7 +583,7 @@ that you want to serve assets from.
 ``` kotlin
 import com.danneu.kog.batteries.serveStatic
 
-val middleware = serveStatic("public")
+val middleware = serveStatic("public", maxAge = Duration.ofDays(365))
 val handler = { Response().text(":)") }
 
 Server(middleware(handler)).listen()
@@ -662,7 +662,7 @@ ETags are unnecessary to generate when you have a file's modification time.
 ``` kotlin
 val router = Router {
     // TODO: kog doesn't yet support mounting middleware on a prefix
-    use("/assets", notModified(etag = false), serveStatic("public"))
+    use("/assets", notModified(etag = false), serveStatic("public", maxAge = Duration.ofHours(4)))
     get("/") { Response().text("homepage")
 }
 ```

@@ -3,6 +3,7 @@ package com.danneu.kog
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.security.MessageDigest
+import java.time.Duration
 
 
 // Decodes www-form-urlencoded. Doesn't do any nesting for now.
@@ -73,4 +74,11 @@ fun ByteArray.md5(): ByteArray {
 
 fun ByteArray.sha1(): ByteArray {
     return MessageDigest.getInstance("SHA1").digest(this)
+}
+
+// Ensure a duration does not exceed a min and max length
+fun Duration.clamp(min: Duration, max: Duration) = when {
+    this < min -> min
+    this > max -> max
+    else -> this
 }

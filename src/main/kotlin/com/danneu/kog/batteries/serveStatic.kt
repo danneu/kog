@@ -5,12 +5,16 @@ import com.danneu.kog.Request
 import com.danneu.kog.Method
 import com.danneu.kog.Middleware
 import com.danneu.kog.Response
+import com.danneu.kog.clamp
 import java.io.File
 import java.nio.file.Path
 import java.time.Duration
 
 
-fun serveStatic(publicFolderName: String, maxAge: Duration = Duration.ZERO): Middleware = handler@ { handler ->
+fun serveStatic(publicFolderName: String, maxAge: Duration): Middleware = handler@ { handler ->
+    @Suppress("NAME_SHADOWING")
+    val maxAge = maxAge.clamp(Duration.ZERO, Duration.ofDays(365))
+
     val publicRoot = Thread.currentThread().contextClassLoader.getResource(publicFolderName)?.let {
         File(it.toURI())
     } ?: run {
