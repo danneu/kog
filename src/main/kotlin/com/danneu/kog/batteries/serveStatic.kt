@@ -28,6 +28,10 @@ fun serveStatic(publicFolderName: String, maxAge: Duration): Middleware = handle
             return handler(request)
         }
 
+        if (request.path == "/") {
+            return handler(request)
+        }
+
         val asset = publicRoot.resolve(File(request.path.drop(1)))
 
         // TODO: Test this since I made blind changes to it.
