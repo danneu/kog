@@ -18,6 +18,29 @@ Built on top of [Jetty](http://www.eclipse.org/jetty/).
 2. Middleware
 3. Functional composition
 
+## Vapid Flame-bait
+
+Each server simply responded with "hello world".
+
+|           | req/second | language   | comment |
+| --------- | ---------- | ---------- | ------- |
+| jetty     | 51,700     | java       | <http://www.eclipse.org/jetty/>
+| go 1.7    | 51,500     | go         | 
+| **kog**   | **46,500** | kotlin     |
+| rocket.rs | 46,200     | rust       | <http://rocket.rs/>
+| spark     | 41,700     | java       | <http://sparkjava.com/>
+| go 1.8    | 41,100     | go         | ouch <https://github.com/golang/go/issues/18964>
+| node      | 13,700     | javascript | non-clustered
+
+kog's hello world:
+
+```kotlin
+import com.danneu.kog.Server
+import com.danneu.kog.Response
+
+Server({ Response().text("hello world") }).listen(3000)
+```
+
 ## Table of Contents
 
 <!-- toc -->
