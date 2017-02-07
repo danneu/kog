@@ -32,7 +32,9 @@ class Request(
         formDecode(queryString).mutableCopy()
     }
 
-    val params: MutableMap<String, Any> = mutableMapOf()
+    val params by lazy {
+        mutableMapOf<String, Any>()
+    }
 
     // multipart middleware populates this with name -> file mappings for multipart uploads
     val uploads by lazy {
