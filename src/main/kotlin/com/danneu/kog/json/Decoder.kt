@@ -256,20 +256,9 @@ class Decoder <out T> (val decode: (JsonValue) -> Result<T, Exception>) {
             }
         }
 
-
-        // FIXME: Billy's first loop
         fun <A> oneOf(vararg ds: Decoder<A>): Decoder<A> = Decoder { value ->
-            var result: Result<A, Exception> = Result.Failure(Exception("None of the decoders matched"))
-            var bail = false
-            for (decoder in ds.iterator()) {
-                decoder(value).map { decoded ->
-                    result = Result.of(decoded)
-                    // break - can't break here
-                    bail = true
-                }
-                if (bail) { break }
-            }
-            result
+            ds.asSequence().map { it(value) }.find { it is Result.Success }
+                ?: Result.Failure(Exception("None of the decoders matched"))
         }
 
         // TODO: Generalize `object` function and allow chaining.
