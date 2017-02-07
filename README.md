@@ -1,5 +1,9 @@
 <p align="center">
-    <img src="cogwheel.gif">
+    <a href="https://kog.danneu.com/">
+        https://kog.danneu.com
+    </a>
+    <br>
+    <img src="cogwheel.gif" width="640" height="220">
 </p>
 
 # kog [![Jitpack](https://jitpack.io/v/com.danneu/kog.svg)](https://jitpack.io/#com.danneu/kog) [![Kotlin](https://img.shields.io/badge/kotlin-1.1.0%20beta-blue.svg)](https://kotlinlang.org/) [![Heroku](https://img.shields.io/badge/heroku-ready-8b59b6.svg)](#heroku-deploy) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog) [![Dependency Status](https://david-dm.org/danneu/kog.svg)](https://david-dm.org/danneu/kog)
@@ -577,8 +581,8 @@ Server(logger(handler)).listen()
 
 ### Static File Serving
 
-The serveStatic middleware checks the `request.path` against a given subdirectory in your `resources` directory
-that you want to serve assets from.
+The serveStatic middleware checks the `request.path` against a directory
+that you want to serve static files from.
 
 ``` kotlin
 import com.danneu.kog.batteries.serveStatic
@@ -589,7 +593,7 @@ val handler = { Response().text(":)") }
 Server(middleware(handler)).listen()
 ```
 
-If we have a `src/main/kotlin/.../resources/public` folder in our project root with a file 
+If we have a `public` folder in our project root with a file 
 `message.txt`, then the responses will look like this:
 
     $ http localhost:3000/foo
