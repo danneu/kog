@@ -906,12 +906,6 @@ This example application will be called "com.danneu.kogtest".
 
 I'm not sure what the minimal boilerplate is, but the following is what worked for me.
 
-In `./system.properties`:
-
-```
-java.runtime.version=1.8
-```
-
 In `./build.gradle`:
 
 ``` groovy
