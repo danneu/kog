@@ -11,16 +11,18 @@ import java.nio.file.Path
 import java.time.Duration
 
 
-fun serveStatic(publicFolderName: String, maxAge: Duration): Middleware = handler@ { handler ->
+fun serveStatic(publicFolderPath: String, maxAge: Duration): Middleware = handler@ { handler ->
     @Suppress("NAME_SHADOWING")
     val maxAge = maxAge.clamp(Duration.ZERO, Duration.ofDays(365))
 
-    val publicRoot = Thread.currentThread().contextClassLoader.getResource(publicFolderName)?.let {
-        File(it.toURI())
-    } ?: run {
-        System.err.println("WARN [serveStatic] Could not find public resource folder: \"$publicFolderName\". serveStatic skipped...")
+    val publicRoot = File(publicFolderPath)
+
+    if (!publicRoot.isDirectory) {
+        System.err.println("WARN [serveStatic] Could not find public resource folder: \"$publicFolderPath\". serveStatic skipped...")
         return@handler { req -> handler(req) }
     }
+
+    println("[serveStatic] will be serving from: ${publicRoot.absolutePath}")
 
     fun(request: Request): Response {
         // Only serve assets to HEAD or GET
