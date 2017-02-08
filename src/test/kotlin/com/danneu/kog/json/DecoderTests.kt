@@ -68,6 +68,17 @@ class DecoderTests {
     }
 
     @Test
+    fun testKeyValuePairsIteration() {
+        // This test exists because I had an impl that used .asSequence() + .firstOrNull() to attempt to short-circuit
+        // on first decode failure, but ended up then iterating twice on successful decode, once to check for failure,
+        // and then again to return list of pairs.
+        var times = 0
+        val decoder = Decoder.keyValuePairs(Decoder.int.map { ++times; it })
+        decoder(Json.parse("""{"a": 1, "b": 2}"""))
+        assertEquals("iterates once", 2, times)
+    }
+
+    @Test
     fun testMapOf() {
         """{"a": "x", "b": "y"}""".ok(mapOf("a" to "x", "b" to "y"), Decoder.mapOf(Decoder.string))
         """{"a": 100, "b": 200}""".ok(mapOf("a" to 100, "b" to 200), Decoder.mapOf(Decoder.int))

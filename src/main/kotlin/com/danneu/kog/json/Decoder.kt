@@ -10,6 +10,10 @@ import com.eclipsesource.json.Json
 import java.io.Reader
 
 
+// TODO: Rewrite collection validators so that they short-circuit on failure instead of failing
+//       after running a decoder on each item.
+
+
 fun Result.Companion.all(vararg results: Result<*, Exception>): Result<List<*>, Exception> {
     val validation = Validation(*results)
     return if (validation.hasFailure) {
@@ -60,22 +64,6 @@ class Decoder <out T> (val decode: (JsonValue) -> Result<T, Exception>) {
             when {
                 it.isNumber -> Result.of(it.asInt())
                 else -> Result.error(Exception("Expected Int but got ${it.javaClass.simpleName}"))
-            }
-        }
-
-        fun <A> listOf(d1: Decoder<A>): Decoder<List<A>> = Decoder {
-            when {
-                it.isArray -> {
-                    val coll = it.asArray().toList()
-                    val results: List<Result<A, Exception>> = coll.map { item: JsonValue -> d1(item) }
-                    val validation = Validation(*results.toTypedArray())
-                    if (!validation.hasFailure) {
-                        Result.of(results.map(Result<A, Exception>::get))
-                    } else {
-                        Result.error(validation.failures.first())
-                    }
-                }
-                else -> Result.error(Exception("Expected List but got ${it.javaClass.simpleName}"))
             }
         }
 
@@ -156,45 +144,40 @@ class Decoder <out T> (val decode: (JsonValue) -> Result<T, Exception>) {
         fun <T> nullable(d1: Decoder<T>): Decoder<T?> = Decoder { value ->
             when {
                 value.isNull -> Result.of { null }
-                else -> d1.decode(value) //.map { Option.Some(it) }
+                else -> d1.decode(value)
             }
-
         }
 
-
-        inline fun <reified A> arrayOf(d1: Decoder<A>): Decoder<Array<A>> = Decoder {
+        fun <A> listOf(d1: Decoder<A>): Decoder<List<A>> = Decoder {
             when {
                 it.isArray -> {
-                    val array = it.asArray()
-                    val results: Array<Result<A, Exception>> = array.map { item: JsonValue -> d1(item) }.toTypedArray()
-                    val validation = Validation(*results)
-                    if (!validation.hasFailure) {
-                        Result.of(results.map(Result<A, Exception>::get).toTypedArray())
-                    } else {
-                        Result.error(validation.failures.first())
-                    }
+                    // Short-circuit on first decode fail
+                    it.asArray().map { value ->
+                        val result = d1(value)
+                        @Suppress("UNCHECKED_CAST")
+                        if (result is Result.Failure) return@Decoder result as Result.Failure<List<A>, Exception>
+                        result.get()
+                    }.let { Result.of(it) }
                 }
-                else -> Result.error(Exception("Expected Array but got ${it.javaClass.simpleName}"))
+                else -> Result.error(Exception("Expected JSON array but got ${it.javaClass.simpleName}"))
             }
         }
+
+        inline fun <reified A> arrayOf(d1: Decoder<A>): Decoder<Array<A>> = this.listOf(d1).map { it.toTypedArray() }
 
         // TODO: pairsOf(left, right)?
         fun <A> keyValuePairs(d1: Decoder<A>): Decoder<List<Pair<String, A>>> = Decoder {
             when {
                 it.isObject -> {
-                    val obj = it.asObject()
-                    // TODO: Rewrite these so they short-circuit on failure instead of failing after parsing the whole list
-                    val results = obj.toList().map { member ->
-                        d1(member.value).map { Pair(member.name, it) }
-                    }
-                    val validation = Validation(*results.toTypedArray())
-                    if (!validation.hasFailure) {
-                        Result.of(results.map { result -> result.get() })
-                    } else {
-                        Result.error(validation.failures.first())
-                    }
+                    // Short-circuit on first decode fail
+                    it.asObject().map { member ->
+                        val result = d1(member.value).map { value -> member.name to value }
+                        @Suppress("UNCHECKED_CAST")
+                        if (result is Result.Failure) return@Decoder result as Result.Failure<List<Pair<String, A>>, Exception>
+                        result.get()
+                    }.let { pairs -> Result.of(pairs) }
                 }
-                else -> Result.error(Exception("Expected Object but got ${it.javaClass.simpleName}"))
+                else -> Result.error(Exception("Expected JSON object but got ${it.javaClass.simpleName}"))
             }
         }
 
