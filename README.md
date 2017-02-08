@@ -1,8 +1,8 @@
 <p align="center">
     <a href="https://kog.danneu.com/">
-        https://kog.danneu.com
+        kog.danneu.com
     </a>
-    <br>
+    <br><br>
     <img src="cogwheel.gif" width="640" height="220">
 </p>
 
@@ -11,6 +11,13 @@
 A simple, experimental Kotlin web framework inspired by Clojure's Ring.
 
 Built on top of [Jetty](http://www.eclipse.org/jetty/).
+
+```kotlin
+import com.danneu.kog.Server
+import com.danneu.kog.Response
+
+Server({ Response().text("hello world") }).listen(3000)
+```
 
 ## Goals
 
@@ -29,17 +36,8 @@ Each server simply responded with "hello world".
 | **kog**   | **46,500** | kotlin     |
 | rocket.rs | 46,200     | rust       | <http://rocket.rs/>
 | spark     | 41,700     | java       | <http://sparkjava.com/>
-| go 1.8    | 41,100     | go         | ouch <https://github.com/golang/go/issues/18964>
+| go 1.8    | 41,100     | go         | <https://github.com/golang/go/issues/18964>
 | node      | 13,700     | javascript | non-clustered
-
-kog's hello world:
-
-```kotlin
-import com.danneu.kog.Server
-import com.danneu.kog.Response
-
-Server({ Response().text("hello world") }).listen(3000)
-```
 
 ## Table of Contents
 
