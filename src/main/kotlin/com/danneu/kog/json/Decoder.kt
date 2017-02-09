@@ -69,16 +69,11 @@ class Decoder <out T> (val decode: (JsonValue) -> Result<T, Exception>) {
 
         fun <A> get(key: String, d1: Decoder<A>): Decoder<A> = Decoder {
             when {
-                it.isObject -> {
-                    val obj = it.asObject()
-                    val fieldVal = obj.get(key)
-                    if (fieldVal != null) {
-                        d1(fieldVal)
-                    } else {
-                        Result.error(Exception("Expected field \"$key\" but it was missing"))
-                    }
-                }
-                else -> Result.error(Exception("Expected object but got ${it.javaClass.simpleName}"))
+                it.isObject ->
+                    it.asObject().get(key)?.let { d1(it) }
+                        ?: Result.error(Exception("Expected field \"$key\" but it was missing"))
+                else ->
+                    Result.error(Exception("Expected object but got ${it.javaClass.simpleName}"))
             }
         }
 

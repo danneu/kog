@@ -72,10 +72,7 @@ sealed class Result<out V, out E : Exception> {
 
         override fun toString() = "[Success: $value]"
 
-        override fun hashCode(): Int = run {
-            println("hashCode succ")
-            value?.hashCode() ?: 0
-        }
+        override fun hashCode() = value?.hashCode() ?: 0
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true
@@ -105,9 +102,9 @@ sealed class Result<out V, out E : Exception> {
         // Factory methods
         fun <E : Exception> error(ex: E) = Failure<Nothing, E>(ex)
 
-         fun <V> of(value: V): Result<V, Exception> {
-             return Success<V, Nothing>(value)
-         }
+        fun <V> of(value: V): Result<V, Exception> {
+            return Success<V, Nothing>(value)
+        }
 
         fun <V> of(f: () -> V): Result<V, Exception> = try {
             Success(f())
@@ -116,15 +113,5 @@ sealed class Result<out V, out E : Exception> {
         }
     }
 
-}
-
-
-fun main(args: Array<String>) {
-    println("hello")
-    val r1 = Result.of(42)
-    println(r1.get())
-    val r2: Result<Int?, Exception> = Result.of { null }
-    println(r2.get())
-    println(r2.map { if (it == null) 1 else 2 }.get())
 }
 
