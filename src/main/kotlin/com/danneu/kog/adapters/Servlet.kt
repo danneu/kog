@@ -5,6 +5,7 @@ import com.danneu.kog.Handler
 import com.danneu.kog.Header
 import com.danneu.kog.HeaderPair
 import com.danneu.kog.Method
+import com.danneu.kog.Protocol
 import com.danneu.kog.Request
 import com.danneu.kog.Response
 import java.util.Locale
@@ -42,14 +43,14 @@ class Servlet(val handler: Handler) : HttpServlet() {
               serverPort = r.serverPort,
               serverName = r.serverName,
               remoteAddr = r.remoteAddr,
-              href = r.requestURL.toString() + if (r.queryString != null) { "?" + r.queryString } else { "" },
+              href = r.requestURL.toString() + if (r.queryString != null) "?" + r.queryString else "",
               queryString = r.queryString,
               scheme = r.scheme,
-              method = Method.fromString(r.method.toLowerCase(Locale.ENGLISH)),
-              protocol = r.protocol,
+              method = Method.fromString(r.method.toLowerCase()),
+              protocol = Protocol.fromString(r.protocol),
               headers = expandHeaders(r),
               type = r.contentType?.split(";", limit = 2)?.get(0)?.toLowerCase(),
-              length = if (r.contentLength >= 0) { r.contentLength } else { null },
+              length = if (r.contentLength >= 0) r.contentLength else null,
               charset = r.characterEncoding?.toLowerCase(),
               //sslClientCert = r.getAttribute("javax.servlet.request.X509Certificate").first()
               body = r.inputStream,

@@ -1,5 +1,6 @@
 package com.danneu.kog
 
+import com.danneu.kog.Protocol.HTTP_1_1
 import com.danneu.kog.batteries.multipart.SavedUpload
 import com.danneu.kog.cookies.parse
 import com.danneu.kog.json.Decoder
@@ -18,7 +19,7 @@ class Request(
   var queryString: String?,
   val scheme: String,
   var method: Method,
-  val protocol: String,
+  val protocol: Protocol,
   override val headers: MutableList<HeaderPair>,
   val type: String?,
   val length: Int?, // Either >= 0 or null
@@ -27,7 +28,6 @@ class Request(
   val body: ServletInputStream, // Note: Could just be InputStream if I'm never going to use ServerInputStream methods
   var path: String
 ) : HasHeaders<Request> {
-
     val query by lazy {
         formDecode(queryString).mutableCopy()
     }
@@ -77,7 +77,7 @@ class Request(
         // Check method
         if (this.method != Method.Get) return false
         // Check protocol
-        if (this.protocol != "HTTP/1.1") return false
+        if (this.protocol != HTTP_1_1) return false
         return true
     }
 
@@ -108,7 +108,7 @@ fun Request.Companion.toy(
     path: String = "/",
     queryString: String = "foo=bar",
     headers: MutableList<HeaderPair> = mutableListOf(),
-    protocol: String = "HTTP/1.1"
+    protocol: Protocol = HTTP_1_1
 ): Request {
     return Request(
       serverPort = 3000,
