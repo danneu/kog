@@ -39,12 +39,12 @@ class Response(
     // BODIES
 
     fun html(html: String) = apply {
-        setHeader(Header.ContentType, ContentType.Html)
+        setHeader(Header.ContentType, ContentType.Html.toString())
         body = ResponseBody.String(html)
     }
 
     fun text(text: String) = apply {
-        setHeader(Header.ContentType, ContentType.Text)
+        setHeader(Header.ContentType, ContentType.Text.toString())
         body = ResponseBody.String(text)
     }
 
@@ -54,11 +54,11 @@ class Response(
     }
 
     fun json(value: JsonValue) = apply {
-        setHeader(Header.ContentType, ContentType.Json)
+        setHeader(Header.ContentType, ContentType.Json.toString())
         body = ResponseBody.String(value.toString())
     }
 
-    fun stream(input: InputStream, contentType: String = ContentType.OctetStream) = apply {
+    fun stream(input: InputStream, contentType: String = ContentType.OctetStream.toString()) = apply {
         setHeader(Header.ContentType, contentType)
         body = ResponseBody.InputStream(input)
     }
@@ -67,7 +67,7 @@ class Response(
         body = ResponseBody.File(file)
         // Hmm, already doing it at finalize time. TODO: Rethink streamable interface. need length?
         setHeader(Header.ContentLength, file.length().toString())
-        setHeader(Header.ContentType, contentType ?: database.fromExtension(file.extension) ?: ContentType.OctetStream)
+        setHeader(Header.ContentType, contentType ?: database.fromExtension(file.extension) ?: ContentType.OctetStream.toString())
     }
 
     fun writer(contentType: String, writeTo: (java.io.Writer) -> Unit): Response = apply {
@@ -143,14 +143,5 @@ class Response(
         // 302 temporary redirect
         fun found() = Response(Status.Found)
         fun redirect302() = Response(Status.Found)
-
-        // Speed up micro-bench :D
-        // This should probably get Headers.kt treatment to avoid strings in code for the comment content types.
-        object ContentType {
-            val Html = "text/html"
-            val Text = "text/plain"
-            val Json = "application/json"
-            val OctetStream = "application/octet-stream"
-        }
     }
 }

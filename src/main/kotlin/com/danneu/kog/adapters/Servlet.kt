@@ -1,5 +1,6 @@
 package com.danneu.kog.adapters
 
+import com.danneu.kog.ContentType
 import javax.servlet.http.HttpServlet
 import com.danneu.kog.Handler
 import com.danneu.kog.Header
@@ -8,7 +9,6 @@ import com.danneu.kog.Method
 import com.danneu.kog.Protocol
 import com.danneu.kog.Request
 import com.danneu.kog.Response
-import java.util.Locale
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
@@ -49,10 +49,9 @@ class Servlet(val handler: Handler) : HttpServlet() {
               method = Method.fromString(r.method.toLowerCase()),
               protocol = Protocol.fromString(r.protocol),
               headers = expandHeaders(r),
-              type = r.contentType?.split(";", limit = 2)?.get(0)?.toLowerCase(),
+              type = r.contentType?.split(";", limit = 2)?.get(0)?.let { ContentType.fromString(it) },
               length = if (r.contentLength >= 0) r.contentLength else null,
               charset = r.characterEncoding?.toLowerCase(),
-              //sslClientCert = r.getAttribute("javax.servlet.request.X509Certificate").first()
               body = r.inputStream,
               path = r.pathInfo ?: "/"
             )

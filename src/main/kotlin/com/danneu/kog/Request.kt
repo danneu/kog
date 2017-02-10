@@ -3,7 +3,8 @@ package com.danneu.kog
 import com.danneu.kog.Protocol.HTTP_1_1
 import com.danneu.kog.batteries.multipart.SavedUpload
 import com.danneu.kog.cookies.parse
-import com.danneu.kog.json.Decoder
+import com.danneu.kog.json.Decoder as JsonDecoder
+import com.danneu.kog.form.Decoder as FormDecoder
 import com.danneu.kog.negotiation.Negotiator
 import com.danneu.kog.result.Result
 import com.danneu.kog.result.flatMap
@@ -21,10 +22,9 @@ class Request(
   var method: Method,
   val protocol: Protocol,
   override val headers: MutableList<HeaderPair>,
-  val type: String?,
+  val type: ContentType?,
   val length: Int?, // Either >= 0 or null
   val charset: String?,
-  // TODO: val sslClientCert
   val body: ServletInputStream, // Note: Could just be InputStream if I'm never going to use ServerInputStream methods
   var path: String
 ) : HasHeaders<Request> {
@@ -49,12 +49,17 @@ class Request(
         parse(getHeader(Header.Cookie)).mutableCopy()
     }
 
-    // TODO: At framework level, need to avoid reading stream when it is already being/been consumed or come up with a deliberate gameplan.
-    fun <T> json(decoder: Decoder<T>): Result<T, Exception> {
-        return Decoder.tryParse(utf8).flatMap { jsonValue -> decoder(jsonValue) }
+    // TODO: Avoid consuming body that's already been drained
+    fun <T> json(decoder: JsonDecoder<T>): Result<T, Exception> {
+        return JsonDecoder.tryParse(utf8).flatMap { decoder(it) }
     }
 
-    // TODO: Handle case where body stream is already read
+    // TODO: Avoid consuming body that's already been drained
+    fun <T> form(decoder: FormDecoder<T>): Result<T, Exception> {
+        return FormDecoder.tryParse(utf8).flatMap { decoder(it) }
+    }
+
+    // TODO: Avoid consuming body that's already been drained
     val utf8: String by lazy {
         body.readBytes().toString(Charsets.UTF_8)
     }

@@ -1,5 +1,6 @@
 package com.danneu.kog.batteries
 
+import com.danneu.kog.ContentType
 import com.danneu.kog.Header
 import com.danneu.kog.Request
 import com.danneu.kog.Middleware
@@ -70,7 +71,7 @@ fun multipart(whitelist: Whitelist, ttl: Duration = Duration.ofHours(1), interva
     })
 
     fun(req: Request): Response {
-        if (req.type != "multipart/form-data") {
+        if (req.type != ContentType.MultipartForm) {
             return handler(req)
         }
 
