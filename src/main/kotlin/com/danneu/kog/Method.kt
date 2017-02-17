@@ -18,14 +18,14 @@ enum class Method {
     Unknown;
 
     companion object {
-        val GET = "GET"
-        val HEAD = "HEAD"
-        val POST = "POST"
-        val PUT = "PUT"
-        val DELETE = "DELETE"
-        val OPTIONS = "OPTIONS"
-        val TRACE = "TRACE"
-        val PATCH = "PATCH"
+        const val GET = "GET"
+        const val HEAD = "HEAD"
+        const val POST = "POST"
+        const val PUT = "PUT"
+        const val DELETE = "DELETE"
+        const val OPTIONS = "OPTIONS"
+        const val TRACE = "TRACE"
+        const val PATCH = "PATCH"
 
         fun fromString(value: String) = when (value.toUpperCase()) {
             GET -> Get

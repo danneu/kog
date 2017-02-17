@@ -15,12 +15,12 @@ sealed class ContentType(private val string: String) {
     object MultipartForm : ContentType(MULTIPART_FORM_DATA)
 
     companion object {
-        private val TEXT_HTML = "text/html"
-        private val TEXT_PLAIN = "text/plain"
-        private val APPLICATION_JSON = "application/json"
-        private val APPLICATION_OCTET_STREAM = "application/octet-stream"
-        private val APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded"
-        private val MULTIPART_FORM_DATA = "multipart/form-data"
+        private const val TEXT_HTML = "text/html"
+        private const val TEXT_PLAIN = "text/plain"
+        private const val APPLICATION_JSON = "application/json"
+        private const val APPLICATION_OCTET_STREAM = "application/octet-stream"
+        private const val APPLICATION_X_WWW_FORM_URLENCODED = "application/x-www-form-urlencoded"
+        private const val MULTIPART_FORM_DATA = "multipart/form-data"
 
         // FIXME: Assumes charset is not attached
         fun fromString(string: String): ContentType {
