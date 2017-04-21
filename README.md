@@ -6,7 +6,7 @@
     <img src="cogwheel.gif" width="640" height="220">
 </p>
 
-# kog [![Jitpack](https://jitpack.io/v/com.danneu/kog.svg)](https://jitpack.io/#com.danneu/kog) [![Kotlin](https://img.shields.io/badge/kotlin-1.1.0-blue.svg)](https://kotlinlang.org/) [![Heroku](https://img.shields.io/badge/heroku-ready-8b59b6.svg)](#heroku-deploy) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog) [![Dependency Status](https://david-dm.org/danneu/kog.svg)](https://david-dm.org/danneu/kog) ![Stability](https://img.shields.io/badge/stability-experimental-orange.svg)
+# kog [![Jitpack](https://jitpack.io/v/com.danneu/kog.svg)](https://jitpack.io/#com.danneu/kog) [![Kotlin](https://img.shields.io/badge/kotlin-1.1-blue.svg)](https://kotlinlang.org/) [![Heroku](https://img.shields.io/badge/heroku-ready-8b59b6.svg)](#heroku-deploy) [![Build Status](https://travis-ci.org/danneu/kog.svg?branch=master)](https://travis-ci.org/danneu/kog) [![Dependency Status](https://david-dm.org/danneu/kog.svg)](https://david-dm.org/danneu/kog) ![Stability](https://img.shields.io/badge/stability-experimental-orange.svg)
 
 A simple, experimental Kotlin web framework inspired by Clojure's Ring.
 
