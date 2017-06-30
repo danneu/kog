@@ -803,7 +803,7 @@ Templating libraries generally generate an HTML string. Just pass it to `Respons
 
 The j2html library works well with the minimal theme.
 
-    compile "com.j2html:j2html:0.7"
+    compile "com.j2html:j2html:1.0.0"
 
 Here's an example server with a "/" route that renders a file-upload form that posts to a "/upload" route.
 
