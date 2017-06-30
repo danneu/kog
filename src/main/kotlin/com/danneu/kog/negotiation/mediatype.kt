@@ -29,7 +29,7 @@ data class MediaType(val type: String, val subtype: String, val q: Double = 1.0)
     }
 
     companion object {
-        val regex = Regex("""^\s*([^\s\/;]+)\/([^;\s]+)\s*(?:;(.*))?$""")
+        val regex = Regex("""^\s*([^\s/;]+)/([^;\s]+)\s*(?:;(.*))?$""")
 
         // TODO: Test malformed headers
 

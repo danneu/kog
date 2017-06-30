@@ -1,5 +1,7 @@
 package com.danneu.kog.negotiation
 
+import kotlin.comparisons.compareBy
+
 // A **goofy** wrapper around accept-language prefix/suffix pairs like en, en-GB, en-US.
 //
 // The implementation got a bit gnarly since I was reverse-engineering how it should work from
@@ -16,53 +18,53 @@ interface Locale {
     val code: String
 
     object Codes {
-        val Argentina = "ar"
-        val Australia = "au"
-        val Austria = "at"
-        val Belgium = "be"
-        val Belize = "bz"
-        val Bolivia = "bo"
-        val Brazil = "br"
-        val Canada = "ca"
-        val Caribbean = "cb"
-        val Chile = "cl"
-        val Colombia = "co"
-        val CostaRica = "cr"
-        val DominicanRepublic = "do"
-        val Ecuador = "ec"
-        val ElSalvador = "sv"
-        val Finland = "fi"
-        val France = "fr"
-        val Germany = "de"
-        val Guatemala = "gt"
-        val Honduras = "hn"
-        val Ireland = "ie"
-        val Italy = "it"
-        val Jamaica = "jm"
-        val Liechtenstein = "li"
-        val Luxembourg = "lu"
-        val Mexico = "mx"
-        val Monaco = "mc"
-        val Netherlands = "nl"
-        val NewZealand = "nz"
-        val Nicaragua = "ni"
-        val Norway = "no"
-        val Panama = "pa"
-        val Paraguay = "py"
-        val Peru = "pe"
-        val Philippines = "ph"
-        val Portugal = "pt"
-        val PuertoRico = "pr"
-        val SouthAfrica = "za"
-        val Spain = "es"
-        val Sweden = "se"
-        val Switzerland = "ch"
-        val TrinidadAndTobago = "tt"
-        val UnitedKingdom = "gb"
-        val UnitedStates = "us"
-        val Uruguay = "uy"
-        val Venezuela = "ve"
-        val Zimbabwe = "zw"
+        const val Argentina = "ar"
+        const val Australia = "au"
+        const val Austria = "at"
+        const val Belgium = "be"
+        const val Belize = "bz"
+        const val Bolivia = "bo"
+        const val Brazil = "br"
+        const val Canada = "ca"
+        const val Caribbean = "cb"
+        const val Chile = "cl"
+        const val Colombia = "co"
+        const val CostaRica = "cr"
+        const val DominicanRepublic = "do"
+        const val Ecuador = "ec"
+        const val ElSalvador = "sv"
+        const val Finland = "fi"
+        const val France = "fr"
+        const val Germany = "de"
+        const val Guatemala = "gt"
+        const val Honduras = "hn"
+        const val Ireland = "ie"
+        const val Italy = "it"
+        const val Jamaica = "jm"
+        const val Liechtenstein = "li"
+        const val Luxembourg = "lu"
+        const val Mexico = "mx"
+        const val Monaco = "mc"
+        const val Netherlands = "nl"
+        const val NewZealand = "nz"
+        const val Nicaragua = "ni"
+        const val Norway = "no"
+        const val Panama = "pa"
+        const val Paraguay = "py"
+        const val Peru = "pe"
+        const val Philippines = "ph"
+        const val Portugal = "pt"
+        const val PuertoRico = "pr"
+        const val SouthAfrica = "za"
+        const val Spain = "es"
+        const val Sweden = "se"
+        const val Switzerland = "ch"
+        const val TrinidadAndTobago = "tt"
+        const val UnitedKingdom = "gb"
+        const val UnitedStates = "us"
+        const val Uruguay = "uy"
+        const val Venezuela = "ve"
+        const val Zimbabwe = "zw"
     }
 
     enum class English(override val code: String) : Locale {
@@ -271,6 +273,8 @@ sealed class Lang(val prefixCode: String, prettyName: String, val locale: Locale
             else -> false
         }
     }
+
+    override fun hashCode() = this.code.toLowerCase().hashCode()
 
     override fun toString() = code
 
