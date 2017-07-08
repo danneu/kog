@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServletResponse
 import org.eclipse.jetty.util.thread.QueuedThreadPool
 import org.eclipse.jetty.io.EofException
 import com.danneu.kog.adapters.Servlet
-import com.danneu.kog.middleware.composeMiddleware
+import com.danneu.kog.middleware.compose
 import org.eclipse.jetty.server.handler.ContextHandler
 import org.eclipse.jetty.server.handler.HandlerCollection
 import java.time.Duration
@@ -124,7 +124,7 @@ class Server @JvmOverloads constructor(
 
 
 // The server's stack of top-level middleware. This should always wrap the user's final handler.
-fun Server.Companion.middleware(): Middleware = composeMiddleware(
+fun Server.Companion.middleware(): Middleware = compose(
     // First middleware in this list touches request first and response last
     wrapHead(),
     wrapFinalize(),

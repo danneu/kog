@@ -1,7 +1,6 @@
 package com.danneu.kog
 
-import com.danneu.kog.middleware.composeMiddleware
-import com.danneu.kog.middleware.identity
+import com.danneu.kog.middleware.compose
 import java.util.UUID
 import java.util.regex.Matcher
 import java.util.regex.Pattern
@@ -32,7 +31,7 @@ fun <A> List<A>.valuesAt(indexes: List<Int>): List<A> {
 }
 
 class Route(val method: Method, var pattern: String, val recv: Function<Handler>, wares: List<Middleware> = emptyList()) {
-    val middleware = composeMiddleware(wares)
+    val middleware = compose(wares)
     val types = recv.types()
 
     val paramIdxs = pattern.segments().mapIndexed { idx, seg ->
@@ -140,10 +139,10 @@ class Dispatcher(val routes: List<Route>) {
 @RouterDslMarker
 class Router(val middleware: Middleware, block: Router.() -> Unit) {
     @JvmOverloads constructor(wares: List<Middleware> = emptyList(), block: Router.() -> Unit):
-        this(composeMiddleware(wares), block)
+        this(compose(wares), block)
 
     constructor(vararg wares: Middleware, block: Router.() -> Unit):
-        this(composeMiddleware(*wares), block)
+        this(compose(wares.asIterable()), block)
 
     val routes = mutableListOf<Route>()
     val dispatcher: Dispatcher
@@ -194,7 +193,7 @@ class Router(val middleware: Middleware, block: Router.() -> Unit) {
         routes.add(Route(Method.Options, pattern, recv, wares))
 
     fun group(prefixPattern: String, wares: List<Middleware> = emptyList(), block: RouteGroup.() -> Unit) {
-        val group = RouteGroup(prefixPattern, composeMiddleware(wares))
+        val group = RouteGroup(prefixPattern, compose(wares))
         group.block()
         group.routes.forEach { route -> routes.add(route) }
     }
@@ -218,7 +217,7 @@ fun concatPatterns(vararg patterns: String): String {
 }
 
 @RouterDslMarker
-class RouteGroup(val prefixPattern: String, val middleware: Middleware = identity) {
+class RouteGroup(val prefixPattern: String, val middleware: Middleware = { it }) {
     val routes = mutableListOf<Route>()
 
     fun get(pattern: String, recv: Function<Handler>) =
@@ -251,7 +250,7 @@ class RouteGroup(val prefixPattern: String, val middleware: Middleware = identit
         routes.add(Route(Method.Options, concatPatterns(prefixPattern, pattern), recv, listOf(middleware).plus(wares)))
 
     fun group(subPrefixPattern: String, wares: List<Middleware> = emptyList(), block: RouteGroup.() -> Unit) {
-        val group = RouteGroup(concatPatterns(prefixPattern, subPrefixPattern), composeMiddleware(wares))
+        val group = RouteGroup(concatPatterns(prefixPattern, subPrefixPattern), compose(wares))
         group.block()
         group.routes.forEach { route -> routes.add(route) }
     }

@@ -6,23 +6,23 @@ import com.danneu.kog.Middleware
  *
  *  Example:
  *
- *      composeMiddleware(a, b, c) becomes (handler) -> a(b(c(handler)))
+ *      compose(a, b, c) becomes (handler) -> a(b(c(handler)))
  *
  *  `a` will touch the request first as it's coming in, and the response last as it's going out.
  *
  *  Arguments may be null to make it easier to conditionally add them, they'll just get filtered out:
  *
- *      composeMiddleware(
+ *      compose(
  *          serveStatic("public"),
  *          if (KOG_ENV == Development) logger() else null
  *      )
  */
-fun composeMiddleware(wares: Collection<Middleware?>): Middleware {
+fun compose(wares: Iterable<Middleware?>): Middleware {
     return wares
         .filterNotNull()
-        .fold(identity, { final, next -> { handler -> final(next(handler)) } })
+        .fold({ ware -> ware }, { final, next -> { handler -> final(next(handler)) } })
 }
 
-fun composeMiddleware(vararg wares: Middleware?): Middleware {
-    return composeMiddleware(wares.asList())
+fun compose(vararg wares: Middleware?): Middleware {
+    return compose(wares.asIterable())
 }
