@@ -2,10 +2,10 @@
 package com.danneu.kog
 
 import com.danneu.kog.cookies.Cookie
-import com.danneu.kog.json.JsonValue
+import com.danneu.json.JsonValue
 import com.danneu.kog.mime.database
 import org.eclipse.jetty.websocket.api.Session
-import com.danneu.kog.json.Encoder as JE
+import com.danneu.json.Encoder as JE
 import java.io.File
 import java.io.InputStream
 

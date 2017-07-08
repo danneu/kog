@@ -197,7 +197,7 @@ var handler: Handler = { request ->
   request.path                     // "/users"
   request.method                   // Method.get
   request.params                   // Map<String, Any>
-  request.json(decoder)            // Result<*, Exception>
+  request.json(decoder)            // com.danneu.result.Result<T, Exception>
   request.utf8()                   // "{\"foo\": \"bar\"}"
   request.headers                  // [(Header.Host, "example.com"), ...]
   request.getHeader(Header.Host)   // "example.com"?
@@ -279,16 +279,18 @@ val middleware: Middleware = { handler -> handler@ { req ->
 kog wraps the small, fast, and simple [ralfstx/minimal-json][minimal-json] library
 with combinators for working with JSON.
 
+**Note:** This has been extracted to <https://github.com/danneu/kotlin-json-combinator>.
+
 [minimal-json]: https://github.com/ralfstx/minimal-json#performance
 
 ### JSON Encoding
 
 kog's built-in JSON encoder has these methods: `.obj()`, `.array()`, `.num()`, `.str()`, `.null()`, `.bool()`.
 
-They all return `kog.json.encode.JsonValue` objects that you pass to `Response#json`.
+They all return `com.danneu.json.JsonValue` objects that you pass to `Response#json`.
 
 ``` kotlin
-import com.danneu.kog.json.Encoder as JE
+import com.danneu.json.Encoder as JE
 
 val handler: Handler = { req ->
   Response().json(JE.obj("hello" to JE.str("world")))
@@ -296,7 +298,7 @@ val handler: Handler = { req ->
 ```
 
 ``` kotlin
-import com.danneu.kog.json.Encoder as JE
+import com.danneu.json.Encoder as JE
 
 val handler: Handler = { req ->
   Response().json(JE.array(JE.str("a"), JE.str("b"), JE.str("c")))
@@ -306,7 +308,7 @@ val handler: Handler = { req ->
 ```
 
 ``` kotlin
-import com.danneu.kog.json.Encoder as JE
+import com.danneu.json.Encoder as JE
 
 val handler: Handler = { req ->
   Response().json(JE.obj(
@@ -331,12 +333,11 @@ kog comes with a declarative JSON parser combinator inspired by Elm's.
 `Decoder<T>` is a decoder that will return `Result<T, Exception>` when
 invoked on a JSON string.
 
-Check out <https://github.com/kittinunf/Result> for more info about the
-Result object.
+**Note:** The result monad has been extracted to <https://github.com/danneu/kotlin-result>.
 
 ``` kotlin
-import com.danneu.kog.json.Decoder as JD
-import com.danneu.kog.json.Encoder as JE
+import com.danneu.json.Decoder as JD
+import com.danneu.json.Encoder as JE
 
 // example request payload: [1, 2, 3]
 val handler = { request ->
@@ -354,8 +355,8 @@ We can use `Result#getOrElse()` to rewrite the previous example so that
 invalid user-input will defaults to an empty list of numbers.
 
 ``` kotlin
-import com.danneu.kog.json.Decoder as JD
-import com.danneu.kog.json.Encoder as JE
+import com.danneu.json.Decoder as JD
+import com.danneu.json.Encoder as JE
 
 // example request payload: [1, 2, 3]
 val handler = { req ->
@@ -368,8 +369,8 @@ This authentication handler parses the username/password combo from
 the request's JSON body:
 
 ``` kotlin
-import com.danneu.kog.json.Decoder as JD
-import com.danneu.kog.json.Encoder as JE
+import com.danneu.json.Decoder as JD
+import com.danneu.json.Encoder as JE
 
 // example request payload: {"user": {"uname": "chuck"}, "password": "secret"}
 val handler = { request ->

@@ -51,7 +51,7 @@ fun main(args: Array<String>) {
         get("/ws/echo", fun(): Handler = {
             // Current limitation: The first argument to Response.websocket() must be a static url path.
             // It does *not* accept route patterns like "/ws/<num>". (#willfix)
-            Response.websocket("/ws/echo", fun(request: Request, session: Session): WebSocketHandler {
+            Response.websocket("/ws/echo", fun(_: Request, session: Session): WebSocketHandler {
                 // Upon each websocket connection at this endpoint, generate a random id for it
                 val id = java.util.UUID.randomUUID()
 
@@ -85,7 +85,7 @@ fun main(args: Array<String>) {
         // Due to this limitation, dynamic path websocket handlers by default will currently cause unbounded growth of
         // the internal jetty mapping of path to websocket handler until I find a better way to work with jetty.
         get("/ws/<>", fun(n: Int): Handler = {
-            Response.websocket("/ws/$n", fun(request: Request, session: Session) = object : WebSocketHandler {
+            Response.websocket("/ws/$n", fun(_: Request, session: Session) = object : WebSocketHandler {
                 override fun onOpen() {
                     session.remote.sendString("you connected to /ws/$n")
                 }

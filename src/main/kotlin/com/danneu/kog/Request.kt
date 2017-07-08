@@ -3,11 +3,11 @@ package com.danneu.kog
 import com.danneu.kog.Protocol.HTTP_1_1
 import com.danneu.kog.batteries.multipart.SavedUpload
 import com.danneu.kog.cookies.parse
-import com.danneu.kog.json.Decoder as JsonDecoder
+import com.danneu.result.Result
+import com.danneu.result.flatMap
+import com.danneu.json.Decoder as JsonDecoder
 import com.danneu.kog.form.Decoder as FormDecoder
 import com.danneu.kog.negotiation.Negotiator
-import com.danneu.kog.result.Result
-import com.danneu.kog.result.flatMap
 import org.eclipse.jetty.websocket.api.util.QuoteUtil
 import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
@@ -51,12 +51,12 @@ class Request(
 
     // TODO: Avoid consuming body that's already been drained
     fun <T> json(decoder: JsonDecoder<T>): Result<T, Exception> {
-        return JsonDecoder.tryParse(utf8).flatMap { decoder(it) }
+        return JsonDecoder.parse(utf8).flatMap { decoder(it) }
     }
 
     // TODO: Avoid consuming body that's already been drained
     fun <T> form(decoder: FormDecoder<T>): Result<T, Exception> {
-        return FormDecoder.tryParse(utf8).flatMap { decoder(it) }
+        return FormDecoder.parse(utf8).flatMap { decoder(it) }
     }
 
     // TODO: Avoid consuming body that's already been drained

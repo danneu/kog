@@ -1,8 +1,8 @@
 
 package com.danneu.kog
 
-import com.danneu.kog.json.Encoder as JE
-import com.danneu.kog.json.Decoder as JD
+import com.danneu.json.Encoder as JE
+import com.danneu.json.Decoder as JD
 import org.eclipse.jetty.server.Handler as JettyHandler
 import org.eclipse.jetty.server.HttpConfiguration
 import org.eclipse.jetty.server.HttpConnectionFactory

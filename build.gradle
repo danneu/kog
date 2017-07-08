@@ -5,8 +5,6 @@ buildscript {
     ext {
         kotlin_version = "1.1.3"
         jetty_version = "9.4.2.v20170220"
-        //result_version = "1.0.5"
-        minimal_json_version = "0.9.4"
         commons_fileupload_version = "1.3.2"
         junit_version = "4.12"
     }
@@ -23,6 +21,7 @@ buildscript {
 
 repositories {
     jcenter()
+    maven { url 'https://jitpack.io' }
 }
 
 
@@ -34,10 +33,10 @@ dependencies {
 
     compile "org.eclipse.jetty:jetty-server:$jetty_version"
     compile "org.eclipse.jetty.websocket:websocket-server:$jetty_version"
-    compile "com.eclipsesource.minimal-json:minimal-json:$minimal_json_version"
     compile "commons-fileupload:commons-fileupload:$commons_fileupload_version"
-    // -- Temporarily disabled
-    // compile "com.github.kittinunf.result:result:$result_version"
+
+    compile "com.danneu:kotlin-result:0.0.3"
+    compile "com.danneu:kotlin-json-combinator:0.0.4"
 }
 
 // Reminder to move the mime-db file into src/main/resources so that it gets bundled.

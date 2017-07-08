@@ -8,7 +8,7 @@ import com.danneu.kog.Router
 import com.danneu.kog.Server
 import com.danneu.kog.util.CopyLimitExceeded
 import com.danneu.kog.util.limitedCopyTo
-import com.danneu.kog.json.Encoder as JE
+import com.danneu.json.Encoder as JE
 import java.io.File
 import java.util.UUID
 

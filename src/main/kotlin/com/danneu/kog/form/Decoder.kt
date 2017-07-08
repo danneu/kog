@@ -3,9 +3,8 @@ package com.danneu.kog.form
 import com.danneu.kog.form.FormValue.FormList
 import com.danneu.kog.form.FormValue.FormMap
 import com.danneu.kog.form.FormValue.FormString
-import com.danneu.kog.result.Result
-import com.danneu.kog.result.flatMap
-import com.danneu.kog.result.map
+import com.danneu.result.Result
+import com.danneu.result.flatMap
 import java.net.URLDecoder
 
 // A work in progress decoder for forms based on the more complete json.Decoder
@@ -63,22 +62,22 @@ class Decoder<out A>(val decode: (FormValue) -> Result<A, Exception>) {
     }
 
     companion object {
-        fun tryParse(string: String): Result<FormValue, Exception> {
-            return FormValue.decode(string).let { Result.of(it) }
+        fun parse(string: String): Result<FormValue, Exception> {
+            return FormValue.decode(string).let { Result.ok(it) }
         }
 
         val string: Decoder<String> = Decoder { value ->
             when (value) {
-                is FormString -> Result.of(value.underlying)
-                else -> Result.error(Exception("Expected string"))
+                is FormString -> Result.ok(value.underlying)
+                else -> Result.err(Exception("Expected string"))
             }
         }
 
         val int: Decoder<Int> = Decoder { value ->
             when (value) {
-                is FormString -> value.underlying.toIntOrNull()?.let { Result.of(it) }
-                    ?: Result.error(Exception("Expected in"))
-                else -> Result.error(Exception("Expected int"))
+                is FormString -> value.underlying.toIntOrNull()?.let { Result.ok(it) }
+                    ?: Result.err(Exception("Expected in"))
+                else -> Result.err(Exception("Expected int"))
             }
         }
 
@@ -86,11 +85,11 @@ class Decoder<out A>(val decode: (FormValue) -> Result<A, Exception>) {
             when (value) {
                 is FormString ->
                     when (value.underlying) {
-                        "true" -> Result.of(true)
-                        "false" -> Result.of(false)
-                        else -> Result.error(Exception("Expected boolean"))
+                        "true" -> Result.ok(true)
+                        "false" -> Result.ok(false)
+                        else -> Result.err(Exception("Expected boolean"))
                     }
-                else -> Result.error(Exception("Expected boolean"))
+                else -> Result.err(Exception("Expected boolean"))
             }
         }
 
@@ -99,32 +98,36 @@ class Decoder<out A>(val decode: (FormValue) -> Result<A, Exception>) {
                 is FormList ->
                     value.underlying.map { value ->
                         val result = d(value)
-                        @Suppress("UNCHECKED_CAST")
-                        if (result is Result.Failure) return@Decoder result as Result.Failure<List<T>, Exception>
-                        result.get()
-                    }.let { Result.of(it) }
+                        when (result) {
+                            is Result.Err ->
+                                @Suppress("UNCHECKED_CAST")
+                                return@Decoder result as Result.Err<List<T>, Exception>
+                            is Result.Ok ->
+                                result.value
+                        }
+                    }.let { Result.ok(it) }
                 else ->
-                    Result.error(Exception("Expected list"))
+                    Result.err(Exception("Expected list"))
             }
         }
 
         fun <T> get(key: String, decoder: Decoder<T>): Decoder<T> = Decoder { value ->
             when (value) {
                 is FormMap ->
-                    value.underlying[key]?.let { decoder(it) } ?: Result.error(Exception("Expected map to have key: $key"))
+                    value.underlying[key]?.let { decoder(it) } ?: Result.err(Exception("Expected map to have key: $key"))
                 else ->
-                    Result.error(Exception("Excepted a map"))
+                    Result.err(Exception("Excepted a map"))
             }
         }
 
         fun <A> oneOf(vararg ds: Decoder<A>): Decoder<A> = Decoder { value ->
-            ds.asSequence().map { it(value) }.find { it is Result.Success }
-                ?: Result.Failure(Exception("None of the decoders matched"))
+            ds.asSequence().map { it(value) }.find { it is Result.Ok }
+                ?: Result.Err(Exception("None of the decoders matched"))
         }
 
-        fun <T> succeed(value: T) = Decoder { Result.of(value) }
+        fun <T> succeed(value: T) = Decoder { Result.ok(value) }
 
-        fun fail(e: Exception) = Decoder { Result.error(e) }
+        fun fail(e: Exception) = Decoder { Result.err(e) }
     }
 }
 

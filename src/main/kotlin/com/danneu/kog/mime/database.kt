@@ -1,9 +1,10 @@
 package com.danneu.kog.mime
 
-import com.danneu.kog.json.Decoder
+import com.danneu.json.Decoder
 import com.danneu.kog.mime.MimeDatabase.MimeRecord
-import com.danneu.kog.result.Result
-import com.danneu.kog.result.flatMap
+import com.danneu.result.Result
+import com.danneu.result.flatMap
+import com.danneu.result.getOrElse
 import java.io.Reader
 
 /** Wraps the mime-db data to expose convenient lookup functions.
@@ -35,7 +36,7 @@ val database: MimeDatabase = run {
     }
 
     parseDatabase(stream.bufferedReader())
-        .fold({ it }, { emptyMap<String, MimeRecord>() })
+        .getOrElse(emptyMap<String, MimeRecord>())
         .let(::MimeDatabase)
 }
 
@@ -52,5 +53,5 @@ private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, Excep
 
     val decoder = Decoder.mapOf(Decoder.object2(::MimeRecord, extensions, compressible))
 
-    return Decoder.tryParse(reader).flatMap { decoder(it) }
+    return Decoder.parse(reader).flatMap { decoder(it) }
 }
