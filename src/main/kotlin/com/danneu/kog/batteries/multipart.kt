@@ -94,8 +94,8 @@ fun multipart(whitelist: Whitelist, ttl: Duration = Duration.ofHours(1), interva
                 val savedUpload = SavedUpload(file, item.name, item.contentType, file.length())
                 item.fieldName to savedUpload
             }
-        }.filterNotNull().forEach { pair ->
-            req.uploads[pair.first] = pair.second
+        }.filterNotNull().forEach { (key, upload) ->
+            req.uploads[key] = upload
         }
 
         return handler(req)

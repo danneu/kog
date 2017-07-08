@@ -121,6 +121,7 @@ class Decoder<out A>(val decode: (FormValue) -> Result<A, Exception>) {
         }
 
         fun <A> oneOf(vararg ds: Decoder<A>): Decoder<A> = Decoder { value ->
+            // Sequence so that .map() is lazy
             ds.asSequence().map { it(value) }.find { it is Result.Ok }
                 ?: Result.Err(Exception("None of the decoders matched"))
         }
