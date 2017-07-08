@@ -1,8 +1,4 @@
 <p align="center">
-    <a href="https://kog.danneu.com/">
-        kog.danneu.com
-    </a>
-    <br><br>
     <img src="cogwheel.gif" width="640" height="220">
 </p>
 
@@ -965,11 +961,8 @@ import com.danneu.kog.Response
 import com.danneu.kog.Server
 
 fun main(args: Array<String>) {
-    val port = Env.int("PORT") ?: 3000
     val handler: Handler = { Response().text("Hello, world!") }
-    Server(handler).listen(port) {
-        println("Listening on $port")
-    }
+    Server(handler).listen(ENV.int("PORT") ?: 3000)
 }
 ```
 
