@@ -10,7 +10,7 @@ import java.io.File
 
 
 private fun readEnvFile(): Map<String, String> {
-    // TODO: Ensure .env is read from project root
+    // TODO: Ensure .env is read from project root or consider more robust solution.
     val file = File(".env")
     if (!file.exists()) return emptyMap()
     return file.readLines().mapNotNull { line ->

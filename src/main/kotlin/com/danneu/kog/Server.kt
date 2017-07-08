@@ -63,6 +63,9 @@ class Server @JvmOverloads constructor(
         println(":: <kog> stopped")
     }
 
+    // Convenience: User often wants to pass in just port and onStart.
+    fun listen(port: Int, onStart: (Server) -> Unit) = listen(port, true, onStart)
+
     @JvmOverloads fun listen(port: Int, wait: Boolean = true, onStart: (Server) -> Unit = {}): Server {
         if (port == 0) {
             println(":: <kog> requesting random port since port == 0")

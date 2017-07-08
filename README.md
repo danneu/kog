@@ -965,8 +965,11 @@ import com.danneu.kog.Response
 import com.danneu.kog.Server
 
 fun main(args: Array<String>) {
+    val port = Env.int("PORT") ?: 3000
     val handler: Handler = { Response().text("Hello, world!") }
-    Server(handler).listen(Env.int("PORT") ?: 3000)
+    Server(handler).listen(port) {
+        println("Listening on $port")
+    }
 }
 ```
 
