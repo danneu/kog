@@ -44,6 +44,7 @@ Server({ Response().text("hello world") }).listen(3000)
 - [Cookies](#cookies)
   * [Request Cookies](#request-cookies)
   * [Response Cookies](#response-cookies)
+- [Content Negotiation](#content-negotiation)
 - [Included Middleware](#included-middleware)
   * [Development Logger](#development-logger)
   * [Static File Serving](#static-file-serving)
@@ -566,6 +567,51 @@ $ http --session=kog-example --body localhost:9000
 count: 2
 $ http --session=kog-example --body localhost:9000
 count: 3
+```
+
+## Content Negotiation
+
+**TODO:** Improve negotiation docs
+
+Each request has a negotiator that parses the `accept-*` headers, returning a list of 
+values in order of client preference.
+
+- `request.negotiate.mediaTypes` parses the `accept` header.
+- `request.negotiate.languages` parses the `accept-language` header.
+- `request.negotiate.encodings` parses the `accept-encoding` header.
+
+Until the docs are fleshed out, here's a demo server that will illuminate this:
+
+```kotlin
+fun main(args: Array<String>) {
+    val handler: Handler = { request ->
+        println(request.headers.toString())
+        Response().text("""
+        languages:  ${request.negotiate.languages()}
+        encodings:  ${request.negotiate.encodings()}
+        mediaTypes: ${request.negotiate.mediaTypes()}
+        """.trimIndent())
+    }
+
+    Server(handler).listen(3000)
+}
+```
+
+An example curl request:
+
+```text
+curl http://localhost:3000 \
+  --header 'Accept-Language:de;q=0.7, fr-CH, fr;q=0.9, en;q=0.8, *;q=0.5, de-CH;q=0.2' \
+  --header 'accept:application/json' \
+  --header 'accept-encoding:gzip,deflate'
+```
+
+Corresponding response:
+
+```text
+languages:  [French[CH], French[*], English[*], German[*], *[*], German[CH]]
+encodings:  [Encoding(name='gzip', q=1.0), Encoding(name='deflate', q=1.0)]
+mediaTypes: [MediaType(type='application', subtype='json', q=1.0)]
 ```
 
 ## Included Middleware
