@@ -38,7 +38,7 @@ class Encoding(val name: String, val q: Double = 1.0) {
                 .map(String::trim)
                 .map { segment ->
                     val vals = regex.find(segment)?.groupValues?.drop(1)!!
-                    val name = vals[0]
+                    val name = vals[0].toLowerCase()
                     val q = QValue.parse(vals[1]) ?: 1.0
                     Encoding(name, q)
                 }

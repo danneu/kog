@@ -37,7 +37,7 @@ data class MediaType(val type: String, val subtype: String, val q: Double = 1.0)
          */
         fun parse(string: String): MediaType? {
             val parts = regex.find(string)?.groupValues?.drop(1) ?: return null
-            val type = parts[0]
+            val type = parts[0].toLowerCase()
             val subtype = parts[1]
             val q = QValue.parse(parts[2]) ?: 1.0
             return MediaType(type, subtype, q)

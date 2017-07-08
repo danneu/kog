@@ -602,8 +602,8 @@ An example curl request:
 ```text
 curl http://localhost:3000 \
   --header 'Accept-Language:de;q=0.7, fr-CH, fr;q=0.9, en;q=0.8, *;q=0.5, de-CH;q=0.2' \
-  --header 'accept:application/json' \
-  --header 'accept-encoding:gzip,deflate'
+  --header 'accept:application/json,TEXT/*' \
+  --header 'accept-encoding:gzip,DeFLaTE'
 ```
 
 Corresponding response:
@@ -611,8 +611,10 @@ Corresponding response:
 ```text
 languages:  [French[CH], French[*], English[*], German[*], *[*], German[CH]]
 encodings:  [Encoding(name='gzip', q=1.0), Encoding(name='deflate', q=1.0)]
-mediaTypes: [MediaType(type='application', subtype='json', q=1.0)]
+mediaTypes: [MediaType(type='application', subtype='json', q=1.0), MediaType(type='text', subtype='*', q=1.0)]
 ```
+
+Notice that values ("TEXT/*", "DeFLaTE") are always downcased for easy comparison.
 
 ## Included Middleware
 
