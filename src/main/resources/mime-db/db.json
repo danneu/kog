@@ -312,7 +312,13 @@
   "application/emergencycalldata.comment+xml": {
     "source": "iana"
   },
+  "application/emergencycalldata.control+xml": {
+    "source": "iana"
+  },
   "application/emergencycalldata.deviceinfo+xml": {
+    "source": "iana"
+  },
+  "application/emergencycalldata.ecall.msd": {
     "source": "iana"
   },
   "application/emergencycalldata.providerinfo+xml": {
@@ -322,6 +328,9 @@
     "source": "iana"
   },
   "application/emergencycalldata.subscriberinfo+xml": {
+    "source": "iana"
+  },
+  "application/emergencycalldata.veds+xml": {
     "source": "iana"
   },
   "application/emma+xml": {
@@ -384,6 +393,9 @@
     "compressible": true,
     "extensions": ["geojson"]
   },
+  "application/geo+json-seq": {
+    "source": "iana"
+  },
   "application/gml+xml": {
     "source": "iana",
     "extensions": ["gml"]
@@ -398,7 +410,8 @@
   },
   "application/gzip": {
     "source": "iana",
-    "compressible": false
+    "compressible": false,
+    "extensions": ["gz"]
   },
   "application/h224": {
     "source": "iana"
@@ -726,6 +739,12 @@
     "source": "iana",
     "extensions": ["mxf"]
   },
+  "application/n-quads": {
+    "source": "iana"
+  },
+  "application/n-triples": {
+    "source": "iana"
+  },
   "application/nasdata": {
     "source": "iana"
   },
@@ -972,6 +991,9 @@
   "application/rpki-manifest": {
     "source": "iana",
     "extensions": ["mft"]
+  },
+  "application/rpki-publication": {
+    "source": "iana"
   },
   "application/rpki-roa": {
     "source": "iana",
@@ -1400,6 +1422,10 @@
     "source": "iana",
     "compressible": true
   },
+  "application/vnd.apothekende.reservation+json": {
+    "source": "iana",
+    "compressible": true
+  },
   "application/vnd.apple.installer+xml": {
     "source": "iana",
     "extensions": ["mpkg"]
@@ -1446,6 +1472,9 @@
     "source": "iana",
     "compressible": true
   },
+  "application/vnd.bint.med-content": {
+    "source": "iana"
+  },
   "application/vnd.biopax.rdf+xml": {
     "source": "iana"
   },
@@ -1475,6 +1504,10 @@
   },
   "application/vnd.canon-lips": {
     "source": "iana"
+  },
+  "application/vnd.capasystems-pg+json": {
+    "source": "iana",
+    "compressible": true
   },
   "application/vnd.cendio.thinlinc.clientconf": {
     "source": "iana"
@@ -1635,6 +1668,10 @@
   "application/vnd.data-vision.rdz": {
     "source": "iana",
     "extensions": ["rdz"]
+  },
+  "application/vnd.datapackage+json": {
+    "source": "iana",
+    "compressible": true
   },
   "application/vnd.dataresource+json": {
     "source": "iana",
@@ -1813,6 +1850,12 @@
     "source": "iana"
   },
   "application/vnd.ecowin.seriesupdate": {
+    "source": "iana"
+  },
+  "application/vnd.efi.img": {
+    "source": "iana"
+  },
+  "application/vnd.efi.iso": {
     "source": "iana"
   },
   "application/vnd.emclient.accessrequest+xml": {
@@ -2222,6 +2265,10 @@
     "source": "iana",
     "extensions": ["sfd-hdstx"]
   },
+  "application/vnd.hyper-item+json": {
+    "source": "iana",
+    "compressible": true
+  },
   "application/vnd.hyperdrive+json": {
     "source": "iana",
     "compressible": true
@@ -2261,6 +2308,12 @@
   "application/vnd.igloader": {
     "source": "iana",
     "extensions": ["igl"]
+  },
+  "application/vnd.imagemeter.folder+zip": {
+    "source": "iana"
+  },
+  "application/vnd.imagemeter.image+zip": {
+    "source": "iana"
   },
   "application/vnd.immervision-ivp": {
     "source": "iana",
@@ -2480,6 +2533,10 @@
     "source": "iana",
     "extensions": ["sse"]
   },
+  "application/vnd.las.las+json": {
+    "source": "iana",
+    "compressible": true
+  },
   "application/vnd.las.las+xml": {
     "source": "iana",
     "extensions": ["lasxml"]
@@ -2585,6 +2642,9 @@
     "extensions": ["igx"]
   },
   "application/vnd.microsoft.portable-executable": {
+    "source": "iana"
+  },
+  "application/vnd.microsoft.windows.thumbnail-cache": {
     "source": "iana"
   },
   "application/vnd.miele+json": {
@@ -3059,6 +3119,9 @@
   "application/vnd.obn": {
     "source": "iana"
   },
+  "application/vnd.ocf+cbor": {
+    "source": "iana"
+  },
   "application/vnd.oftn.l10n+json": {
     "source": "iana",
     "compressible": true
@@ -3226,6 +3289,21 @@
     "source": "iana"
   },
   "application/vnd.onepager": {
+    "source": "iana"
+  },
+  "application/vnd.onepagertamp": {
+    "source": "iana"
+  },
+  "application/vnd.onepagertamx": {
+    "source": "iana"
+  },
+  "application/vnd.onepagertat": {
+    "source": "iana"
+  },
+  "application/vnd.onepagertatp": {
+    "source": "iana"
+  },
+  "application/vnd.onepagertatx": {
     "source": "iana"
   },
   "application/vnd.openblox.game+xml": {
@@ -5156,6 +5234,18 @@
   "audio/lpc": {
     "source": "iana"
   },
+  "audio/melp": {
+    "source": "iana"
+  },
+  "audio/melp1200": {
+    "source": "iana"
+  },
+  "audio/melp2400": {
+    "source": "iana"
+  },
+  "audio/melp600": {
+    "source": "iana"
+  },
   "audio/midi": {
     "source": "apache",
     "extensions": ["mid","midi","kar","rmi"]
@@ -5529,6 +5619,10 @@
     "compressible": true,
     "extensions": ["otf"]
   },
+  "image/apng": {
+    "compressible": false,
+    "extensions": ["apng"]
+  },
   "image/bmp": {
     "source": "iana",
     "compressible": true,
@@ -5882,6 +5976,9 @@
   "message/vnd.wfa.wsc": {
     "source": "iana"
   },
+  "model/3mf": {
+    "source": "iana"
+  },
   "model/gltf+json": {
     "source": "iana",
     "compressible": true
@@ -6015,6 +6112,9 @@
     "source": "iana",
     "compressible": false
   },
+  "multipart/vnd.bint.med-plus": {
+    "source": "iana"
+  },
   "multipart/voice-message": {
     "source": "iana"
   },
@@ -6102,7 +6202,9 @@
     "extensions": ["less"]
   },
   "text/markdown": {
-    "source": "iana"
+    "source": "iana",
+    "compressible": true,
+    "extensions": ["markdown","md"]
   },
   "text/mathml": {
     "source": "nginx",
@@ -6174,6 +6276,9 @@
   },
   "text/slim": {
     "extensions": ["slim","slm"]
+  },
+  "text/strings": {
+    "source": "iana"
   },
   "text/stylus": {
     "extensions": ["stylus","styl"]
@@ -6349,7 +6454,7 @@
   },
   "text/x-markdown": {
     "compressible": true,
-    "extensions": ["markdown","md","mkd"]
+    "extensions": ["mkd"]
   },
   "text/x-nfo": {
     "source": "apache",
