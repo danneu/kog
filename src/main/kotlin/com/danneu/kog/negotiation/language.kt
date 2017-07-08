@@ -246,7 +246,7 @@ interface Locale {
 
 sealed class Lang(val prefixCode: String, prettyName: String, val locale: Locale? = null) {
     val code = prefixCode + if (locale != null) "-${locale.code.toUpperCase()}" else ""
-    val prettyName = prettyName + if (locale != null) " (${locale.code.toUpperCase()})" else ""
+    val prettyName = prettyName + if (locale == null) "[*]" else "[${locale.code.toUpperCase()}]"
 
     // Special
     object Wildcard: Lang("*", "*")
@@ -276,7 +276,7 @@ sealed class Lang(val prefixCode: String, prettyName: String, val locale: Locale
 
     override fun hashCode() = this.code.toLowerCase().hashCode()
 
-    override fun toString() = code
+    override fun toString() = prettyName
 
     object Codes {
         // Special
