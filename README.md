@@ -6,6 +6,8 @@
 
 A simple, experimental Kotlin web framework inspired by Clojure's Ring.
 
+A kog application is a function that takes a `Request` and returns a `Response`.
+
 Built on top of [Jetty](http://www.eclipse.org/jetty/).
 
 ```kotlin
