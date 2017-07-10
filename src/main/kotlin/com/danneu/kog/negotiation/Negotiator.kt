@@ -33,7 +33,6 @@ class Negotiator(val request: Request) {
         val header = request.getHeader(Header.AcceptLanguage) ?: return emptyList()
         return AcceptLanguage.parseHeader(header)
             .let { AcceptLanguage.prioritize(it) }
-            .distinctBy { it.lang.code } // TODO: why doesn't distinctBy { it.lang } work?
     }
 
     /** List of preferred languages sent by the client
@@ -41,6 +40,7 @@ class Negotiator(val request: Request) {
     fun languages(): List<Lang> {
         return allAcceptLanguages()
             .filter { it.q > 0 }
+            .distinctBy { it.lang }
             .map { it.lang }
     }
 
@@ -74,7 +74,7 @@ class Negotiator(val request: Request) {
                     }
                 }
 
-            // TODO: Why do we have dupes?
+            // TODO: Why do we have dupes? EDIT: Do we still have dupes after I fixed distinctBy?
             return (explicit + implicit).distinct()
         }
     }

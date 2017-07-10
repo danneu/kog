@@ -11,10 +11,7 @@ import com.danneu.kog.negotiation.Negotiator
 import org.junit.Assert.*
 import org.junit.Test
 
-
-fun codeList(vararg codes: String): List<Lang> {
-    return codes.map { Lang.fromCode(it)!! }
-}
+// TODO: Finish getting rid of older codeList stuff.
 
 class LanguageTests {
     @Test
@@ -24,6 +21,7 @@ class LanguageTests {
         val expected = listOf(AcceptLanguage(Lang.English()), AcceptLanguage(Lang.Wildcard))
         assertEquals("wildcard is always moved to the end", expected, sorted)
     }
+
     @Test
     fun testMissingHeader() {
         val neg = Negotiator(Request.toy(headers = mutableListOf()))
@@ -76,16 +74,34 @@ class LanguageTests {
         }
         run {
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "en-US, en;q=0.8")))
-            assertEquals(codeList("en-US", "en"), neg.languages())
-            assertEquals(codeList("en-US", "en"), neg.languages())
+            assertEquals(
+                listOf(
+                    Lang.English(Locale.UnitedStates),
+                    Lang.English()
+                ),
+                neg.languages()
+            )
         }
         run {
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "en-US, en-GB")))
-            assertEquals(codeList("en-US", "en-GB"), neg.languages())
+            assertEquals(
+                listOf(
+                    Lang.English(Locale.UnitedStates),
+                    Lang.English(Locale.UnitedKingdom)
+                ),
+                neg.languages()
+            )
         }
         run {
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "en-US;q=0.8, es")))
-            assertEquals(codeList("es", "en-US"), neg.languages())
+            //assertEquals(codeList("es", "en-US"), neg.languages())
+            assertEquals(
+                listOf(
+                    Lang.Spanish(),
+                    Lang.English(Locale.UnitedStates)
+                ),
+                neg.languages()
+            )
         }
         run {
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "nl;q=0.5, fr, de, en, it, es, pt, no, se, fi, ro")))
@@ -135,8 +151,34 @@ class LanguageTests {
             val msg = "returns preferred languages"
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "*;q=0.8, en, es")))
             assertEquals(msg,
-                codeList( "en", "es", "fr", "de", "it", "pt", "no", "se", "fi", "ro", "nl" ),
-                neg.acceptableLanguages(codeList("fr", "de", "en", "it", "es", "pt", "no", "se", "fi", "ro", "nl" ))
+                //codeList( "en", "es", "fr", "de", "it", "pt", "no", "se", "fi", "ro", "nl" ),
+                listOf(
+                    Lang.English(),
+                    Lang.Spanish(),
+                    Lang.French(),
+                    Lang.German(),
+                    Lang.Italian(),
+                    Lang.Portuguese(),
+                    Lang.Norwegian(),
+                    Lang.Sami(),
+                    Lang.Finnish(),
+                    Lang.Romanian(),
+                    Lang.Dutch()
+                ),
+                // neg.acceptableLanguages(codeList("fr", "de", "en", "it", "es", "pt", "no", "se", "fi", "ro", "nl" ))
+                neg.acceptableLanguages(listOf(
+                    Lang.French(),
+                    Lang.German(),
+                    Lang.English(),
+                    Lang.Italian(),
+                    Lang.Spanish(),
+                    Lang.Portuguese(),
+                    Lang.Norwegian(),
+                    Lang.Sami(),
+                    Lang.Finnish(),
+                    Lang.Romanian(),
+                    Lang.Dutch()
+                ))
             )
         }
         run {
@@ -149,10 +191,11 @@ class LanguageTests {
         run {
             val msg = "accepts en-US, preferring en over en-US"
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "en")))
-            assertEquals(msg, listOf(Lang.English(Locale.English.UnitedStates)), neg.acceptableLanguages(listOf(Lang.English(Locale.English.UnitedStates))))
-            assertEquals(msg, listOf(Lang.English(Locale.English.UnitedStates)), neg.acceptableLanguages(listOf(Lang.English(Locale.English.UnitedStates))))
-            assertEquals(msg, listOf(Lang.English(), Lang.English(Locale.English.UnitedStates)), neg.acceptableLanguages(listOf(Lang.English(Locale.English.UnitedStates), Lang.English())))
-            assertEquals(msg, listOf(Lang.English(), Lang.English(Locale.English.UnitedStates)), neg.acceptableLanguages(listOf(Lang.English(), Lang.English(Locale.English.UnitedStates))))
+            // TODO: Consider Locale.English.UnitedStates like I had originally
+            assertEquals(msg, listOf(Lang.English(Locale.UnitedStates)), neg.acceptableLanguages(listOf(Lang.English(Locale.UnitedStates))))
+            assertEquals(msg, listOf(Lang.English(Locale.UnitedStates)), neg.acceptableLanguages(listOf(Lang.English(Locale.UnitedStates))))
+            assertEquals(msg, listOf(Lang.English(), Lang.English(Locale.UnitedStates)), neg.acceptableLanguages(listOf(Lang.English(Locale.UnitedStates), Lang.English())))
+            assertEquals(msg, listOf(Lang.English(), Lang.English(Locale.UnitedStates)), neg.acceptableLanguages(listOf(Lang.English(), Lang.English(Locale.UnitedStates))))
         }
         run {
             val msg = "returns nothing"
@@ -167,41 +210,129 @@ class LanguageTests {
             assertEquals(msg, listOf(Lang.Spanish(), Lang.English()), neg.acceptableLanguages(listOf(Lang.English(), Lang.Spanish())))
             assertEquals(msg, listOf(Lang.Spanish(), Lang.English()), neg.acceptableLanguages(listOf(Lang.Spanish(), Lang.English())))
         }
-
-
+//
+//
         run {
             val msg = "returns preferred languages"
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "en;q=0.9, es;q=0.8, en;q=0.7")))
-            assertEquals(msg, codeList("en"), neg.acceptableLanguages(codeList("en")))
+            assertEquals(msg, listOf(Lang.English()), neg.acceptableLanguages(listOf(Lang.English())))
             // TODO: apparently the later dupe overwrites the q of the earlier?
             //assertEquals(msg, codeList("es", "en"), neg.acceptableLanguages(codeList("en", "es")))
             //assertEquals(msg, codeList("es", "en"), neg.acceptableLanguages(codeList("es", "en")))
         }
 
         run {
+            val msg = "prefers en-US over en"
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "en-US, en;q=0.8")))
-            assertEquals("prefers en-US over en", codeList("en-US", "en"), neg.acceptableLanguages(codeList("en-US", "en")))
-            assertEquals("prefers en-US over en", codeList("en-US", "en", "en-GB"), neg.acceptableLanguages(codeList("en-GB", "en-US", "en")))
+
+            //assertEquals("prefers en-US over en", codeList("en-US", "en"), neg.acceptableLanguages(codeList("en-US", "en")))
+            assertEquals(msg,
+                listOf(
+                    Lang.English(Locale.UnitedStates),
+                    Lang.English()
+                ),
+                neg.acceptableLanguages(listOf(
+                    Lang.English(Locale.UnitedStates),
+                    Lang.English()
+                ))
+            )
+
+            //assertEquals("prefers en-US over en", codeList("en-US", "en", "en-GB"), neg.acceptableLanguages(codeList("en-GB", "en-US", "en")))
+            assertEquals(msg,
+                listOf(
+                    Lang.English(Locale.UnitedStates),
+                    Lang.English(),
+                    Lang.English(Locale.UnitedKingdom)
+                ),
+                neg.acceptableLanguages(listOf(
+                    Lang.English(Locale.UnitedKingdom),
+                    Lang.English(Locale.UnitedStates),
+                    Lang.English()
+                ))
+            )
         }
 
         run {
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "en-US, en-GB")))
-            assertEquals(codeList("en-US", "en-GB"), neg.acceptableLanguages(codeList("en-US", "en-GB")))
-            assertEquals(codeList("en-US", "en-GB"), neg.acceptableLanguages(codeList("en-GB", "en-US")))
+            //assertEquals(codeList("en-US", "en-GB"), neg.acceptableLanguages(codeList("en-US", "en-GB")))
+            assertEquals(
+                listOf(
+                    Lang.English(Locale.UnitedStates),
+                    Lang.English(Locale.UnitedKingdom)
+                ),
+                neg.acceptableLanguages(listOf(
+                    Lang.English(Locale.UnitedStates),
+                    Lang.English(Locale.UnitedKingdom)
+                ))
+            )
+
+            //assertEquals(codeList("en-US", "en-GB"), neg.acceptableLanguages(codeList("en-GB", "en-US")))
+            assertEquals(
+                listOf(
+                    Lang.English(Locale.UnitedStates),
+                    Lang.English(Locale.UnitedKingdom)
+                ),
+                neg.acceptableLanguages(listOf(
+                    Lang.English(Locale.UnitedKingdom),
+                    Lang.English(Locale.UnitedStates)
+                ))
+            )
         }
 
         run {
             val msg = "prefers es over en-US"
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "en-US;q=0.8, es")))
-            assertEquals(msg, codeList("es", "en"), neg.acceptableLanguages(codeList("en", "es")))
+
+            //assertEquals(msg, codeList("es", "en"), neg.acceptableLanguages(codeList("en", "es")))
+            assertEquals(msg,
+                listOf(
+                    Lang.Spanish(),
+                    Lang.English()
+                ),
+                neg.acceptableLanguages(listOf(
+                    Lang.English(),
+                    Lang.Spanish()
+                ))
+            )
         }
 
         run {
             val msg = "returns preferred languages"
             val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "nl;q=0.5, fr, de, en, it, es, pt, no, se, fi, ro")))
+//            assertEquals(msg,
+//                codeList("fr", "de", "en", "it", "es", "pt", "no", "se", "fi", "ro", "nl"),
+//                neg.acceptableLanguages(codeList("fr", "de", "en", "it", "es", "pt", "no", "se", "fi", "ro", "nl"))
+//            )
+
             assertEquals(msg,
-                codeList("fr", "de", "en", "it", "es", "pt", "no", "se", "fi", "ro", "nl"),
-                neg.acceptableLanguages(codeList("fr", "de", "en", "it", "es", "pt", "no", "se", "fi", "ro", "nl"))
+//                codeList("fr", "de", "en", "it", "es", "pt", "no", "se", "fi", "ro", "nl"),
+                listOf(
+                    Lang.French(),
+                    Lang.German(),
+                    Lang.English(),
+                    Lang.Italian(),
+                    Lang.Spanish(),
+                    Lang.Portuguese(),
+                    Lang.Norwegian(),
+                    Lang.Sami(),
+                    Lang.Finnish(),
+                    Lang.Romanian(),
+                    Lang.Dutch()
+                ),
+//                neg.acceptableLanguages(codeList("fr", "de", "en", "it", "es", "pt", "no", "se", "fi", "ro", "nl"))
+                neg.acceptableLanguages(listOf(
+                    Lang.French(),
+                    Lang.German(),
+                    Lang.English(),
+                    Lang.Italian(),
+                    Lang.Spanish(),
+                    Lang.Portuguese(),
+                    Lang.Norwegian(),
+                    Lang.Sami(),
+                    Lang.Finnish(),
+                    Lang.Romanian(),
+                    Lang.Dutch()
+                ))
             )
         }
     }
@@ -459,4 +590,4 @@ class NegotiatorTests {
             "gzip", neg.acceptableEncoding(listOf("identity", "deflate", "gzip"))
         )
     }
-}
+ }

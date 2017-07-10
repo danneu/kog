@@ -45,6 +45,7 @@ Server({ Response().text("hello world") }).listen(3000)
   * [Request Cookies](#request-cookies)
   * [Response Cookies](#response-cookies)
 - [Content Negotiation](#content-negotiation)
+  * [Most acceptable language](#most-acceptable-language)
 - [Included Middleware](#included-middleware)
   * [Development Logger](#development-logger)
   * [Static File Serving](#static-file-serving)
@@ -615,6 +616,84 @@ mediaTypes: [MediaType(type='application', subtype='json', q=1.0), MediaType(typ
 ```
 
 Notice that values ("TEXT/*", "DeFLaTE") are always downcased for easy comparison.
+
+### Most acceptable language
+
+Given a list of languages that you want to support, the negotiator can return a list that filters and sorts your 
+available languages down in order of client preference, the first one being the client's highest preference.
+
+```kotlin
+import com.danneu.kog.Lang
+import com.danneu.kog.Locale
+
+// Request Accept-Language: "en-US, es"
+request.negotiate.acceptableLanguages(listOf(
+    Lang.Spanish(),
+    Lang.English(Locale.UnitedStates)
+)) == listOf(
+    Lang.English(Locale.UnitedStates),
+    Lang.Spanish()
+)
+```
+
+Also, note that we don't have to provide a locale. If the client asks for `en-US`, then of course
+`Lang.English()` without a locale should be acceptable if we have no more specific match.
+
+```kotlin
+// Request Accept-Language: "en-US, es"
+request.negotiate.acceptableLanguages(listOf(
+    Lang.Spanish(),
+    Lang.English()
+)) == listOf(
+    Lang.English(),
+    Lang.Spanish()
+)
+```
+
+The singular form, `.acceptableLanguage()`, is a helper that returns the first result (the most preferred language
+in common with the client).
+
+```kotlin
+// Request Accept-Language: "en-US, es"
+request.negotiate.acceptableLanguage(listOf(
+    Lang.Spanish(),
+    Lang.English()
+)) == Lang.English()
+```
+
+Here we write an extension function `Request#lang()` that returns the optimal lang between
+our available langs and the client's requested langs.
+
+We define an internal `OurLangs` enum so that we can exhaust it with `when` expressions in our routes
+or middleware.
+
+```kotlin
+enum class OurLangs {
+    Spanish,
+    English
+}
+
+fun Request.lang(): OurLangs {
+    val availableLangs = listOf(
+        Lang.Spanish(),
+        Lang.English()
+    )
+    
+    return when (this.negotiate.acceptableLanguage(availableLangs)) {
+        Lang.English() -> AvailableLang.English
+        else -> AvailableLang.Spanish
+    }
+}
+
+router.get("/", fun(): Handler = { request -> 
+    return when (request.lang()) {
+        OurLangs.Spanish() ->
+            Response().text("Les servimos en español")
+        OurLangs.English() ->
+            Response().text("We're serving you English")
+    }
+})
+```
 
 ## Included Middleware
 
