@@ -680,8 +680,9 @@ fun Request.lang(): OurLangs {
     )
     
     return when (this.negotiate.acceptableLanguage(availableLangs)) {
-        Lang.English() -> AvailableLang.English
-        else -> AvailableLang.Spanish
+        Lang.English() -> OurLangs.English
+        // Default to Spanish
+        else -> OurLangs.Spanish
     }
 }
 
