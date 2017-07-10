@@ -50,12 +50,12 @@ class Request(
     }
 
     // TODO: Avoid consuming body that's already been drained
-    fun <T> json(decoder: JsonDecoder<T>): Result<T, Exception> {
+    fun <T> json(decoder: JsonDecoder<T>): Result<T, String> {
         return JsonDecoder.parse(utf8).flatMap { decoder(it) }
     }
 
     // TODO: Avoid consuming body that's already been drained
-    fun <T> form(decoder: FormDecoder<T>): Result<T, Exception> {
+    fun <T> form(decoder: FormDecoder<T>): Result<T, String> {
         return FormDecoder.parse(utf8).flatMap { decoder(it) }
     }
 

@@ -40,7 +40,7 @@ val database: MimeDatabase = run {
         .let(::MimeDatabase)
 }
 
-private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, Exception> {
+private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, String> {
     val extensions: Decoder<List<String>> = Decoder.oneOf(
         Decoder.get("extensions", Decoder.nullable(Decoder.listOf(Decoder.string)).map { it ?: emptyList() }),
         Decoder.succeed(emptyList())
@@ -51,7 +51,7 @@ private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, Excep
         Decoder.succeed(false)
     )
 
-    val decoder = Decoder.mapOf(Decoder.object2(::MimeRecord, extensions, compressible))
+    val decoder = Decoder.mapOf(Decoder.map2(::MimeRecord, extensions, compressible))
 
     return Decoder.parse(reader).flatMap { decoder(it) }
 }

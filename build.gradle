@@ -7,6 +7,8 @@ buildscript {
         jetty_version = "9.4.6.v20170531"
         commons_fileupload_version = "1.3.3"
         junit_version = "4.12"
+        result_version = '0.0.4'
+        json_version = '0.0.5'
     }
 
     repositories {
@@ -35,8 +37,8 @@ dependencies {
     compile "org.eclipse.jetty.websocket:websocket-server:$jetty_version"
     compile "commons-fileupload:commons-fileupload:$commons_fileupload_version"
 
-    compile "com.danneu:kotlin-result:0.0.3"
-    compile "com.danneu:kotlin-json-combinator:0.0.4"
+    compile "com.danneu:kotlin-result:$result_version"
+    compile "com.danneu:kotlin-json-combinator:$json_version"
 }
 
 // Reminder to move the mime-db file into src/main/resources so that it gets bundled.

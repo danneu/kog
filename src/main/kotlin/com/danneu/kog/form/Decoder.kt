@@ -50,7 +50,7 @@ sealed class FormValue {
     }
 }
 
-class Decoder<out A>(val decode: (FormValue) -> Result<A, Exception>) {
+class Decoder<out A>(val decode: (FormValue) -> Result<A, String>) {
     operator fun invoke(value: FormValue) = decode(value)
 
     fun <B> map(f: (A) -> B) = Decoder { value ->
@@ -62,22 +62,22 @@ class Decoder<out A>(val decode: (FormValue) -> Result<A, Exception>) {
     }
 
     companion object {
-        fun parse(string: String): Result<FormValue, Exception> {
+        fun parse(string: String): Result<FormValue, String> {
             return FormValue.decode(string).let { Result.ok(it) }
         }
 
         val string: Decoder<String> = Decoder { value ->
             when (value) {
                 is FormString -> Result.ok(value.underlying)
-                else -> Result.err(Exception("Expected string"))
+                else -> Result.err("Expected string")
             }
         }
 
         val int: Decoder<Int> = Decoder { value ->
             when (value) {
                 is FormString -> value.underlying.toIntOrNull()?.let { Result.ok(it) }
-                    ?: Result.err(Exception("Expected in"))
-                else -> Result.err(Exception("Expected int"))
+                    ?: Result.err("Expected in")
+                else -> Result.err("Expected int")
             }
         }
 
@@ -87,48 +87,61 @@ class Decoder<out A>(val decode: (FormValue) -> Result<A, Exception>) {
                     when (value.underlying) {
                         "true" -> Result.ok(true)
                         "false" -> Result.ok(false)
-                        else -> Result.err(Exception("Expected boolean"))
+                        else -> Result.err("Expected boolean")
                     }
-                else -> Result.err(Exception("Expected boolean"))
+                else -> Result.err("Expected boolean")
             }
         }
 
-        fun <T> listOf(d: Decoder<T>): Decoder<List<T>> = Decoder { value ->
-            when (value) {
+        fun <T> listOf(decoder: Decoder<T>): Decoder<List<T>> = Decoder { formValue ->
+            when (formValue) {
                 is FormList ->
-                    value.underlying.map { value ->
-                        val result = d(value)
-                        when (result) {
-                            is Result.Err ->
-                                @Suppress("UNCHECKED_CAST")
-                                return@Decoder result as Result.Err<List<T>, Exception>
-                            is Result.Ok ->
-                                result.value
+                    formValue.underlying.map { value ->
+                        decoder(value).let { result ->
+                            when (result) {
+                                is Result.Err ->
+                                    return@Decoder Result.err(result.error)
+                                is Result.Ok ->
+                                    result.value
+                            }
                         }
-                    }.let { Result.ok(it) }
+                    }.let(Result.Companion::ok)
                 else ->
-                    Result.err(Exception("Expected list"))
+                    Result.err("Expected list")
             }
         }
 
-        fun <T> get(key: String, decoder: Decoder<T>): Decoder<T> = Decoder { value ->
-            when (value) {
+        fun <T> get(key: String, decoder: Decoder<T>): Decoder<T> = Decoder { formValue ->
+            when (formValue) {
                 is FormMap ->
-                    value.underlying[key]?.let { decoder(it) } ?: Result.err(Exception("Expected map to have key: $key"))
+                    formValue.underlying[key]?.let { decoder(it) } ?:
+                        Result.err("Expected map to have key: $key")
                 else ->
-                    Result.err(Exception("Excepted a map"))
+                    Result.err("Excepted a map")
             }
         }
 
-        fun <A> oneOf(vararg ds: Decoder<A>): Decoder<A> = Decoder { value ->
-            // Sequence so that .map() is lazy
-            ds.asSequence().map { it(value) }.find { it is Result.Ok }
-                ?: Result.Err(Exception("None of the decoders matched"))
+        fun <A> oneOf(decoders: Iterable<Decoder<A>>): Decoder<A> = Decoder { formValue ->
+            for (decoder in decoders) {
+                decoder(formValue).let { result ->
+                    if (result is Result.Ok) {
+                        return@Decoder result
+                    }
+                }
+            }
+
+            Result.err("None of the decoders matched")
         }
 
-        fun <T> succeed(value: T) = Decoder { Result.ok(value) }
+        fun <A> oneOf(vararg decoders: Decoder<A>): Decoder<A> = Companion.oneOf(decoders.asIterable())
 
-        fun fail(e: Exception) = Decoder { Result.err(e) }
+        fun <T> succeed(value: T) = Decoder {
+            Result.ok(value)
+        }
+
+        fun fail(message: String) = Decoder {
+            Result.err(message)
+        }
     }
 }
 
