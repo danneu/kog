@@ -51,7 +51,7 @@ private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, Strin
         Decoder.succeed(false)
     )
 
-    val decoder = Decoder.mapOf(Decoder.map2(::MimeRecord, extensions, compressible))
+    val decoder = Decoder.mapOf(Decoder.map(::MimeRecord, extensions, compressible))
 
     return Decoder.parse(reader).flatMap { decoder(it) }
 }

@@ -44,8 +44,6 @@ Server({ Response().text("hello world") }).listen(3000)
 - [Cookies](#cookies)
   * [Request Cookies](#request-cookies)
   * [Response Cookies](#response-cookies)
-- [Content Negotiation](#content-negotiation)
-  * [Most acceptable language](#most-acceptable-language)
 - [Included Middleware](#included-middleware)
   * [Development Logger](#development-logger)
   * [Static File Serving](#static-file-serving)
@@ -62,6 +60,8 @@ Server({ Response().text("hello world") }).listen(3000)
 - [Environment Variables](#environment-variables)
 - [Heroku Deploy](#heroku-deploy)
 - [Example: Tiny Pastebin Server](#example-tiny-pastebin-server)
+- [Content Negotiation](#content-negotiation)
+  * [Most acceptable language](#most-acceptable-language)
 - [License](#license)
 
 <!-- tocstop -->
@@ -110,7 +110,7 @@ fun main(args: Array<String>) {
 ### Type-Safe Routing
 
 ``` kotlin
-import com.danneu.kog.json.Encoder as JE
+import com.danneu.json.Encoder as JE
 import com.danneu.kog.Router
 import com.danneu.kog.Response
 import com.danneu.kog.Request
@@ -279,8 +279,13 @@ val middleware: Middleware = { handler -> handler@ { req ->
 kog wraps the small, fast, and simple [ralfstx/minimal-json][minimal-json] library
 with combinators for working with JSON.
 
-**Note:** This has been extracted to <https://github.com/danneu/kotlin-json-combinator>.
+**Note:** json combinators and the result monad have been extracted from kog:
 
+- [danneu/kotlin-json-combinator][json]
+- [danneu/kotlin-result][result]
+
+[json]: https://github.com/danneu/kotlin-json-combinator
+[result]: https://github.com/danneu/kotlin-result
 [minimal-json]: https://github.com/ralfstx/minimal-json#performance
 
 ### JSON Encoding
@@ -333,8 +338,6 @@ kog comes with a declarative JSON parser combinator inspired by Elm's.
 `Decoder<T>` is a decoder that will return `Result<T, Exception>` when
 invoked on a JSON string.
 
-**Note:** The result monad has been extracted to <https://github.com/danneu/kotlin-result>.
-
 ``` kotlin
 import com.danneu.json.Decoder as JD
 import com.danneu.json.Encoder as JE
@@ -374,8 +377,8 @@ import com.danneu.json.Encoder as JE
 
 // example request payload: {"user": {"uname": "chuck"}, "password": "secret"}
 val handler = { request ->
-  val decoder = JD.pair(
-    JD.getIn(listOf("user", "uname"), JD.string),
+  val decoder = JD.pairOf(
+    JD.get(listOf("user", "uname"), JD.string),
     JD.get("password", JD.string)
   )
   val (uname, password) = request.json(decoder)
@@ -383,6 +386,9 @@ val handler = { request ->
   Response().json(JE.obj("success" to JE.obj("uname" to JE.str(uname))))
 }
 ```
+
+Check out [danneu/kotlin-json-combinator][json] and [danneu/kotlin-result][result]
+for more examples.
 
 ## Routing
 
@@ -568,132 +574,6 @@ $ http --session=kog-example --body localhost:9000
 count: 2
 $ http --session=kog-example --body localhost:9000
 count: 3
-```
-
-## Content Negotiation
-
-**TODO:** Improve negotiation docs
-
-Each request has a negotiator that parses the `accept-*` headers, returning a list of 
-values in order of client preference.
-
-- `request.negotiate.mediaTypes` parses the `accept` header.
-- `request.negotiate.languages` parses the `accept-language` header.
-- `request.negotiate.encodings` parses the `accept-encoding` header.
-
-Until the docs are fleshed out, here's a demo server that will illuminate this:
-
-```kotlin
-fun main(args: Array<String>) {
-    val handler: Handler = { request ->
-        println(request.headers.toString())
-        Response().text("""
-        languages:  ${request.negotiate.languages()}
-        encodings:  ${request.negotiate.encodings()}
-        mediaTypes: ${request.negotiate.mediaTypes()}
-        """.trimIndent())
-    }
-
-    Server(handler).listen(3000)
-}
-```
-
-An example curl request:
-
-```text
-curl http://localhost:3000 \
-  --header 'Accept-Language:de;q=0.7, fr-CH, fr;q=0.9, en;q=0.8, *;q=0.5, de-CH;q=0.2' \
-  --header 'accept:application/json,TEXT/*' \
-  --header 'accept-encoding:gzip,DeFLaTE'
-```
-
-Corresponding response:
-
-```text
-languages:  [French[CH], French[*], English[*], German[*], *[*], German[CH]]
-encodings:  [Encoding(name='gzip', q=1.0), Encoding(name='deflate', q=1.0)]
-mediaTypes: [MediaType(type='application', subtype='json', q=1.0), MediaType(type='text', subtype='*', q=1.0)]
-```
-
-Notice that values ("TEXT/*", "DeFLaTE") are always downcased for easy comparison.
-
-### Most acceptable language
-
-Given a list of languages that you want to support, the negotiator can return a list that filters and sorts your 
-available languages down in order of client preference, the first one being the client's highest preference.
-
-```kotlin
-import com.danneu.kog.Lang
-import com.danneu.kog.Locale
-
-// Request Accept-Language: "en-US, es"
-request.negotiate.acceptableLanguages(listOf(
-    Lang.Spanish(),
-    Lang.English(Locale.UnitedStates)
-)) == listOf(
-    Lang.English(Locale.UnitedStates),
-    Lang.Spanish()
-)
-```
-
-Also, note that we don't have to provide a locale. If the client asks for `en-US`, then of course
-`Lang.English()` without a locale should be acceptable if we have no more specific match.
-
-```kotlin
-// Request Accept-Language: "en-US, es"
-request.negotiate.acceptableLanguages(listOf(
-    Lang.Spanish(),
-    Lang.English()
-)) == listOf(
-    Lang.English(),
-    Lang.Spanish()
-)
-```
-
-The singular form, `.acceptableLanguage()`, is a helper that returns the first result (the most preferred language
-in common with the client).
-
-```kotlin
-// Request Accept-Language: "en-US, es"
-request.negotiate.acceptableLanguage(listOf(
-    Lang.Spanish(),
-    Lang.English()
-)) == Lang.English()
-```
-
-Here we write an extension function `Request#lang()` that returns the optimal lang between
-our available langs and the client's requested langs.
-
-We define an internal `OurLangs` enum so that we can exhaust it with `when` expressions in our routes
-or middleware.
-
-```kotlin
-enum class OurLangs {
-    Spanish,
-    English
-}
-
-fun Request.lang(): OurLangs {
-    val availableLangs = listOf(
-        Lang.Spanish(),
-        Lang.English()
-    )
-    
-    return when (this.negotiate.acceptableLanguage(availableLangs)) {
-        Lang.English() -> OurLangs.English
-        // Default to Spanish
-        else -> OurLangs.Spanish
-    }
-}
-
-router.get("/", fun(): Handler = { request -> 
-    return when (request.lang()) {
-        OurLangs.Spanish() ->
-            Response().text("Les servimos en español")
-        OurLangs.English() ->
-            Response().text("We're serving you English")
-    }
-})
 ```
 
 ## Included Middleware
@@ -1176,6 +1056,133 @@ fun main(args: Array<String>) {
     Server(router.handler()).listen(3000)
 }
 ```
+
+## Content Negotiation
+
+**TODO:** Improve negotiation docs
+
+Each request has a negotiator that parses the `accept-*` headers, returning a list of 
+values in order of client preference.
+
+- `request.negotiate.mediaTypes` parses the `accept` header.
+- `request.negotiate.languages` parses the `accept-language` header.
+- `request.negotiate.encodings` parses the `accept-encoding` header.
+
+Until the docs are fleshed out, here's a demo server that will illuminate this:
+
+```kotlin
+fun main(args: Array<String>) {
+    val handler: Handler = { request ->
+        println(request.headers.toString())
+        Response().text("""
+        languages:  ${request.negotiate.languages()}
+        encodings:  ${request.negotiate.encodings()}
+        mediaTypes: ${request.negotiate.mediaTypes()}
+        """.trimIndent())
+    }
+
+    Server(handler).listen(3000)
+}
+```
+
+An example curl request:
+
+```text
+curl http://localhost:3000 \
+  --header 'Accept-Language:de;q=0.7, fr-CH, fr;q=0.9, en;q=0.8, *;q=0.5, de-CH;q=0.2' \
+  --header 'accept:application/json,TEXT/*' \
+  --header 'accept-encoding:gzip,DeFLaTE'
+```
+
+Corresponding response:
+
+```text
+languages:  [French[CH], French[*], English[*], German[*], *[*], German[CH]]
+encodings:  [Encoding(name='gzip', q=1.0), Encoding(name='deflate', q=1.0)]
+mediaTypes: [MediaType(type='application', subtype='json', q=1.0), MediaType(type='text', subtype='*', q=1.0)]
+```
+
+Notice that values ("TEXT/*", "DeFLaTE") are always downcased for easy comparison.
+
+### Most acceptable language
+
+Given a list of languages that you want to support, the negotiator can return a list that filters and sorts your 
+available languages down in order of client preference, the first one being the client's highest preference.
+
+```kotlin
+import com.danneu.kog.Lang
+import com.danneu.kog.Locale
+
+// Request Accept-Language: "en-US, es"
+request.negotiate.acceptableLanguages(listOf(
+    Lang.Spanish(),
+    Lang.English(Locale.UnitedStates)
+)) == listOf(
+    Lang.English(Locale.UnitedStates),
+    Lang.Spanish()
+)
+```
+
+Also, note that we don't have to provide a locale. If the client asks for `en-US`, then of course
+`Lang.English()` without a locale should be acceptable if we have no more specific match.
+
+```kotlin
+// Request Accept-Language: "en-US, es"
+request.negotiate.acceptableLanguages(listOf(
+    Lang.Spanish(),
+    Lang.English()
+)) == listOf(
+    Lang.English(),
+    Lang.Spanish()
+)
+```
+
+The singular form, `.acceptableLanguage()`, is a helper that returns the first result (the most preferred language
+in common with the client).
+
+```kotlin
+// Request Accept-Language: "en-US, es"
+request.negotiate.acceptableLanguage(listOf(
+    Lang.Spanish(),
+    Lang.English()
+)) == Lang.English()
+```
+
+Here we write an extension function `Request#lang()` that returns the optimal lang between
+our available langs and the client's requested langs.
+
+We define an internal `OurLangs` enum so that we can exhaust it with `when` expressions in our routes
+or middleware.
+
+```kotlin
+enum class OurLangs {
+    Spanish,
+    English
+}
+
+fun Request.lang(): OurLangs {
+    val availableLangs = listOf(
+        Lang.Spanish(),
+        Lang.English()
+    )
+    
+    return when (this.negotiate.acceptableLanguage(availableLangs)) {
+        Lang.English() -> OurLangs.English
+        // Default to Spanish
+        else -> OurLangs.Spanish
+    }
+}
+
+router.get("/", fun(): Handler = { request -> 
+    return when (request.lang()) {
+        OurLangs.Spanish() ->
+            Response().text("Les servimos en español")
+        OurLangs.English() ->
+            Response().text("We're serving you English")
+    }
+})
+```
+
 
 ## License
 
