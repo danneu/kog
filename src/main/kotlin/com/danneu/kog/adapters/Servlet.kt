@@ -35,6 +35,11 @@ class Servlet(val handler: Handler) : HttpServlet() {
                 servletResponse.contentType = type
             }
 
+            response.contentType?.let { type ->
+                servletResponse.contentType = type.toString()
+
+            }
+
             response.body.pipe(servletResponse.outputStream)
         }
 
@@ -49,9 +54,8 @@ class Servlet(val handler: Handler) : HttpServlet() {
               method = Method.fromString(r.method),
               protocol = Protocol.fromString(r.protocol),
               headers = expandHeaders(r),
-              type = r.contentType?.split(";", limit = 2)?.get(0)?.let { ContentType.fromString(it) },
+              contentType = r.contentType?.let { ContentType.parse(it) },
               length = if (r.contentLength >= 0) r.contentLength else null,
-              charset = r.characterEncoding?.toLowerCase(),
               body = r.inputStream,
               path = r.pathInfo ?: "/"
             )

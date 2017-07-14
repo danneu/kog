@@ -1,5 +1,6 @@
 package com.danneu.kog
 
+import com.danneu.kog.toy
 import org.junit.Assert.*
 import org.junit.Test
 

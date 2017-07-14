@@ -178,9 +178,10 @@ Response().text("Hello")                        // text/plain
 Response().html("<h1>Hello</h1>")               // text/html
 Response().json(JE.obj("number" to JE.num(42))) // application/json {"number": 42}
 Response().json(JE.array(JE.num(1), JE.num(2), JE.num(3))) // application/json [1, 2, 3]
-Response().file(File("video.mp4"))                 // video/mp4 (determines response headers from File metadata)
-Response().stream(File("video.mp4"), "video/mp4")  // video/mp4
-Response().setHeader(Header.ContentType, "application/json")
+Response().file(File("video.mp4"))              // video/mp4 (determines response headers from File metadata)
+Response().stream(File("video.mp4"))            // video/mp4
+Response().setHeader(Header.AccessControlAllowOrigin, "*")
+Response().type = ContentType(Mime.Html, mapOf("charset", "utf-8"))
 Response().appendHeader(Header.Custom("X-Fruit"), "orange")
 Response().redirect("/")                           // 302 redirect
 Response().redirect("/", permanent = true)         // 301 redirect
@@ -193,6 +194,7 @@ import com.danneu.kog.Header
 
 // GET http://example.com/users?sort=created,  json body is {"foo": "bar"}
 var handler: Handler = { request ->
+  request.type                     // ContentType(mime=Mime.Html, params=mapOf("charset" to "utf-8"))
   request.href                     // http://example.com/users?sort=created
   request.path                     // "/users"
   request.method                   // Method.get

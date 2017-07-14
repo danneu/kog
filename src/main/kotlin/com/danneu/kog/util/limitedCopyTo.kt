@@ -11,7 +11,7 @@ class CopyLimitExceeded : Exception()
  * Based on Kotlin's built-in extension function `InputStream.copyTo`.
  */
 fun InputStream.limitedCopyTo(limit: ByteLength, out: OutputStream, bufferSize: Int = DEFAULT_BUFFER_SIZE): Long {
-    var bytesCopied: Long = 0
+    var bytesCopied = 0L
     val buffer = ByteArray(bufferSize)
     var bytes = read(buffer)
     while (bytes >= 0) {

@@ -1,29 +1,30 @@
 package com.danneu.kog.mime
 
 import com.danneu.json.Decoder
-import com.danneu.kog.mime.MimeDatabase.MimeRecord
+import com.danneu.kog.Mime
 import com.danneu.result.Result
-import com.danneu.result.flatMap
 import com.danneu.result.getOrElse
 import java.io.Reader
+
+class MimeRecord(val extensions: List<String> = emptyList(), val compressible: Boolean)
 
 /** Wraps the mime-db data to expose convenient lookup functions.
  */
 class MimeDatabase(underlying: Map<String, MimeRecord>) {
     // mapping of extensions ("gif") to mime types
     private val extLookup = underlying.flatMap { (mime, record) ->
-        record.extensions.map { ext -> ext to mime }
+        record.extensions.map { ext ->
+            ext to Mime.fromString(mime)
+        }
     }.toMap()
 
     // set of all extensions that can be compressed
     private val compressibleLookup: Set<String> =
         underlying.filterValues(MimeRecord::compressible).keys.toSet()
 
-    fun compressible(key: String) = compressibleLookup.contains(key)
+    fun compressible(key: String): Boolean = compressibleLookup.contains(key)
 
-    fun fromExtension(ext: String): String? = extLookup[ext]
-
-    class MimeRecord(val extensions: List<String> = emptyList(), val compressible: Boolean)
+    fun fromExtension(ext: String): Mime? = extLookup[ext]
 }
 
 
@@ -53,5 +54,5 @@ private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, Strin
 
     val decoder = Decoder.mapOf(Decoder.map(::MimeRecord, extensions, compressible))
 
-    return Decoder.parse(reader).flatMap { decoder(it) }
+    return Decoder.decode(reader, decoder)
 }

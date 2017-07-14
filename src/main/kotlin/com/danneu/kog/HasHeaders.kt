@@ -4,13 +4,14 @@ typealias HeaderPair = Pair<Header, String>
 
 // Implements default header-related methods for Request/Response.
 //
-// Initialially implemented this as an interface, but did not
+// Initially implemented this as an interface, but did not
 // like how the toType() hack could not be made internal since
 // I don't want the hack to be exposed on Request/Response
 // public API.
 abstract class HasHeaders<out T> {
     abstract val headers: MutableList<HeaderPair>
 
+    // Allows us to avoid unchecked cast
     internal abstract fun toType(): T
 
     fun getHeader(key: Header): String? {
@@ -36,5 +37,9 @@ abstract class HasHeaders<out T> {
         headers.removeIf { it.first == key }
         return this.toType()
     }
+}
+
+interface HasContentType {
+    var contentType: ContentType?
 }
 

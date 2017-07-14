@@ -66,6 +66,10 @@ class Decoder<out A>(val decode: (FormValue) -> Result<A, String>) {
             return FormValue.decode(string).let { Result.ok(it) }
         }
 
+        fun <T> decode(string: String, decoder: Decoder<T>): Result<T, String> {
+            return Decoder.parse(string).flatMap { decoder(it) }
+        }
+
         val string: Decoder<String> = Decoder { value ->
             when (value) {
                 is FormString -> Result.ok(value.underlying)

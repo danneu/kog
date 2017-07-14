@@ -1,11 +1,11 @@
 package com.danneu.kog
 
-import com.danneu.kog.Protocol.HTTP_1_1
-import com.danneu.kog.Protocol.HTTP_2
+import com.danneu.kog.Protocol.Http_1_1
+import com.danneu.kog.Protocol.Http_2
 import org.junit.Assert.*
 import org.junit.Test
 
-fun upgradeRequest(protocol: Protocol = HTTP_1_1, method: Method = Method.Get): Request = Request.toy(
+fun upgradeRequest(protocol: Protocol = Http_1_1, method: Method = Method.Get): Request = Request.toy(
     protocol = protocol,
     method = method,
     headers = mutableListOf(
@@ -41,7 +41,7 @@ class RequestTests {
 
         // Protocol
         run {
-            assertFalse("protocol must be HTTP/1.1", upgradeRequest(protocol = HTTP_2).isUpgrade())
+            assertFalse("protocol must be HTTP/1.1", upgradeRequest(protocol = Http_2).isUpgrade())
         }
     }
 }

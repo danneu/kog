@@ -4,6 +4,7 @@ import com.danneu.kog.ContentType
 import com.danneu.kog.Header
 import com.danneu.kog.Request
 import com.danneu.kog.Middleware
+import com.danneu.kog.Mime
 import com.danneu.kog.Response
 import com.danneu.kog.batteries.multipart.SavedUpload
 import com.danneu.kog.batteries.multipart.Whitelist
@@ -27,7 +28,7 @@ private fun fileSequence(iter: FileItemIterator): Sequence<FileItemStream> = gen
 
 private fun Request.context() = object : UploadContext {
     // RequestContext
-    override fun getCharacterEncoding(): String = this@context.charset ?: "utf-8"
+    override fun getCharacterEncoding(): String = this@context.contentType?.charset ?: "utf-8"
     override fun getContentLength(): Int = this@context.length ?: -1
     // needs the full header (i.e. with the boundary) which is why we can't just use this.type
     // TODO: What happens when content-type is not of a format UploadContext expects?
@@ -71,7 +72,7 @@ fun multipart(whitelist: Whitelist, ttl: Duration = Duration.ofHours(1), interva
     })
 
     fun(req: Request): Response {
-        if (req.type != ContentType.MultipartForm) {
+        if (req.contentType?.mime != Mime.FormMultipart) {
             return handler(req)
         }
 

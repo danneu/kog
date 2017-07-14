@@ -5,7 +5,6 @@ import com.danneu.kog.cookies.Cookie
 import com.danneu.json.JsonValue
 import com.danneu.kog.mime.database
 import org.eclipse.jetty.websocket.api.Session
-import com.danneu.json.Encoder as JE
 import java.io.File
 import java.io.InputStream
 
@@ -27,56 +26,60 @@ fun Response.Companion.websocket(key: String, accept: WebSocketAcceptor): Respon
 class Response(
     var status: Status = Status.Ok,
     var body: ResponseBody = ResponseBody.None,
-    var webSocket: Pair<String, WebSocketAcceptor>? = null
-) : HasHeaders<Response>() {
+    var webSocket: Pair<String, WebSocketAcceptor>? = null,
+    override var contentType: ContentType? = null
+) : HasHeaders<Response>(), HasContentType {
     override fun toType() = this
 
     val cookies by lazy { mutableMapOf<String, Cookie>() }
 
     override var headers = mutableListOf<HeaderPair>()
 
-    fun setStatus(status: Status) = apply { this.status = status }
-
     // BODIES
 
     fun html(html: String) = apply {
-        setHeader(Header.ContentType, ContentType.Html.toString())
+        contentType = ContentType(Mime.Html)
         body = ResponseBody.String(html)
     }
 
     fun text(text: String) = apply {
-        setHeader(Header.ContentType, ContentType.Text.toString())
+        contentType = ContentType(Mime.Text)
         body = ResponseBody.String(text)
     }
 
-    fun bytes(bytes: ByteArray) = apply {
+    fun bytes(bytes: ByteArray, mime: Mime) = apply {
+        contentType = ContentType(mime)
         body = ResponseBody.ByteArray(bytes)
     }
 
     fun none() = apply {
         removeHeader(Header.ContentType)
+        contentType = null
         body = ResponseBody.None
     }
 
     fun json(value: JsonValue) = apply {
-        setHeader(Header.ContentType, ContentType.Json.toString())
+        contentType = ContentType(Mime.Json)
         body = ResponseBody.String(value.toString())
     }
 
-    fun stream(input: InputStream, contentType: String = ContentType.OctetStream.toString()) = apply {
-        setHeader(Header.ContentType, contentType)
+    fun stream(input: InputStream, mime: Mime = Mime.OctetStream) = apply {
+        contentType = ContentType(mime)
         body = ResponseBody.InputStream(input)
     }
 
-    fun file(file: File, contentType: String? = null) = apply {
+    fun file(file: File, mime: Mime? = null) = apply {
         body = ResponseBody.File(file)
         // Hmm, already doing it at finalize time. TODO: Rethink streamable interface. need length?
         setHeader(Header.ContentLength, file.length().toString())
-        setHeader(Header.ContentType, contentType ?: database.fromExtension(file.extension) ?: ContentType.OctetStream.toString())
+        contentType = ContentType(mime
+            ?: database.fromExtension(file.extension)
+            ?: Mime.OctetStream
+        )
     }
 
-    fun writer(contentType: String, writeTo: (java.io.Writer) -> Unit): Response = apply {
-        setHeader(Header.ContentType, contentType)
+    fun writer(mime: Mime, writeTo: (java.io.Writer) -> Unit): Response = apply {
+        contentType = ContentType(mime)
         body = ResponseBody.Writer(writeTo)
     }
 
@@ -84,13 +87,12 @@ class Response(
 
     // This method ties up loose ends.
     // Call this right before flushing the response.
-    fun finalize(): Response {
+    internal fun finalize(): Response {
         if (status.empty) {
             this.none()
         }
 
-        // TODO: Only set this if response type is text/*
-        if (body is ResponseBody.None) {
+        if (body is ResponseBody.None && contentType?.mime?.prefix == "text") {
             if (status in setOf(Status.NotFound, Status.InternalError)) {
                 text(status.toString())
             }
@@ -99,6 +101,11 @@ class Response(
         when (body.length) {
             null -> setHeader(Header.TransferEncoding, "chunked")
             else -> setHeader(Header.ContentLength, body.length.toString())
+        }
+
+        // If contentType is set, then content-type header would be redundant and more likely wrong
+        if (contentType != null) {
+            removeHeader(Header.ContentType)
         }
 
         return this
@@ -110,7 +117,7 @@ class Response(
     // 302: .Found
     fun redirect(uri: String, permanent: Boolean = false) = apply {
         setHeader(Header.Location, uri)
-        setStatus(if (permanent) Status.MovedPermanently else Status.Found)
+        status = if (permanent) Status.MovedPermanently else Status.Found
     }
 
     fun redirectBack(request: Request, altUri: String) = redirect(request.getHeader(Header.Referer) ?: altUri)

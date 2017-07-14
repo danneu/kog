@@ -1,10 +1,6 @@
-package com.danneu.kog.toy
+package com.danneu.kog
 
-import com.danneu.kog.HeaderPair
-import com.danneu.kog.Method
-import com.danneu.kog.Protocol
-import com.danneu.kog.Protocol.HTTP_1_1
-import com.danneu.kog.Request
+import com.danneu.kog.Protocol.Http_1_1
 import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
 
@@ -25,7 +21,7 @@ fun Request.Companion.toy(
     path: String = "/",
     queryString: String = "foo=bar",
     headers: MutableList<HeaderPair> = mutableListOf(),
-    protocol: Protocol = HTTP_1_1
+    protocol: Protocol = Http_1_1
 ): Request {
     return Request(
         serverPort = 3000,
@@ -37,9 +33,8 @@ fun Request.Companion.toy(
         method = method,
         protocol = protocol,
         headers = headers,
-        type = null,
+        contentType = null,
         length = 0,
-        charset = null,
         body = ToyStream(),
         path = path
     )

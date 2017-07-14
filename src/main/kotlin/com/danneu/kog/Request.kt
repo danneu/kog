@@ -1,6 +1,6 @@
 package com.danneu.kog
 
-import com.danneu.kog.Protocol.HTTP_1_1
+import com.danneu.kog.Protocol.Http_1_1
 import com.danneu.kog.batteries.multipart.SavedUpload
 import com.danneu.kog.cookies.parse
 import com.danneu.result.Result
@@ -21,12 +21,11 @@ class Request(
   var method: Method,
   val protocol: Protocol,
   override val headers: MutableList<HeaderPair>,
-  val type: ContentType?,
+  override var contentType: ContentType?,
   val length: Int?, // Either >= 0 or null
-  val charset: String?,
   val body: ServletInputStream, // Note: Could just be InputStream if I'm never going to use ServerInputStream methods
   var path: String
-) : HasHeaders<Request>() {
+) : HasHeaders<Request>(), HasContentType {
     override fun toType() = this
 
     val query by lazy {
@@ -52,12 +51,12 @@ class Request(
 
     // TODO: Avoid consuming body that's already been drained
     fun <T> json(decoder: JsonDecoder<T>): Result<T, String> {
-        return JsonDecoder.parse(utf8).flatMap { decoder(it) }
+        return JsonDecoder.decode(utf8, decoder)
     }
 
     // TODO: Avoid consuming body that's already been drained
     fun <T> form(decoder: FormDecoder<T>): Result<T, String> {
-        return FormDecoder.parse(utf8).flatMap { decoder(it) }
+        return FormDecoder.decode(utf8, decoder)
     }
 
     // TODO: Avoid consuming body that's already been drained
@@ -83,7 +82,7 @@ class Request(
         // Check method
         if (this.method != Method.Get) return false
         // Check protocol
-        if (this.protocol != HTTP_1_1) return false
+        if (this.protocol != Http_1_1) return false
         return true
     }
 
@@ -98,11 +97,10 @@ class Request(
           "method" to method.toString(),
           "protocol" to protocol,
           "headers" to headers,
-          "type" to type,
+          "contentType" to contentType,
           "length" to length,
-          "charset" to charset,
           "path" to path
-        ).map { pair -> pair.toString() }.joinToString("\n")
+        ).map { it.toString() }.joinToString("\n")
     }
 
     companion object
