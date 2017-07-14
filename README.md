@@ -808,7 +808,8 @@ val router = Router() {
 
 Templating libraries generally generate an HTML string. Just pass it to `Response().html(html)`.
 
-The j2html library works well with the minimal theme.
+For example, [tipsy/j2html](https://github.com/tipsy/j2html) is a simple templating library
+for generating HTML from your handlers.
 
     compile "com.j2html:j2html:1.0.0"
 
