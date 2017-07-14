@@ -28,7 +28,8 @@ class Response(
     var status: Status = Status.Ok,
     var body: ResponseBody = ResponseBody.None,
     var webSocket: Pair<String, WebSocketAcceptor>? = null
-) : HasHeaders<Response> {
+) : HasHeaders<Response>() {
+    override fun toType() = this
 
     val cookies by lazy { mutableMapOf<String, Cookie>() }
 

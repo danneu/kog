@@ -2,7 +2,6 @@ package com.danneu.kog.negotiation
 
 import com.danneu.kog.Header
 import com.danneu.kog.Request
-import com.danneu.kog.toy
 
 enum class Locale {
     // Special
@@ -115,12 +114,4 @@ fun Request.lang(): AvailableLang {
         Lang.English() -> AvailableLang.English
         else -> AvailableLang.Spanish
     }
-}
-
-fun main(args: Array<String>) {
-
-    //val neg = Negotiator(Request.toy(headers = mutableListOf(Header.AcceptLanguage to "en-US, es")))
-    val req = Request.toy(headers = mutableListOf(Header.AcceptLanguage to "es, en-US, es"))
-
-    println(req.lang())
 }

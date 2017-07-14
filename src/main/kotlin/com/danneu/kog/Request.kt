@@ -9,7 +9,6 @@ import com.danneu.json.Decoder as JsonDecoder
 import com.danneu.kog.form.Decoder as FormDecoder
 import com.danneu.kog.negotiation.Negotiator
 import org.eclipse.jetty.websocket.api.util.QuoteUtil
-import javax.servlet.ReadListener
 import javax.servlet.ServletInputStream
 
 class Request(
@@ -27,7 +26,9 @@ class Request(
   val charset: String?,
   val body: ServletInputStream, // Note: Could just be InputStream if I'm never going to use ServerInputStream methods
   var path: String
-) : HasHeaders<Request> {
+) : HasHeaders<Request>() {
+    override fun toType() = this
+
     val query by lazy {
         formDecode(queryString).mutableCopy()
     }
@@ -108,36 +109,3 @@ class Request(
 }
 
 
-fun Request.Companion.toy(
-    method: Method = Method.Get,
-    path: String = "/",
-    queryString: String = "foo=bar",
-    headers: MutableList<HeaderPair> = mutableListOf(),
-    protocol: Protocol = HTTP_1_1
-): Request {
-    return Request(
-      serverPort = 3000,
-      serverName = "name",
-      remoteAddr = "1.2.3.4",
-      href = path + if (queryString.isNotBlank()) { "?" + queryString } else { "" },
-      queryString = queryString,
-      scheme = "http",
-      method = method,
-      protocol = protocol,
-      headers = headers,
-      type = null,
-      length = 0,
-      charset = null,
-      body = ToyStream(),
-      path = path
-    )
-}
-
-
-// Lets us mock a Request with a noop input stream
-class ToyStream: ServletInputStream() {
-    override fun isReady(): Boolean = true
-    override fun isFinished(): Boolean = true
-    override fun read(): Int = -1
-    override fun setReadListener(readListener: ReadListener?) {}
-}

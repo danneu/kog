@@ -46,7 +46,7 @@ class Servlet(val handler: Handler) : HttpServlet() {
               href = r.requestURL.toString() + if (r.queryString != null) "?" + r.queryString else "",
               queryString = r.queryString,
               scheme = r.scheme,
-              method = Method.fromString(r.method.toLowerCase()),
+              method = Method.fromString(r.method),
               protocol = Protocol.fromString(r.protocol),
               headers = expandHeaders(r),
               type = r.contentType?.split(";", limit = 2)?.get(0)?.let { ContentType.fromString(it) },

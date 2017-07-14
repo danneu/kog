@@ -1,50 +1,13 @@
 package com.danneu.kog
 
-
-typealias HeaderPair = Pair<Header, String>
-
-
-// FIXME: Not sure how to create an interface with default implementations that always returning the implementing self.
-// For now I use these unchecked `this as T` returns.
-@Suppress("UNCHECKED_CAST")
-interface HasHeaders <out T> {
-    val headers: MutableList<HeaderPair>
-
-    fun getHeader(key: Header): String? {
-        return headers.find { it.first == key }?.second
-    }
-
-    // if value is null, then the header does not get set
-    fun setHeader(key: Header, value: String?): T {
-        if (value == null) return this as T
-        removeHeader(key)
-        appendHeader(key, value)
-        return this as T
-    }
-
-    // if value is null, then the header does not get set
-    fun appendHeader(key: Header, value: String?): T {
-        if (value == null) return this as T
-        headers.add(key to value)
-        return this as T
-    }
-
-    fun removeHeader(key: Header): T {
-        headers.removeIf { it.first == key }
-        return this as T
-    }
-}
-
-
 sealed class Header(val key: String) {
-    // Keys are canonicalized on creation. Nitpick: Maybe it should be done at another time.
+    // Keys are canonicalized on creation.
     class Custom(key: String) : Header(key.toLowerCase()) {
-        // Support Custom("foo") == Custom("FOO")
-        override fun equals(other: Any?): Boolean = when (other) {
-            is Custom -> key == other.key
-            else -> false
+        override fun equals(other: Any?): Boolean {
+            return other is Custom && key == other.key
         }
-        override fun hashCode() = key.toLowerCase().hashCode()
+
+        override fun hashCode() = key.hashCode()
     }
 
     // AUTHENTICATION
@@ -210,7 +173,7 @@ sealed class Header(val key: String) {
     // Hyphenates capitalize-letter boundaries.
     //
     // Example: "XForwardedFor" -> "X-Forwarded-For"
-    override fun toString(): String = key
+    override fun toString() = key
 
     companion object {
         private const val ACCEPT = "accept"

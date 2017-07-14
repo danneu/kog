@@ -10,7 +10,7 @@ enum class Protocol {
 
     companion object {
         // Jetty always gives us uppercase.
-        fun fromString(string: String): Protocol = when (string) {
+        fun fromString(string: String) = when (string) {
             "HTTP/1.0" -> HTTP_1_0
             "HTTP/1.1" -> HTTP_1_1
             "HTTP/2" -> HTTP_2
