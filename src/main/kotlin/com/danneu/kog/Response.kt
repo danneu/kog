@@ -48,6 +48,10 @@ class Response(
         body = ResponseBody.String(text)
     }
 
+    fun bytes(bytes: ByteArray) = apply {
+        body = ResponseBody.ByteArray(bytes)
+    }
+
     fun none() = apply {
         removeHeader(Header.ContentType)
         body = ResponseBody.None
