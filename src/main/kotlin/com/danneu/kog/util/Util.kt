@@ -1,42 +1,54 @@
-package com.danneu.kog
+package com.danneu.kog.util
 
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.nio.charset.Charset
+import java.nio.charset.UnsupportedCharsetException
 import java.security.MessageDigest
 import java.time.Duration
 
+object Util {
+    // Decodes www-form-urlencoded. Doesn't do any nesting for now.
+    fun formDecode(encoded: String?): Map<String, String> {
+        if (encoded == null) { return emptyMap() }
+        return encoded.split("&", limit = 100)
+            .map { it.split("=", limit = 2) }
+            .map { list -> if (list.size == 2) { list[0] to list[1] } else { null }}
+            .filterNotNull()
+            .toMap()
+    }
 
-// Decodes www-form-urlencoded. Doesn't do any nesting for now.
-fun formDecode(encoded: String?): Map<String, String> {
-    if (encoded == null) { return emptyMap() }
-    return encoded.split("&", limit = 100)
-        .map { it.split("=", limit = 2) }
-        .map { list -> if (list.size == 2) { list[0] to list[1] } else { null }}
-        .filterNotNull()
-        .toMap()
+    fun urlDecode(string: String, encoding: String = "utf-8"): String {
+        return URLDecoder.decode(string, encoding)
+    }
+
+    // Note: space becomes "+"
+    fun urlEncode(string: String): String {
+        return URLEncoder.encode(string, "utf-8")
+    }
+
+    // Note: space becomes "%20"
+    fun percentEncode(string: String): String {
+        return URLEncoder.encode(string, "utf-8").replace("+", "%20")
+    }
+
+    fun percentDecode(string: String): String {
+        return URLDecoder.decode(string, "utf-8")
+    }
+
+    // A version of charset() that does not throw
+    fun charsetOrNull(str: String): Charset? = try {
+        charset(str)
+    } catch (ex: UnsupportedCharsetException) {
+        null
+    }
 }
 
-fun urlDecode(string: String, encoding: String = "utf-8"): String {
-    return URLDecoder.decode(string, encoding)
-}
-
-// Note: space becomes "+"
-fun urlEncode(string: String): String {
-    return URLEncoder.encode(string, "utf-8")
-}
-
-// Note: space becomes "%20"
-fun percentEncode(string: String): String {
-    return URLEncoder.encode(string, "utf-8").replace("+", "%20")
-}
-
-fun percentDecode(string: String): String {
-    return URLDecoder.decode(string, "utf-8")
-}
-
+//
+// EXTENSIONS
+//
 
 fun <K, V> Map<K, V>.mutableCopy(): MutableMap<K, V> = java.util.HashMap(this)
-
 
 // decimal digit to hex nibble lookup
 private val nibble = arrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f')
@@ -82,3 +94,4 @@ fun Duration.clamp(min: Duration, max: Duration) = when {
     this > max -> max
     else -> this
 }
+

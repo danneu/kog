@@ -5,7 +5,7 @@ import com.danneu.kog.Request
 import com.danneu.kog.Method
 import com.danneu.kog.Middleware
 import com.danneu.kog.Response
-import com.danneu.kog.clamp
+import com.danneu.kog.util.clamp
 import java.io.File
 import java.nio.file.Path
 import java.time.Duration

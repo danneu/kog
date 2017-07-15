@@ -4,7 +4,7 @@ package com.danneu.kog.batteries.basicAuth
 import com.danneu.kog.Header
 import com.danneu.kog.Request
 import com.danneu.kog.Response
-import com.danneu.kog.utf8
+import com.danneu.kog.util.utf8
 import java.util.Base64
 
 

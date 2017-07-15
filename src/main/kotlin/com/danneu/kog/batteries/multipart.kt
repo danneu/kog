@@ -28,7 +28,7 @@ private fun fileSequence(iter: FileItemIterator): Sequence<FileItemStream> = gen
 
 private fun Request.context() = object : UploadContext {
     // RequestContext
-    override fun getCharacterEncoding(): String = this@context.contentType?.charset ?: "utf-8"
+    override fun getCharacterEncoding(): String = this@context.contentType?.charset?.toString()?.toLowerCase() ?: "utf-8"
     override fun getContentLength(): Int = this@context.length ?: -1
     // needs the full header (i.e. with the boundary) which is why we can't just use this.type
     // TODO: What happens when content-type is not of a format UploadContext expects?

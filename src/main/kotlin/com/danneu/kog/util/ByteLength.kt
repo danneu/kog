@@ -1,4 +1,4 @@
-package com.danneu.kog
+package com.danneu.kog.util
 
 
 /** Represents a Long quantity of bytes.

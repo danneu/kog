@@ -1,7 +1,7 @@
 package com.danneu.kog.examples
 
 
-import com.danneu.kog.ByteLength
+import com.danneu.kog.util.ByteLength
 import com.danneu.kog.Handler
 import com.danneu.kog.Response
 import com.danneu.kog.Router

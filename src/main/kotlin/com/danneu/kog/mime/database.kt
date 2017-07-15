@@ -2,15 +2,21 @@ package com.danneu.kog.mime
 
 import com.danneu.json.Decoder
 import com.danneu.kog.Mime
+import com.danneu.kog.util.Util
 import com.danneu.result.Result
 import com.danneu.result.getOrElse
 import java.io.Reader
+import java.nio.charset.Charset
 
-class MimeRecord(val extensions: List<String> = emptyList(), val compressible: Boolean)
+class MimeRecord(
+    val extensions: List<String> = emptyList(),
+    val compressible: Boolean,
+    val charset: Charset?
+)
 
 /** Wraps the mime-db data to expose convenient lookup functions.
  */
-class MimeDatabase(underlying: Map<String, MimeRecord>) {
+class MimeDatabase(val underlying: Map<String, MimeRecord>) {
     // mapping of extensions ("gif") to mime types
     private val extLookup = underlying.flatMap { (mime, record) ->
         record.extensions.map { ext ->
@@ -18,13 +24,25 @@ class MimeDatabase(underlying: Map<String, MimeRecord>) {
         }
     }.toMap()
 
-    // set of all extensions that can be compressed
-    private val compressibleLookup: Set<String> =
-        underlying.filterValues(MimeRecord::compressible).keys.toSet()
+    fun compressible(mime: Mime) = underlying[mime.toString()]?.compressible ?: false
 
-    fun compressible(key: String): Boolean = compressibleLookup.contains(key)
+    // Remove leading dot if there is one
+    fun fromExtension(ext: String): Mime? = ext.trim().let {
+        if (it.startsWith('.')) {
+            extLookup[it.drop(1)]
+        } else {
+            extLookup[it]
+        }
+    }
 
-    fun fromExtension(ext: String): Mime? = extLookup[ext]
+    // text/* is utf-8 by default
+    fun getCharset(mime: Mime): Charset? = if (mime.prefix == "text") {
+        Charsets.UTF_8
+    } else {
+        underlying[mime.toString()]?.charset
+    }
+
+    fun getExtensions(mime: Mime): List<String> = underlying[mime.toString()]?.extensions ?: emptyList()
 }
 
 
@@ -33,12 +51,16 @@ val database: MimeDatabase = run {
 
     if (stream == null) {
         System.err.println("Error initializing MimeDatabase: Could not find resource mime-db/db.json")
-        System.exit(1)
+        return@run MimeDatabase(emptyMap())
     }
 
+    val start = System.currentTimeMillis()
     parseDatabase(stream.bufferedReader())
-        .getOrElse(emptyMap<String, MimeRecord>())
+        .getOrElse(emptyMap())
         .let(::MimeDatabase)
+        .apply {
+            println("mime-db loaded in ${System.currentTimeMillis() - start}ms")
+        }
 }
 
 private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, String> {
@@ -52,7 +74,10 @@ private fun parseDatabase(reader: Reader): Result<Map<String, MimeRecord>, Strin
         Decoder.succeed(false)
     )
 
-    val decoder = Decoder.mapOf(Decoder.map(::MimeRecord, extensions, compressible))
+    val charset: Decoder<Charset?> = Decoder.getOrMissing("charset", null, Decoder.string.map { Util.charsetOrNull(it) })
+
+    val decoder = Decoder.mapOf(Decoder.map(::MimeRecord, extensions, compressible, charset))
 
     return Decoder.decode(reader, decoder)
 }
+

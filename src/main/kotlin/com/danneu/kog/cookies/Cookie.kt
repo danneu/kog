@@ -1,6 +1,6 @@
 package com.danneu.kog.cookies
 
-import com.danneu.kog.percentEncode
+import com.danneu.kog.util.Util
 import com.danneu.kog.util.HttpDate
 import java.time.Duration
 import java.time.OffsetDateTime
@@ -18,7 +18,7 @@ data class Cookie(
     val httpOnly: Boolean? = null,
     val firstPartyOnly: Boolean? = null
 ) {
-    fun serialize(name: String): String = mutableListOf("$name=${percentEncode(value)}").apply {
+    fun serialize(name: String): String = mutableListOf("$name=${Util.percentEncode(value)}").apply {
         if (path != null) add("path=$path")
         if (domain != null) add("domain=$domain")
         duration.serialize()?.let { add(it) }

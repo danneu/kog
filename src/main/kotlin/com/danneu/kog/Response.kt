@@ -63,8 +63,7 @@ class Response(
         body = ResponseBody.String(value.toString())
     }
 
-    fun stream(input: InputStream, mime: Mime = Mime.OctetStream) = apply {
-        contentType = ContentType(mime)
+    fun stream(input: InputStream) = apply {
         body = ResponseBody.InputStream(input)
     }
 
@@ -92,18 +91,21 @@ class Response(
             this.none()
         }
 
+        // Respond with human-friendly error on 404/500 text/* responses that do not have bodies.
         if (body is ResponseBody.None && contentType?.mime?.prefix == "text") {
-            if (status in setOf(Status.NotFound, Status.InternalError)) {
+            if (status in setOf(Status.NotFound, Status.InternalServerError)) {
                 text(status.toString())
             }
         }
 
+        // If body length has not been set yet, we assume that the body length cannot be determined.
         when (body.length) {
             null -> setHeader(Header.TransferEncoding, "chunked")
             else -> setHeader(Header.ContentLength, body.length.toString())
         }
 
-        // If contentType is set, then content-type header would be redundant and more likely wrong
+        // If contentType is set, then ignore the content-type header.
+        // The contentType property takes priority and assumed to be more likely in sync.
         if (contentType != null) {
             removeHeader(Header.ContentType)
         }
@@ -138,7 +140,7 @@ class Response(
         fun forbidden() = Response(Status.Forbidden)
         fun notFound() = Response(Status.NotFound)
         fun gone() = Response(Status.Gone)
-        fun internalError() = Response(Status.InternalError)
+        fun internalServerError() = Response(Status.InternalServerError)
         fun notImplemented() = Response(Status.NotImplemented)
         fun serviceUnavailble() = Response(Status.ServiceUnavailable)
         fun gatewayTimeout() = Response(Status.GatewayTimeout)

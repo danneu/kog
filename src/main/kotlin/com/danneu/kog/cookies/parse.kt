@@ -1,7 +1,7 @@
 package com.danneu.kog.cookies
 
 
-import com.danneu.kog.urlDecode
+import com.danneu.kog.util.Util
 
 
 fun parse(header: String?): Map<String, String> {
@@ -14,7 +14,7 @@ fun parse(header: String?): Map<String, String> {
 private fun parsePair(str: String): Pair<String, String>? {
     val pair = str.split("=", limit = 2)
     if (pair.size != 2) return null
-    return pair[0].trim() to urlDecode(unwrapQuotes(pair[1].trim()))
+    return pair[0].trim() to Util.urlDecode(unwrapQuotes(pair[1].trim()))
 }
 
 

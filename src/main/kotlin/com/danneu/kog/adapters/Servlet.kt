@@ -35,9 +35,9 @@ class Servlet(val handler: Handler) : HttpServlet() {
                 servletResponse.contentType = type
             }
 
+            //contentType property overwrites the header if it is set
             response.contentType?.let { type ->
                 servletResponse.contentType = type.toString()
-
             }
 
             response.body.pipe(servletResponse.outputStream)
@@ -64,7 +64,7 @@ class Servlet(val handler: Handler) : HttpServlet() {
 }
 
 
-fun expandHeaders(r: HttpServletRequest): MutableList<HeaderPair> {
+private fun expandHeaders(r: HttpServletRequest): MutableList<HeaderPair> {
     return r.headerNames.asSequence().flatMap { name ->
         r.getHeaders(name).asSequence().map { value ->
             Header.fromString(name) to value

@@ -1,9 +1,10 @@
 package com.danneu.kog.batteries
 
-import com.danneu.kog.ByteLength
+import com.danneu.kog.util.ByteLength
 import com.danneu.kog.Header
 import com.danneu.kog.Method
 import com.danneu.kog.Middleware
+import com.danneu.kog.Mime
 import com.danneu.kog.Request
 import com.danneu.kog.Response
 import com.danneu.kog.ResponseBody
@@ -13,7 +14,6 @@ import java.io.InputStream
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.util.zip.GZIPOutputStream
-import kotlin.text.RegexOption.IGNORE_CASE
 
 
 // TODO: Consider a Vary tool for appending it instead of assoc'ing it
@@ -23,7 +23,7 @@ import kotlin.text.RegexOption.IGNORE_CASE
 
 fun compress(
     threshold: ByteLength = ByteLength.ofBytes(1024),
-    predicate: (String?) -> Boolean = ::isCompressible
+    predicate: (Mime?) -> Boolean = ::isCompressible
 ): Middleware = { handler ->
     fun(request: Request): Response {
         val response = handler(request)
@@ -42,7 +42,7 @@ fun compress(
         // Body length is not-null and it doesn't meet threshold
         if (response.body.length?.let { it < threshold.byteLength} ?: false) return response
         // Ensure it's a Content-Type we want to compress
-        if (!predicate(response.getHeader(Header.ContentType))) return response
+        if (!predicate(response.contentType?.mime)) return response
 
         // ACCEPT
 
@@ -55,25 +55,21 @@ fun compress(
         return response.apply {
             setHeader(Header.ContentEncoding, "gzip")
             removeHeader(Header.ContentLength)
-            body = ResponseBody.InputStream(compressBody(response.body))
+            stream(compressBody(response.body))
         }
     }
 }
 
-private val compressibleTypeRegex = Regex("""^text/|\+json$|\+text$|\+xml$""", IGNORE_CASE)
-private val extractTypeRegex = Regex("""^\s*([^;\s]*)(?:;|\s|$)""")
+private val compressibleTypeRegex = Regex("""^text/|\+json$|\+text$|\+xml$""")
 
-fun isCompressible(header: String?): Boolean {
-    if (header == null) return false
-
-    // strip params
-    val mime = extractTypeRegex.find(header)?.groupValues?.get(1)?.toLowerCase() ?: return false
+fun isCompressible(mime: Mime?): Boolean {
+    if (mime == null) return false
 
     // check against mime-db
     if (database.compressible(mime)) return true
 
-    // fallback to regex
-    return compressibleTypeRegex.containsMatchIn(mime)
+    // fallback to out own regex check
+    return compressibleTypeRegex.containsMatchIn(mime.toString())
 }
 
 // TODO: Don't wait on the compression.

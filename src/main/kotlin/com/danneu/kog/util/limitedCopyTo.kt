@@ -1,6 +1,5 @@
 package com.danneu.kog.util
 
-import com.danneu.kog.ByteLength
 import java.io.InputStream
 import java.io.OutputStream
 

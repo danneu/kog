@@ -10,5 +10,6 @@ class MimeTests {
         assertEquals("two raws are case-insensitive equal", Mime.Raw("foo"), Mime.Raw("FOO"))
         assertEquals("two named are equal", Mime.Html, Mime.Html)
         assertEquals("raw is equal name of same case-insensitive string", Mime.Raw("tExT/HtML"), Mime.Html)
+        assertEquals("raw and named with same string are equal", Mime.Raw("video/mp4"), Mime.VideoMp4)
     }
 }

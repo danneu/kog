@@ -169,11 +169,11 @@ internal fun Server.Companion.wrapErrorHandler(): Middleware = { handler -> { re
         handler(req)
     } catch (ex: EofException) {
         // We can't do anything about early client hangup
-        Response.internalError()
+        Response.internalServerError()
     } catch (ex: Exception) {
         System.err.print("Unhandled error: ")
         ex.printStackTrace(System.err)
-        Response.internalError()
+        Response.internalServerError()
     }
 }}
 

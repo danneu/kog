@@ -66,7 +66,7 @@ enum class Status(val code: Int, val redirect: Boolean = false, val empty: Boole
 
     // 5xx SERVER ERRORS
 
-    InternalError(500),
+    InternalServerError(500),
     NotImplemented(501),
     BadGateway(502, retry = true),
     ServiceUnavailable(503, retry = true),
@@ -82,12 +82,12 @@ enum class Status(val code: Int, val redirect: Boolean = false, val empty: Boole
 
     Unknown(0);
 
-    override fun toString(): String = name.toSpaceCamel()
+    override fun toString() = name.toSpaceCamel()
 }
 
+private val spaceCamelRegex = Regex("""(?<=[a-zA-Z])([A-Z])""")
 
 // "HelloWorldFoo" -> "Hello World Foo"
 fun String.toSpaceCamel(): String {
-    return this.replace(Regex("(?<=[a-zA-Z])([A-Z])"), { " " + it.groupValues.last() })
+    return this.replace(spaceCamelRegex, " $1")
 }
-

@@ -4,10 +4,11 @@ import com.danneu.kog.Protocol.Http_1_1
 import com.danneu.kog.batteries.multipart.SavedUpload
 import com.danneu.kog.cookies.parse
 import com.danneu.result.Result
-import com.danneu.result.flatMap
 import com.danneu.json.Decoder as JsonDecoder
 import com.danneu.kog.form.Decoder as FormDecoder
 import com.danneu.kog.negotiation.Negotiator
+import com.danneu.kog.util.Util
+import com.danneu.kog.util.mutableCopy
 import org.eclipse.jetty.websocket.api.util.QuoteUtil
 import javax.servlet.ServletInputStream
 
@@ -29,7 +30,7 @@ class Request(
     override fun toType() = this
 
     val query by lazy {
-        formDecode(queryString).mutableCopy()
+        Util.formDecode(queryString).mutableCopy()
     }
 
     val params by lazy {

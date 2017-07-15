@@ -1,5 +1,8 @@
 package com.danneu.kog
 
+import com.danneu.kog.util.md5
+import com.danneu.kog.util.toHexString
+import com.danneu.kog.util.utf8
 import java.io.OutputStream
 import java.io.StringWriter
 import java.util.Base64
@@ -19,7 +22,7 @@ interface ETaggable {
         /**
          * The ETag for 0-length empty body.
          */
-        val empty = "\"0-1B2M2Y8AsgTpgAmY7PhCfg\"" // i.e. md5("")
+        const val empty = "\"0-1B2M2Y8AsgTpgAmY7PhCfg\"" // i.e. md5("")
     }
 }
 
