@@ -55,6 +55,7 @@ Server({ Response().text("hello world") }).listen(3000)
   * [Compression / Gzip](#compression--gzip)
 - [HTML Templating](#html-templating)
 - [WebSockets](#websockets)
+  * [Idle Timeout](#idle-timeout)
 - [Caching](#caching)
   * [In-Memory Cache](#in-memory-cache)
 - [Environment Variables](#environment-variables)
@@ -855,6 +856,33 @@ Check out [examples/websockets.kt][examples-websockets] for a websocket example 
 a websocket handler that echos back every message, and a websocket handler bound to a dynamic `/ws/<number>` route.
 
 Take note of a few limitations explained in the comments that I'm working on fixing.
+
+### Idle Timeout
+
+By default, Jetty (and thus kog) timeout connections that have idled for 30 seconds.
+
+You can change this when initializing a kog `Server`:
+
+```kotlin
+import com.danneu.kog.Server
+import java.time.Duration
+
+fun main(args: Array<String>) {
+    Server(handler, idleTimeout = Duration.ofMinutes(5)).listen(3000)
+}
+```
+
+However, instead of changing kog's `idleTimeout`, you probably want to have your websocket clients ping the server
+to keep the connections alive.
+
+Often reverse proxies like nginx, Heroku's routing layer, and Cloudflare have their own idle timeout. 
+
+For example, here are Heroku's docs on the matter: <https://devcenter.heroku.com/articles/websockets#timeouts>
+
+I believe this is also why websocket libraries like <https://socket.io/> implement their own ping/pong.
+
+Finally, it seems that Jetty's maximum idle timeout is 5 minutes, so passing in durations longer than 5 minutes
+seems to just max out at 5 minutes. If someone can correct me here, feel free to create an issue.
 
 [examples-websockets]: https://github.com/danneu/kog/blob/master/src/main/kotlin/com/danneu/kog/examples/websockets.kt
 
