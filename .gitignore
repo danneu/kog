@@ -1,5 +1,6 @@
 .gradle
 build
 .idea
+out
 node_modules
 /src/main/kotlin/com/danneu/kog/Main.kt
