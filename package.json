@@ -6,7 +6,7 @@
     "buildrun": "npm run build && java -jar build/libs/kog-all.jar"
   },
   "dependencies": {
-    "mime-db": "^1.28.0"
+    "mime-db": "^1.29.0"
   },
   "devDependencies": {
     "markdown-toc": "^1.0.3"
