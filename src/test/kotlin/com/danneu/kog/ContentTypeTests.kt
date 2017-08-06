@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 
-class ContentTypeTestsTests {
+class ContentTypeTests {
     @Test
     fun testParse() {
         assertEquals(

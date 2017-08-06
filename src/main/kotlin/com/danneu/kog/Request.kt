@@ -47,7 +47,7 @@ class Request(
     }
 
     val cookies by lazy {
-        parse(getHeader(Header.Cookie)).mutableCopy()
+        getHeader(Header.Cookie)?.let(::parse)?.mutableCopy() ?: mutableMapOf()
     }
 
     // TODO: Avoid consuming body that's already been drained

@@ -18,6 +18,8 @@ object Util {
             .toMap()
     }
 
+    // Note: "+" are turned into spaces.
+    // - https://stackoverflow.com/questions/2678551/when-to-encode-space-to-plus-or-20
     fun urlDecode(string: String, encoding: String = "utf-8"): String {
         return URLDecoder.decode(string, encoding)
     }
