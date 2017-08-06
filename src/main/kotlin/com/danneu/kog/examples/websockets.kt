@@ -14,36 +14,45 @@ fun main(args: Array<String>) {
     val router = Router {
         get("/", fun(): Handler = {
             Response().html("""
-                <p>open the browser's javascript console</p>
+                <!doctype html>
+                <head>
+                    <meta charset="utf-8">
+                </head>
+                <body>
+                    <p>open the browser's javascript console</p>
 
-                <script>
-                    var socket = new WebSocket("ws://localhost:3000/ws/echo")
+                    <ul id="log"></ul>
 
-                    socket.onopen = function (event) {
-                        console.log('open:', event)
-                        socket.send('hello world')
-                    }
+                    <script>
+                        var socket = new WebSocket("ws://localhost:3000/ws/echo")
 
-                    socket.onclose = function (event) {
-                        console.log('close:', event)
-                    }
+                        socket.onopen = function (event) {
+                            console.log('open:', event)
+                            socket.send('hello world')
 
-                    socket.onerror = function (event) {
-                        console.log('error:', event)
-                    }
+                            // Every 10 seconds, ping the server to avoid idle timeout.
+                            setInterval(function () {
+                                socket.send('ping')
+                            }, 10000)
+                        }
 
-                    socket.onmessage = function (event) {
-                        console.log('server said:', event.data)
-                    }
-                </script>
+                        socket.onclose = function (event) {
+                            console.log('close:', event)
+                        }
 
-                <script>
-                    var socket2 = new WebSocket("ws://localhost:3000/ws/42")
+                        socket.onerror = function (event) {
+                            console.log('error:', event)
+                        }
 
-                    socket2.onmessage = function (event) {
-                        console.log(socket2.url, 'said:', event.data)
-                    }
-                </script>
+                        socket.onmessage = function (event) {
+                            console.log('server said:', event.data)
+                            var ul = document.querySelector('#log')
+                            var li = document.createElement('li')
+                            li.appendChild(document.createTextNode('server said: ' + event.data))
+                            ul.appendChild(li)
+                        }
+                    </script>
+                </body>
             """)
         })
 
@@ -61,6 +70,9 @@ fun main(args: Array<String>) {
                     }
 
                     override fun onText(message: String) {
+                        // Client sends us "ping" messages to keep the connection alive. Don't echo them.
+                        if (message == "ping") return
+
                         println("[$id] client sent us: $message")
                         session.remote.sendString(message)
                     }
@@ -75,22 +87,6 @@ fun main(args: Array<String>) {
                 }
             })
         })
-
-        // This endpoint demonstrates how to mount a websocket handler on a dynamic URL that accepts request
-        // paths like /ws/1, /ws/2, /ws/3, etc.
-        //
-        // It also demonstrates the current limitation that the first argument to `Response.websocket()` must
-        // be a static path. (#willfix)
-        //
-        // Due to this limitation, dynamic path websocket handlers by default will currently cause unbounded growth of
-        // the internal jetty mapping of path to websocket handler until I find a better way to work with jetty.
-        get("/ws/<>", fun(n: Int): Handler = {
-            Response.websocket("/ws/$n", fun(_: Request, session: Session) = object : WebSocketHandler {
-                override fun onOpen() {
-                    session.remote.sendString("you connected to /ws/$n")
-                }
-            })
-        })
     }
 
     val middleware = logger()
@@ -99,3 +95,21 @@ fun main(args: Array<String>) {
     Server(middleware(handler)).listen(3000)
 }
 
+// WARNING
+
+// This endpoint demonstrates how to mount a websocket handler on a dynamic URL that accepts request
+// paths like /ws/1, /ws/2, /ws/3, etc.
+//
+// It also demonstrates the current limitation that the first argument to `Response.websocket()` must
+// be a static path. (#willfix)
+//
+// Due to this limitation, dynamic path websocket handlers by default will currently cause unbounded growth of
+// the internal jetty mapping of path to websocket handler until I find a better way to work with jetty.
+//
+// get("/ws/<>", fun(n: Int): Handler = {
+//     Response.websocket("/ws/$n", fun(_: Request, session: Session) = object : WebSocketHandler {
+//         override fun onOpen() {
+//             session.remote.sendString("you connected to /ws/$n")
+//         }
+//     })
+// })
